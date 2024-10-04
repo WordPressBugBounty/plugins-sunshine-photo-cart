@@ -1,0 +1,1 @@
+<div id="sunshine--gallery--expired"><?php echo sprintf( __( 'The gallery %1$s expired on %2$s and is no longer accessible', 'sunshine-photo-cart' ), $gallery->get_name(), $gallery->get_expiration_date_formatted() ); ?></div>
