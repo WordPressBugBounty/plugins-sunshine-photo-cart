@@ -91,7 +91,7 @@ class SPC_Cart {
 				// Check if this shipping method is still
 				if ( array_key_exists( 'shipping_method', $this->data ) && is_array( $allowed_shipping_methods ) &&  array_key_exists( $this->data['shipping_method'], $allowed_shipping_methods ) ) {
 					$this->set_shipping_method( $this->data['shipping_method'] );
-				} elseif ( count( $allowed_shipping_methods ) == 1 ) {
+				} elseif ( $this->delivery_method == 'ship' && count( $allowed_shipping_methods ) == 1 ) {
 					$this->set_shipping_method( array_key_first( $allowed_shipping_methods ) );
 				}
 			}
@@ -251,13 +251,13 @@ class SPC_Cart {
 			// 'image_name' => ( !empty( $image ) ) ? $image->get_name() : '',
 			'price_level' => $price_level,
 			'qty'         => ( $qty <= 0 ) ? 1 : $qty,
-			// 'price' => $product->get_price( $gallery->get_price_level() ),
+			'price' => $product->get_price( $price_level ),
 			// 'needs_shipping' => $product->needs_shipping(),
 			// 'shipping' => $product->get_shipping(),
 			'discount'    => 0,
 			'comments'    => $comments,
 			'meta' => ( ! empty( $meta ) ) ? $meta : array(),
-			'hash'        => md5( time() . $product_id . $qty ),
+			'hash' => md5( time() . $product_id . $qty ),
 		);
 
 		// $item = wp_parse_args( $options, $options_default );
@@ -1040,6 +1040,53 @@ class SPC_Cart {
 		}
 	}
 
+	public function update_item_quantity_by_hash( $hash, $qty ) {
+		if ( ! empty( $this->cart ) ) {
+			foreach ( $this->cart as $key => $current_item ) {
+				if ( $current_item['hash'] == $hash ) {
+					$this->update_item_quantity( $key, $qty );
+				}
+			}
+		}
+		return false;
+	}
+
+	public function update_item_price( $key, $price ) {
+		if ( array_key_exists( $key, $this->cart ) ) {
+			$this->cart[ $key ]['price'] = floatval( $price );
+			$this->update_cart();
+		}
+	}
+
+	public function update_item_price_by_hash( $hash, $price ) {
+		if ( ! empty( $this->cart ) ) {
+			foreach ( $this->cart as $key => $current_item ) {
+				if ( $current_item['hash'] == $hash ) {
+					$this->update_item_price( $key, $price );
+				}
+			}
+		}
+		return false;
+	}
+
+	public function update_item_meta( $key, $meta_key, $value ) {
+		if ( array_key_exists( $key, $this->cart ) ) {
+			$this->cart[ $key ]['meta'][ $meta_key ] = $value;
+			$this->update_cart();
+		}
+	}
+
+	public function update_item_meta_by_hash( $hash, $meta_key, $value ) {
+		if ( ! empty( $this->cart ) ) {
+			foreach ( $this->cart as $key => $current_item ) {
+				if ( $current_item['hash'] == $hash ) {
+					$this->update_item_meta( $key, $meta_key, $value );
+				}
+			}
+		}
+		return false;
+	}
+
 	public function has_image( $image_id ) {
 		if ( ! $this->is_empty() ) {
 			foreach ( $this->cart as $item ) {
@@ -1694,40 +1741,10 @@ class SPC_Cart {
 
 		$order = $this->create_order();
 		if ( $order ) {
-
-			//do_action( 'sunshine_checkout_process_payment', $this );
-			if ( $this->get_checkout_data_item( 'payment_method' ) ) {
-				do_action( 'sunshine_checkout_process_payment_' . $this->get_checkout_data_item( 'payment_method' ), $order );
-			} elseif ( $order->get_total() > 0 ) {
-				$this->add_error( __( 'No payment method', 'sunshine-photo-cart' ) );
-			}
-
-			// Recheck for errors after attempting to process payment.
-			if ( $this->has_errors() ) {
-				SPC()->log( 'Payment processing errors: ' . json_encode( $this->get_errors() ) );
-				$order->delete( true );
-				return false;
-			}
-
-			if ( apply_filters( 'sunshine_checkout_allow_order_notify', true, $order ) ) {
-				do_action( 'sunshine_order_notify', $order );
-			}
-
-			if ( apply_filters( 'sunshine_order_clear_cart', true ) ) {
-				// Clear checkout data from session data.
-				SPC()->session->set( 'checkout_data', '' );
-				SPC()->session->set( 'checkout_sections_completed', '' );
-				SPC()->cart->empty_cart();
-			}
-
 			$url = apply_filters( 'sunshine_checkout_redirect', $order->get_received_permalink() );
 			SPC()->log( 'Checkout created new order and is redirecting' );
 			wp_safe_redirect( $url );
 			exit;
-		} else {
-			// There was some kind of issue creating the order so just return and show last section again.
-			SPC()->log( 'Checkout had error and could not create order' );
-			return false;
 		}
 
 	}
@@ -1885,7 +1902,33 @@ class SPC_Cart {
 			//SPC()->customer->add_action( 'order', array( 'order_id' => $order->get_id() ) );
 			SPC()->customer->recalculate_stats();
 
+			//do_action( 'sunshine_checkout_process_payment', $this );
+			if ( $this->get_checkout_data_item( 'payment_method' ) ) {
+				do_action( 'sunshine_checkout_process_payment_' . $this->get_checkout_data_item( 'payment_method' ), $order );
+			} elseif ( $order->get_total() > 0 ) {
+				$this->add_error( __( 'No payment method', 'sunshine-photo-cart' ) );
+			}
+
+			// Recheck for errors after attempting to process payment.
+			if ( $this->has_errors() ) {
+				SPC()->log( 'Payment processing errors: ' . json_encode( $this->get_errors() ) );
+				$order->delete( true );
+				return false;
+			}
+
+			if ( apply_filters( 'sunshine_checkout_allow_order_notify', true, $order ) ) {
+				do_action( 'sunshine_order_notify', $order );
+			}
+
+			if ( apply_filters( 'sunshine_order_clear_cart', true ) ) {
+				// Clear checkout data from session data.
+				SPC()->session->set( 'checkout_data', '' );
+				SPC()->session->set( 'checkout_sections_completed', '' );
+				SPC()->cart->empty_cart();
+			}
+
 			do_action( 'sunshine_checkout_create_order', $order, $data );
+
 			return $order;
 		}
 

@@ -14,12 +14,76 @@ defined( 'ABSPATH' ) || exit;
  * @since  3.0.16
  * @return boolean If sunshine-gallery post type should be excluded
  */
-function sitemap_exclude_post_type( $excluded, $post_type ) {
-	if ( 'sunshine-gallery' == $post_type && SPC()->get_option( 'hide_galleries' ) ) {
+add_filter( 'wpseo_sitemap_exclude_post_type', 'sunshine_yoast_sitemap_exclude_post_type', 10, 2 );
+function sunshine_yoast_sitemap_exclude_post_type( $excluded, $post_type ) {
+	if ( 'sunshine-gallery' === $post_type && SPC()->get_option( 'hide_galleries' ) ) {
 		return true;
 	}
-	return false;
+	return $excluded;
 }
+
+/**
+ * Alter the OpenGraph image for a gallery
+ */
+function sunshine_yoast_alter_existing_opengraph_image( $url ) {
+	global $post;
+	if ( is_singular( 'sunshine-gallery' ) ) {
+		$featured_image_id = SPC()->frontend->current_gallery->get_featured_image_id();
+		if ( $featured_image_id ) {
+			$image = wp_get_attachment_image_src( $featured_image_id, 'sunshine-large' );
+			$url   = $image[0];
+		}
+	} elseif ( is_attachment() ) {
+		if ( get_post_type( $post->post_parent ) == 'sunshine-gallery' ) {
+			$image = wp_get_attachment_image_src( $post->ID, 'sunshine-large' );
+			$url   = $image[0];
+		}
+	}
+	return $url;
+}
+add_filter( 'wpseo_opengraph_image', 'sunshine_yoast_alter_existing_opengraph_image', 999 );
+
+/**
+ * Alter the OpenGraph image height for a single post type.
+ */
+add_filter( 'wpseo_opengraph_image_width', 'sunshine_yoast_change_opengraph_image_width' );
+function sunshine_yoast_change_opengraph_image_width( $width ) {
+	global $post;
+	if ( is_singular( 'sunshine-gallery' ) ) {
+		$featured_image_id = SPC()->frontend->current_gallery->get_featured_image_id();
+		if ( $featured_image_id ) {
+			$image = wp_get_attachment_image_src( $featured_image_id, 'sunshine-large' );
+			$width = $image[1];
+		}
+	} elseif ( is_attachment() ) {
+		if ( get_post_type( $post->post_parent ) == 'sunshine-gallery' ) {
+			$image = wp_get_attachment_image_src( $post->ID, 'sunshine-large' );
+			$width = $image[1];
+		}
+	}
+	return $width;
+}
+/**
+ * Alter the OpenGraph image height for a single post type.
+ */
+add_filter( 'wpseo_opengraph_image_height', 'sunshine_yoast_change_opengraph_image_height' );
+function sunshine_yoast_change_opengraph_image_height( $height ) {
+	global $post;
+	if ( is_singular( 'sunshine-gallery' ) ) {
+		$featured_image_id = SPC()->frontend->current_gallery->get_featured_image_id();
+		if ( $featured_image_id ) {
+			$image  = wp_get_attachment_image_src( $featured_image_id, 'sunshine-large' );
+			$height = $image[2];
+		}
+	} elseif ( is_attachment() ) {
+		if ( get_post_type( $post->post_parent ) == 'sunshine-gallery' ) {
+			$image  = wp_get_attachment_image_src( $post->ID, 'sunshine-large' );
+			$height = $image[2];
+		}
+	}
+	return $height;
+}
+
 
 /**
  * Function to query and get IDs of galleries to be excluded from XML sitemaps

@@ -16,6 +16,11 @@ class SPC_Email_Admin_Signup extends SPC_Email {
 
 	public function trigger( $customer ) {
 
+		if ( is_user_logged_in() && current_user_can( 'sunshine_manage_options' ) ) {
+			// Do not need to send when already doing something as an admin.
+			return;
+		}
+
 		$this->set_template( $this->id );
 		$this->set_subject( $this->get_subject() );
 
@@ -24,8 +29,7 @@ class SPC_Email_Admin_Signup extends SPC_Email {
 		);
 		$this->add_args( $args );
 
-		// Send email
-		$result = $this->send();
+		$this->send();
 
 	}
 

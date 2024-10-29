@@ -506,7 +506,7 @@ function sunshine_checkout_scripts() {
 	</script>
 
 	<?php
-	$active_section = ( SPC()->cart->get_active_section() == 'shipping' ) ? 'shipping' : 'billing';
+	$active_section      = ( SPC()->cart->get_active_section() == 'shipping' ) ? 'shipping' : 'billing';
 	$google_maps_api_key = SPC()->get_option( 'google_maps_api_key' );
 	if ( $google_maps_api_key ) {
 		$default_country = SPC()->get_option( 'country' );
@@ -527,16 +527,16 @@ function sunshine_checkout_scripts() {
 				google.maps.event.clearInstanceListeners( sunshine_autocomplete );
 				jQuery( ".pac-container" ).remove();
 			}
-		  	address1Field = document.querySelector("#" + section + "_address1");
-		  	address2Field = document.querySelector("#" + section + "_address2");
-		  	postalField = document.querySelector("#" + section + "_postcode");
-		  	sunshine_autocomplete = new google.maps.places.Autocomplete(address1Field, {
+			  address1Field = document.querySelector("#" + section + "_address1");
+			  address2Field = document.querySelector("#" + section + "_address2");
+			  postalField = document.querySelector("#" + section + "_postcode");
+			  sunshine_autocomplete = new google.maps.places.Autocomplete(address1Field, {
 				componentRestrictions: { country: [ default_country ] },
 				fields: ["address_components", "geometry"],
 				types: ["address"],
-		  	});
-		  	//address1Field.focus();
-		  	sunshine_autocomplete_listener = sunshine_autocomplete.addListener( "place_changed", function(){
+			  });
+			  //address1Field.focus();
+			  sunshine_autocomplete_listener = sunshine_autocomplete.addListener( "place_changed", function(){
 				sunshine_autopopulate_address( section );
 			} );
 		}
@@ -604,7 +604,7 @@ function sunshine_checkout_scripts() {
 		}
 	</script>
 
-	<?php
+		<?php
 	}
 }
 
@@ -618,10 +618,18 @@ function sunshine_checkout_update_summary() {
 
 	SPC()->cart->setup();
 
-	$html = sunshine_get_template_html( 'checkout/checkout' );
+	SPC()->log( 'Checkout update' );
+
+	$html    = sunshine_get_template_html( 'checkout/checkout' );
 	$refresh = SPC()->session->get( 'checkout_refresh' );
 	SPC()->session->set( 'checkout_refresh', false );
-	wp_send_json_success( array( 'html' => $html, 'section' => SPC()->cart->get_active_section(), 'refresh' => $refresh ) );
+	wp_send_json_success(
+		array(
+			'html'    => $html,
+			'section' => SPC()->cart->get_active_section(),
+			'refresh' => $refresh,
+		)
+	);
 
 }
 
@@ -633,9 +641,12 @@ function sunshine_checkout_process_section() {
 		wp_send_json_error();
 	}
 
-	// Do validation
+	// Do validation.
+	$current_section = sanitize_text_field( $_POST['sunshine_checkout_section'] );
+	SPC()->log( 'Processing checkout section: ' . $current_section );
 	SPC()->cart->setup();
-	$next_section = SPC()->cart->process_section( sanitize_text_field( $_POST['sunshine_checkout_section'] ), $_POST );
+	$next_section = SPC()->cart->process_section( $current_section, $_POST );
+	SPC()->log( 'Going to next checkout section: ' . $next_section );
 
 	wp_send_json_success( array( 'next_section' => $next_section ) );
 }
@@ -656,6 +667,8 @@ function sunshine_checkout_select_delivery_method() {
 		$this_delivery_method = sunshine_get_delivery_method_by_id( $selected_delivery_method );
 		SPC()->cart->set_delivery_method( $selected_delivery_method );
 		SPC()->cart->update();
+
+		SPC()->log( 'Checkout update: Delivery method set to ' . $this_delivery_method->get_name() );
 
 		$result = array(
 			'needs_shipping' => $this_delivery_method->needs_shipping(),
@@ -687,6 +700,8 @@ function sunshine_checkout_select_shipping_method() {
 		SPC()->cart->set_shipping_method( $selected_shipping_method_instance );
 		SPC()->cart->update();
 
+		SPC()->log( 'Checkout update: Shipping method set to ' . $this_shipping_method->get_name() );
+
 		$result = array(
 			'summary' => sunshine_get_template_html( 'checkout/summary' ),
 		);
@@ -709,8 +724,10 @@ function sunshine_checkout_use_credits() {
 	SPC()->cart->setup();
 
 	if ( ! empty( $_POST['use_credits'] ) && $_POST['use_credits'] == 'yes' ) {
+		SPC()->log( 'Checkout update: Use credits' );
 		SPC()->cart->set_use_credits( true );
 	} else {
+		SPC()->log( 'Checkout update: Disable credits' );
 		SPC()->cart->set_use_credits( false );
 	}
 
@@ -738,7 +755,8 @@ function sunshine_checkout_select_payment_method() {
 	if ( array_key_exists( $selected_payment_method, $active_payment_methods ) ) {
 		SPC()->cart->set_payment_method( $selected_payment_method );
 		$payment_method = SPC()->cart->get_payment_method();
-		$result = array(
+		SPC()->log( 'Checkout update: Set payment method to ' . $payment_method->get_name() );
+		$result       = array(
 			'summary' => sunshine_get_template_html( 'checkout/summary' ),
 		);
 		$submit_label = $payment_method->get_submit_label();
@@ -773,6 +791,8 @@ function sunshine_checkout_update_state() {
 		}
 
 		$country = sanitize_text_field( $_POST['country'] );
+
+		SPC()->log( 'Checkout update state' );
 
 		SPC()->cart->set_checkout_data_item( $prefix . '_country', $country );
 

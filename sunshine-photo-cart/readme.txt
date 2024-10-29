@@ -6,7 +6,7 @@ Tags: client photo gallery, sell photos, client galleries, client proofing, phot
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 6.6.2
-Stable tag: 3.2.11
+Stable tag: 3.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,19 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 11. Admin: Create a gallery and add images
 
 == Changelog ==
+
+= 3.3 =
+* New! Ability to set pricing on a per-image basis
+* Fix: Wrong price level for imageless products when adding to cart from store
+* Adjusted mobile modal styles
+* Fix: Ajax powered galleries field to also include Direct URL access galleries
+* Fix: Multi-image select only allows max qty 1 on digital products in store (and for packages)
+* Fix: Handling async payment methods in Stripe
+* Fix: Issues with action triggered emails sending to same person multiple times
+* Fix: Do not send new account registration emails when admin is the one triggering it
+* Fix: Add "products" as available settings field
+* Fix: Classic theme CSS styles
+* Enhancement: Better support for Yoast Open Graph images to use the sunshine-large size
 
 = 3.2.11 =
 * Fix issue with conflicting settings: disable account vs no guest checkout. No guest checkout takes precedence.

@@ -182,13 +182,18 @@ class SPC_Image extends Sunshine_Data {
 	}
 
 	public function can_purchase() {
+		$can_purchase = true;
 		if ( empty( $this->gallery ) ) {
 			$this->get_gallery();
 		}
 		if ( $this->gallery ) {
-			return $this->gallery->can_purchase();
+			$can_purchase = $this->gallery->can_purchase();
+			if ( $can_purchase ) {
+				$can_purchase = ! ( ! empty( $this->meta['sunshine_disable_purchase'] ) );
+			}
 		}
-		return false;
+		$can_purchase = apply_filters( 'sunshine_image_can_purchase', $can_purchase, $this );
+		return $can_purchase;
 	}
 
 	public function is_favorite() {
@@ -253,6 +258,9 @@ class SPC_Image extends Sunshine_Data {
 	}
 
 	public function get_price_level() {
+		if ( ! empty( $this->meta['sunshine_price_level'] ) ) {
+			return $this->meta['sunshine_price_level'];
+		}
 		$gallery = $this->get_gallery();
 		if ( $gallery ) {
 			return $gallery->get_price_level();

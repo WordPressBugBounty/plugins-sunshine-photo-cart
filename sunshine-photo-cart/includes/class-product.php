@@ -114,6 +114,7 @@ class SPC_Product extends Sunshine_Data {
 		if ( ! empty( $prices ) && is_array( $prices ) && array_key_exists( $price_level_id, $prices ) && $prices[ $price_level_id ] != '' ) {
 			$price = sunshine_sanitize_amount( $prices[ $price_level_id ] );
 		}
+		//sunshine_log( $prices, 'prices for ' . $this->get_name() . ': ' . $price_level_id );
 
 		if ( ! empty( $options ) ) {
 			$product_options = $this->get_options();

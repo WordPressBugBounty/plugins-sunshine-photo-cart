@@ -26,14 +26,14 @@ class SPC_Email {
 
 		$this->add_search_replace(
 			array(
-				'site_name' => get_bloginfo( 'name' ),
-				'sitename' => get_bloginfo( 'name' ),
-				'site_url'  => get_bloginfo( 'url' ),
-				'siteurl'  => get_bloginfo( 'url' ),
-				'sunshine_url'  => sunshine_get_page_url( 'home' ),
+				'site_name'    => get_bloginfo( 'name' ),
+				'sitename'     => get_bloginfo( 'name' ),
+				'site_url'     => get_bloginfo( 'url' ),
+				'siteurl'      => get_bloginfo( 'url' ),
+				'sunshine_url' => sunshine_get_page_url( 'home' ),
 				'sunshineurl'  => sunshine_get_page_url( 'home' ),
 				'register_url' => sunshine_get_page_url( 'account' ),
-				'first_name' => __( 'Friend', 'sunshine-photo-cart' ),
+				'first_name'   => __( 'Friend', 'sunshine-photo-cart' ),
 			)
 		);
 
@@ -75,10 +75,10 @@ class SPC_Email {
 			'placeholder' => $this->subject,
 		);
 		$fields['1300'] = array(
-			'name'        => __( 'Message', 'sunshine-photo-cart' ),
-			'id'          => 'email_' . $this->id . '_message',
-			'type'        => 'wysiwyg',
-			//'description' => __( 'Added message to be included within the email template', 'sunshine-photo-cart' ),
+			'name' => __( 'Message', 'sunshine-photo-cart' ),
+			'id'   => 'email_' . $this->id . '_message',
+			'type' => 'wysiwyg',
+			// 'description' => __( 'Added message to be included within the email template', 'sunshine-photo-cart' ),
 		);
 		return $fields;
 	}
@@ -114,7 +114,7 @@ class SPC_Email {
 	}
 
 	public function get_subject() {
-		//return $this->subject;
+		// return $this->subject;
 		return SPC()->get_option( 'email_' . $this->id . '_subject' );
 	}
 
@@ -269,11 +269,11 @@ class SPC_Email {
 		}
 
 		$default_search_replace = array(
-			'site_name' => get_bloginfo( 'name' ),
-			'sitename' => get_bloginfo( 'name' ),
-			'site_url'  => get_bloginfo( 'url' ),
-			'siteurl'  => get_bloginfo( 'url' ),
-			'sunshine_url'  => sunshine_get_page_url( 'home' ),
+			'site_name'    => get_bloginfo( 'name' ),
+			'sitename'     => get_bloginfo( 'name' ),
+			'site_url'     => get_bloginfo( 'url' ),
+			'siteurl'      => get_bloginfo( 'url' ),
+			'sunshine_url' => sunshine_get_page_url( 'home' ),
 			'sunshineurl'  => sunshine_get_page_url( 'home' ),
 			'register_url' => sunshine_get_page_url( 'account' ),
 		);
@@ -281,7 +281,7 @@ class SPC_Email {
 			$this->search_replace[ $key ] = $value;
 		}
 
-		//sunshine_log( 'Sending ' . $this->id );
+		// sunshine_log( 'Sending ' . $this->id );
 
 		if ( empty( $this->from ) ) { // Set up default from email
 			$this->from = SPC()->get_option( 'from_email' );
@@ -305,21 +305,21 @@ class SPC_Email {
 			$headers[] = 'Reply-To: ' . $this->reply_to;
 		}
 
-		// Make sure we get any custom message that may exist
-		$this->args['message'] = $this->get_message();
+		// Make sure we get any custom message that may exist.
+		$this->args['message']  = $this->get_message();
 		$this->args['template'] = $this->template;
 
-		// Get main content from template if not yet set
+		// Get main content from template if not yet set.
 		if ( empty( $this->content ) ) {
 			$this->content = $this->get_template_content( $this->template );
 		}
 
-		// Add header/footer
-		$header        = $this->get_template_content( 'header' );
-		$footer        = $this->get_template_content( 'footer' );
+		// Add header/footer.
+		$header  = $this->get_template_content( 'header' );
+		$footer  = $this->get_template_content( 'footer' );
 		$content = $header . $this->content . $footer;
 
-		// Search/replace
+		// Search/replace.
 		if ( ! empty( $this->search_replace ) ) {
 			foreach ( $this->search_replace as $key => $value ) {
 				$search[]  = '[' . $key . ']';
@@ -329,15 +329,15 @@ class SPC_Email {
 		$subject = str_replace( $search, $replace, $this->subject );
 		$content = str_replace( $search, $replace, $content );
 
-		// Run through emogrifier
+		// Run through emogrifier.
 		if ( ! class_exists( 'Sunshine_Emogrifier' ) ) {
 			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/class-emogrifier.php';
 		}
-		$css           = $this->get_template_content( 'style' );
-		$emogrifier    = new Sunshine_Emogrifier( $content, $css );
-		$content = $emogrifier->emogrify();
+		$css        = $this->get_template_content( 'style' );
+		$emogrifier = new Sunshine_Emogrifier( $content, $css );
+		$content    = $emogrifier->emogrify();
 
-		// Send
+		// Send.
 		foreach ( $this->recipients as $email ) {
 			$result = wp_mail( $email, $subject, $content, $headers );
 			if ( $result ) {
@@ -347,26 +347,27 @@ class SPC_Email {
 			}
 		}
 
-		$this->content = '';
+		$this->recipients = array();
+		$this->content    = '';
 
 		return $content;
 
 	}
 
 	function reset() {
-		$this->recipients = array();
-		$this->subject = '';
-		$this->content = '';
-		$this->to = '';
-		$this->to_name = '';
-		$this->recipients = array();
-		$this->from = '';
-		$this->from_name = '';
-		$this->subject = '';
-		$this->content = '';
+		$this->recipients     = array();
+		$this->subject        = '';
+		$this->content        = '';
+		$this->to             = '';
+		$this->to_name        = '';
+		$this->recipients     = array();
+		$this->from           = '';
+		$this->from_name      = '';
+		$this->subject        = '';
+		$this->content        = '';
 		$this->args           = array();
 		$this->search_replace = array();
-		$this->reply_to = '';
+		$this->reply_to       = '';
 	}
 
 }

@@ -400,7 +400,7 @@ function sunshine_hide_comments( $query ) {
 }
 
 function sunshine_image_placeholder_url() {
-	return SUNSHINE_PHOTO_CART_URL . '/assets/images/missing-image.png';
+	return apply_filters( 'sunshine_image_placeholder_url', SUNSHINE_PHOTO_CART_URL . '/assets/images/missing-image.png' );
 }
 
 function sunshine_image_placeholder_html( $args = array() ) {

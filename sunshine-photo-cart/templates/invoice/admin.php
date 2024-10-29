@@ -92,7 +92,7 @@
 		<td id="sunshine--invoice--logo">
 		<?php
 		if ( SPC()->get_option( 'invoice_logo' ) > 0 ) {
-			echo '<img src="' . wp_get_attachment_url( SPC()->get_option( 'invoice_logo' ) ) . '" alt="' . esc_attr( get_bloginfo( 'name' ) ) . '" style="max-height:50px;" />';
+			echo '<img src="' . wp_get_attachment_url( SPC()->get_option( 'invoice_logo' ) ) . '" alt="' . esc_attr( get_bloginfo( 'name' ) ) . '" />';
 		} else {
 			bloginfo( 'name' );
 		}

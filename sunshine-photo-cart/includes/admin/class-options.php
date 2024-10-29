@@ -378,12 +378,17 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 					break;
 
 				case 'galleries':
-					$html .= '<select ' . ( ( $field['required'] ) ? 'required="required"' : '' ) . ' name="' . esc_attr( $option_name ) . '[]" id="' . esc_attr( $field['id'] ) . '" multiple="multiple">';
+					$multiple = '';
+					if ( $field['multiple'] ) {
+						$option_name = $option_name . '[]';
+						$multiple = 'multiple="multiple"';
+					}
+					$html .= '<select ' . ( ( $field['required'] ) ? 'required="required"' : '' ) . ' name="' . esc_attr( $option_name ) . '" id="' . esc_attr( $field['id'] ) . '" ' . $multiple . '>';
 					$data = array();
 					if ( ! empty( $option_value ) ) {
 						foreach ( $option_value as $gallery_id ) {
 							$gallery = sunshine_get_gallery( $gallery_id );
-							$html .= '<option value="' . esc_attr( $gallery_id ) . '" selected="selected">' . $gallery->get_name() . '</option>';
+							$html .= '<option value="' . esc_attr( $gallery_id ) . '" selected="selected">' . esc_html( $gallery->get_name() ) . '</option>';
 						}
 					}
 					$html .= '</select> ';
@@ -400,7 +405,52 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 						            data: function(params) {
 						                return {
 						                    action: "sunshine_search_galleries",
-						                    search: params.term
+						                    search: params.term,
+											security: "' . wp_create_nonce( 'sunshine_search_galleries' ) . '",
+						                };
+						            },
+						            processResults: function(data) {
+						                return {
+						                    results: data
+						                };
+						            }
+						        },
+						        minimumInputLength: 3
+								});
+							});
+						</script>';
+					break;
+
+				case 'products':
+					$multiple = '';
+					if ( $field['multiple'] ) {
+						$option_name = $option_name . '[]';
+						$multiple = 'multiple="multiple"';
+					}
+					$html .= '<select ' . ( ( $field['required'] ) ? 'required="required"' : '' ) . ' name="' . esc_attr( $option_name ) . '" id="' . esc_attr( $field['id'] ) . '" ' . $multiple . '>';
+					$data = array();
+					if ( ! empty( $option_value ) ) {
+						foreach ( $option_value as $product_id ) {
+							$product = sunshine_get_product( $product_id );
+							$html .= '<option value="' . esc_attr( $product_id ) . '" selected="selected">' . esc_html( $product->get_name() ) . '</option>';
+						}
+					}
+					$html .= '</select> ';
+					$html .= '
+						<script type="text/javascript">jQuery(function () {
+
+							jQuery("#' . esc_js( $field['id'] ) . '").select2({
+								width: "350px",
+								placeholder: "' . esc_js( $field['placeholder'] ) . '",
+								ajax: {
+						            url: ajaxurl,
+						            dataType: "json",
+						            delay: 250,
+						            data: function(params) {
+						                return {
+						                    action: "sunshine_search_products",
+						                    search: params.term,
+											security: "' . wp_create_nonce( 'sunshine_search_products' ) . '",
 						                };
 						            },
 						            processResults: function(data) {

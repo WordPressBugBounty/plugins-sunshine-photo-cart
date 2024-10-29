@@ -4,6 +4,7 @@ add_action( 'wp_ajax_sunshine_modal_display', 'sunshine_modal_display' );
 function sunshine_modal_display() {
 
 	if ( empty( $_POST['hook'] ) || empty( $_POST['security'] ) || ! wp_verify_nonce( $_POST['security'], 'sunshinephotocart' ) ) {
+		SPC()->log( __( 'Failed modal security check', 'sunshine-photo-cart' ) . ': ' . print_r( $_POST, 1 ) );
 		wp_send_json_error( array( 'reason' => __( 'Failed security check', 'sunshine-photo-cart' ) ) );
 	}
 

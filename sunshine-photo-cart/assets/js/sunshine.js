@@ -595,6 +595,10 @@ jQuery( document ).ready(function($){
 				            var $select = $(this);
 				            var currentValue = parseInt($select.val());
 				            var maxOptionValue = maxImages - currentTotal + currentValue;
+							var maxSingleImage = $select.data( 'max' );
+							if ( maxSingleImage ) {
+								maxOptionValue = maxSingleImage;
+							}
 
 							/*
 							if ( maxOptionValue <= 0 ) {

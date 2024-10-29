@@ -6,6 +6,7 @@ class SPC_Cart_Item {
 	protected $object_id;
 	protected $image_id;
 	protected $image;
+	protected $image_url;
 	protected $type;
 	protected $name = '';
 	protected $product_id;
@@ -19,16 +20,16 @@ class SPC_Cart_Item {
 	protected $price = 0.00;
 	protected $options;
 	protected $options_total;
-	protected $discount = 0.00;
+	protected $discount       = 0.00;
 	protected $discount_price = 0.00;
-	protected $taxable = false;
-	protected $tax = 0.00;
-	protected $taxable_total = 0.00;
-	protected $tax_total = 0.00;
-	protected $subtotal = 0.00;
-	protected $total = 0.00;
-	protected $comments = '';
-	protected $meta = array();
+	protected $taxable        = false;
+	protected $tax            = 0.00;
+	protected $taxable_total  = 0.00;
+	protected $tax_total      = 0.00;
+	protected $subtotal       = 0.00;
+	protected $total          = 0.00;
+	protected $comments       = '';
+	protected $meta           = array();
 	protected $hash;
 
 	function __construct( $item = array() ) {
@@ -51,9 +52,9 @@ class SPC_Cart_Item {
 
 		if ( ! empty( $item['image_id'] ) ) {
 			$this->image_id = $item['image_id'];
-			$image = sunshine_get_image( $item['image_id'] );
+			$image          = sunshine_get_image( $item['image_id'] );
 			if ( $image->exists() ) {
-				$this->image = $image;
+				$this->image   = $image;
 				$this->gallery = $this->image->gallery;
 				if ( $this->gallery ) {
 					$this->gallery_id = $this->image->gallery->get_id();
@@ -61,9 +62,13 @@ class SPC_Cart_Item {
 			}
 		}
 
+		if ( ! empty( $item['image_url'] ) ) {
+			$this->image_url = $item['image_url'];
+		}
+
 		if ( ! empty( $item['product_id'] ) && ! empty( $item['price_level'] ) ) {
 			$this->product_id = $item['product_id'];
-			$product = sunshine_get_product( $item['product_id'], $item['price_level'] );
+			$product          = sunshine_get_product( $item['product_id'], $item['price_level'] );
 			if ( $product->exists() ) {
 				$this->product = $product;
 				$this->name    = $product->get_display_name();
@@ -101,7 +106,7 @@ class SPC_Cart_Item {
 		} else {
 			$discount = apply_filters( 'sunshine_cart_item_discount', $this->discount, $this );
 			if ( $discount ) {
-				$this->discount = floatval( $discount );
+				$this->discount       = floatval( $discount );
 				$this->discount_price = floatval( $this->price - $this->discount );
 			}
 		}
@@ -119,36 +124,35 @@ class SPC_Cart_Item {
 		// Do all the magic to determine actual price and tax based on store settings.
 		if ( ! empty( $item['tax'] ) ) {
 			$this->tax = $item['tax'];
-		}
-		else {
+		} else {
 			$tax_rate = SPC()->cart->get_tax_rate();
 			// Only do if we have a price, product is taxable and we have a matched tax rate.
 			if ( $this->price && $this->taxable && ! empty( $tax_rate ) ) {
 				$price_has_tax = SPC()->get_option( 'price_has_tax' );
 				if ( 'yes' === $price_has_tax ) {
 					// Take out tax from current price and lower price adjusting for tax amount.
-					$new_price = $this->price / ( $tax_rate['rate'] + 1 );
-					$new_price = number_format( ceil( $new_price * 100 ) / 100, 2 );
-					$this->tax = $this->price - $new_price;
+					$new_price       = $this->price / ( $tax_rate['rate'] + 1 );
+					$new_price       = number_format( ceil( $new_price * 100 ) / 100, 2 );
+					$this->tax       = $this->price - $new_price;
 					$this->tax_total = $this->tax * $this->qty;
-					$this->price = $new_price;
+					$this->price     = $new_price;
 
 					if ( $this->options_total ) {
-						$new_options_total = $this->options_total / ( $tax_rate['rate'] + 1 );
-						$new_price = number_format( ceil( $new_options_total * 100 ) / 100, 2 );
-						$this->tax += $this->options_total - $new_options_total;
-						$this->tax_total = $this->tax * $this->qty;
+						$new_options_total   = $this->options_total / ( $tax_rate['rate'] + 1 );
+						$new_price           = number_format( ceil( $new_options_total * 100 ) / 100, 2 );
+						$this->tax          += $this->options_total - $new_options_total;
+						$this->tax_total     = $this->tax * $this->qty;
 						$this->options_total = $new_options_total;
 					}
 
 					$this->taxable_total = ( $this->price + $this->options_total - $this->discount ) * $this->qty;
-					$this->total = ( ( $this->price + $this->options_total - $this->discount ) * $this->qty );
-					$this->subtotal = ( $this->price + $this->options_total ) * $this->qty;
+					$this->total         = ( ( $this->price + $this->options_total - $this->discount ) * $this->qty );
+					$this->subtotal      = ( $this->price + $this->options_total ) * $this->qty;
 
 				} else {
 					// Need to calculate from price whenever tax is not included
-					$this->tax = ( $this->price + $this->options_total ) * $tax_rate['rate'];
-					$this->tax_total = $this->tax * $this->qty;
+					$this->tax           = ( $this->price + $this->options_total ) * $tax_rate['rate'];
+					$this->tax_total     = $this->tax * $this->qty;
 					$this->taxable_total = ( $this->price + $this->options_total - $this->discount ) * $this->qty;
 				}
 			}
@@ -181,7 +185,7 @@ class SPC_Cart_Item {
 
 	public function set_total() {
 		$this->subtotal = max( 0, ( floatval( $this->price ) + floatval( $this->options_total ) ) * $this->qty );
-		$this->total = max( 0, floatval( $this->subtotal - ( $this->discount * $this->qty ) ) );
+		$this->total    = max( 0, floatval( $this->subtotal - ( $this->discount * $this->qty ) ) );
 	}
 
 	public function get_image_id() {
@@ -209,8 +213,11 @@ class SPC_Cart_Item {
 
 	public function get_gallery_hierarchy( $separator = '>' ) {
 
-		$result = '';
+		$result  = '';
 		$gallery = $this->get_gallery();
+		if ( empty( $gallery ) ) {
+			return false;
+		}
 		if ( $gallery->exists() && $gallery->get_parent_gallery_id() > 0 ) {
 			$ancestors      = get_ancestors( $gallery->get_id(), 'sunshine-gallery', 'post_type' );
 			$ancestor_items = array( $gallery->get_name() );
@@ -218,7 +225,7 @@ class SPC_Cart_Item {
 				$ancestor_items[] = get_the_title( $ancestor_id );
 			}
 			$ancestor_items = array_reverse( $ancestor_items );
-			$result = join( ' ' . $separator . ' ', $ancestor_items );
+			$result         = join( ' ' . $separator . ' ', $ancestor_items );
 		} else {
 			$result = $gallery->get_name();
 		}
@@ -248,6 +255,9 @@ class SPC_Cart_Item {
 	}
 
 	public function get_image_url( $size = 'sunshine-thumbnail' ) {
+		if ( ! empty( $this->image_url ) ) {
+			return $this->image_url;
+		}
 		$image_url = '';
 		if ( ! empty( $this->image ) ) {
 			$image_url = $this->image->get_image_url( $size );
@@ -328,7 +338,7 @@ class SPC_Cart_Item {
 
 	public function get_price_formatted() {
 		$reg_price = $this->get_regular_price();
-		$price = $this->get_price();
+		$price     = $this->get_price();
 		if ( $this->discount > 0 ) {
 			$price_formatted = '<s>' . sunshine_price( $reg_price ) . '</s> ' . sunshine_get_price_to_display( $price, $this->tax );
 		} else {
@@ -342,7 +352,7 @@ class SPC_Cart_Item {
 	}
 
 	public function get_regular_price_formatted() {
-		$price = $this->get_price();
+		$price           = $this->get_price();
 		$price_formatted = sunshine_get_price_to_display( $price, $this->tax );
 		return $price_formatted;
 	}
@@ -397,9 +407,9 @@ class SPC_Cart_Item {
 
 	public function get_subtotal_formatted() {
 		$reg_subtotal = $this->get_regular_price() * $this->qty;
-		$subtotal = $this->get_subtotal();
+		$subtotal     = $this->get_subtotal();
 		if ( $this->discount > 0 ) {
-			$price_formatted = '<s>' . sunshine_price( $reg_subtotal ) . '</s> ' . sunshine_get_price_to_display( $subtotal );
+			$price_formatted = '<s>' . sunshine_price( $reg_subtotal ) . '</s> ' . sunshine_get_price_to_display( $subtotal - $this->get_discount_total() );
 		} else {
 			$price_formatted = sunshine_get_price_to_display( $subtotal, $this->tax_total );
 		}
@@ -407,7 +417,7 @@ class SPC_Cart_Item {
 	}
 
 	public function get_regular_subtotal_formatted() {
-		$subtotal = $this->get_subtotal();
+		$subtotal           = $this->get_subtotal();
 		$subtotal_formatted = sunshine_get_price_to_display( $subtotal, $this->tax_total );
 		return $subtotal_formatted;
 	}
@@ -530,8 +540,15 @@ class SPC_Cart_Item {
 		return false;
 	}
 
-	public function update() {
-
+	public function update_meta_value( $key, $value ) {
+		$this->meta[ $key ] = $value;
+		$cart               = SPC()->cart->get_cart();
+		foreach ( $cart as $item ) {
+			if ( $item['hash'] == $this->get_hash() ) {
+				SPC()->cart->update_meta_value_by_hash( $item['hash'], $key, $value );
+				break;
+			}
+		}
 	}
 
 }

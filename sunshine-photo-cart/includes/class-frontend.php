@@ -18,7 +18,7 @@ class SPC_Frontend {
 		add_action( 'wp', array( $this, 'admin_bar' ) );
 		add_action( 'wp', array( $this, 'remove_canonical' ), 99 );
 		add_filter( 'body_class', array( $this, 'body_class' ) );
-		//add_filter( 'the_title', array( $this, 'the_title' ), 10, 2 );
+		// add_filter( 'the_title', array( $this, 'the_title' ), 10, 2 );
 		add_filter( 'protected_title_format', array( $this, 'protected_title_format' ), 10, 2 );
 		add_filter( 'private_title_format', array( $this, 'private_title_format' ), 10, 2 );
 		add_filter( 'sunshine_main_menu', array( $this, 'build_main_menu' ), 10 );
@@ -28,7 +28,7 @@ class SPC_Frontend {
 		add_action( 'wp_head', array( $this, 'custom_css' ), 999 );
 		add_action( 'wp_footer', array( $this, 'protection' ) );
 		add_action( 'wp_footer', array( $this, 'version_output' ), 9999 );
-		//add_action( 'template_redirect', array( $this, 'can_view_gallery' ) );
+		// add_action( 'template_redirect', array( $this, 'can_view_gallery' ) );
 		add_action( 'template_redirect', array( $this, 'can_view_image' ) );
 		add_action( 'template_redirect', array( $this, 'can_view_order' ) );
 		add_action( 'template_redirect', array( $this, 'can_use_cart' ) );
@@ -41,11 +41,12 @@ class SPC_Frontend {
 		add_action( 'wp', array( $this, 'check_account_endpoints' ) );
 		add_action( 'wp', array( $this, 'theme_functions' ) );
 		add_action( 'template_redirect', array( $this, 'no_cache' ) );
+		add_action( 'post_thumbnail_size', array( $this, 'post_thumbnail_size' ), 10, 2 );
 
 		// Filter the_content for FSE themes since full template_include fails with get_header()
 		// TODO: Somehow create a single-gallery.html FSE template like WooCommerce does
 		if ( ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() && 'theme' == SPC()->get_option( 'theme' ) ) || SPC()->get_option( 'page_builder' ) ) {
-            add_filter( 'the_content', array( $this, 'the_content' ) );
+			add_filter( 'the_content', array( $this, 'the_content' ) );
 		} else {
 			add_filter( 'template_include', array( $this, 'template_include' ), 999 );
 		}
@@ -70,15 +71,15 @@ class SPC_Frontend {
 		$theme = SPC()->get_option( 'theme' );
 		if ( 'theme' != $theme ) {
 			if ( is_sunshine_page( 'home' ) ) {
-				$template         = sunshine_locate_template( 'home' );
+				$template = sunshine_locate_template( 'home' );
 			} elseif ( is_sunshine_page( 'cart' ) ) {
-				$template         = sunshine_locate_template( 'cart' );
+				$template = sunshine_locate_template( 'cart' );
 			} elseif ( is_sunshine_page( 'checkout' ) ) {
-				$template         = sunshine_locate_template( 'checkout' );
+				$template = sunshine_locate_template( 'checkout' );
 			} elseif ( is_sunshine_page( 'favorites' ) ) {
-				$template         = sunshine_locate_template( 'favorites' );
+				$template = sunshine_locate_template( 'favorites' );
 			} elseif ( is_sunshine_page( 'account' ) && ! SPC()->frontend->is_order() ) {
-				$template         = sunshine_locate_template( 'account' );
+				$template = sunshine_locate_template( 'account' );
 			}
 		}
 
@@ -175,7 +176,7 @@ class SPC_Frontend {
 				$url = add_query_arg( 'redirect', $order->get_permalink(), $url );
 				wp_safe_redirect( $url );
 				exit;
-				//$this->die();
+				// $this->die();
 			}
 		} elseif ( get_query_var( SPC()->get_option( 'endpoint_order_received', 'receipt' ) ) ) {
 			$order_id = get_query_var( SPC()->get_option( 'endpoint_order_received', 'receipt' ) );
@@ -193,12 +194,12 @@ class SPC_Frontend {
 
 		if ( isset( $_GET['sunshine_search'] ) ) {
 			$this->search_term = sanitize_text_field( $_GET['sunshine_search'] );
-			$args = array(
+			$args              = array(
 				's' => $this->search_term,
 			);
 			if ( $this->is_gallery() ) {
 				$args['post_parent__in'] = array( $this->current_gallery->get_id() );
-				$descendants = sunshine_get_gallery_descendants( $this->current_gallery->get_id() );
+				$descendants             = sunshine_get_gallery_descendants( $this->current_gallery->get_id() );
 				if ( ! empty( $descendants ) ) {
 					foreach ( $descendants as $descendant ) {
 						$descendant_gallery = sunshine_get_gallery( $descendant );
@@ -208,7 +209,7 @@ class SPC_Frontend {
 					}
 				}
 			}
-			$args = apply_filters( 'sunshine_search_args', $args );
+			$args                 = apply_filters( 'sunshine_search_args', $args );
 			$this->search_results = sunshine_get_images( $args );
 			do_action( 'sunshine_search', $this->search_term, $this->search_results );
 		}
@@ -388,10 +389,10 @@ class SPC_Frontend {
 				array(
 					'ajax_url' => admin_url( 'admin-ajax.php' ),
 					'security' => wp_create_nonce( 'sunshinephotocart' ),
-					'lang' => array(
-						'error' => __( 'Sorry, there was an error with your request', 'sunshine-photo-cart' ),
+					'lang'     => array(
+						'error'      => __( 'Sorry, there was an error with your request', 'sunshine-photo-cart' ),
 						'max_images' => __( 'You have already selected the maximum number of photos allowed', 'sunshine-photo-cart' ),
-					)
+					),
 				)
 			);
 
@@ -408,7 +409,7 @@ class SPC_Frontend {
 			}
 
 			// Load masonry if needed
-			if ( is_sunshine() && ( SPC()->get_option( 'gallery_layout' ) == 'masonry'  || SPC()->get_option( 'image_layout' ) == 'masonry' ) ) {
+			if ( is_sunshine() && ( SPC()->get_option( 'gallery_layout' ) == 'masonry' || SPC()->get_option( 'image_layout' ) == 'masonry' ) ) {
 				wp_enqueue_script( 'sunshine-photo-cart-masonry', SUNSHINE_PHOTO_CART_URL . 'assets/js/masonry.js', '', SUNSHINE_PHOTO_CART_VERSION, true );
 				wp_localize_script(
 					'sunshine-photo-cart-masonry',
@@ -474,7 +475,7 @@ class SPC_Frontend {
 					$selected = ' sunshine--selected';
 				}
 				$menu[25] = array(
-					'name'  => get_the_title( SPC()->get_option( 'page_favorites' ) ),
+					'name'    => get_the_title( SPC()->get_option( 'page_favorites' ) ),
 					'after_a' => $count,
 					'url'     => sunshine_get_page_permalink( 'favorites' ),
 					'class'   => 'sunshine--favorites' . $selected,
@@ -483,11 +484,11 @@ class SPC_Frontend {
 		} else {
 			$menu[100] = array(
 				'name'    => __( 'Login', 'sunshine-photo-cart' ),
-				'url'   => sunshine_get_account_endpoint_url( 'login' ),
+				'url'     => sunshine_get_account_endpoint_url( 'login' ),
 				'class'   => 'sunshine--login',
 				'a_class' => 'sunshine--open-modal',
 				'attr'    => array(
-					'data-hook' => 'login',
+					'data-hook'     => 'login',
 					'aria-haspopup' => 'dialog',
 				),
 			);
@@ -498,7 +499,7 @@ class SPC_Frontend {
 					'class'   => 'sunshine--signup',
 					'a_class' => 'sunshine--open-modal',
 					'attr'    => array(
-						'data-hook' => 'signup',
+						'data-hook'     => 'signup',
 						'aria-haspopup' => 'dialog',
 					),
 				);
@@ -574,7 +575,7 @@ class SPC_Frontend {
 				$menu[10] = array(
 					'name'    => __( 'Favorite', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
 					'class'   => 'sunshine--favorite',
-					//'url'     => '#favorite',
+					// 'url'     => '#favorite',
 					'a_class' => 'sunshine--add-to-favorites',
 					'attr'    => array(
 						'data-image-id' => $image->get_id(),
@@ -583,41 +584,41 @@ class SPC_Frontend {
 			} else {
 				$menu[10] = array(
 					'name'    => __( 'Favorite', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
-					//'url'     => '#favorite',
+					// 'url'     => '#favorite',
 					'class'   => 'sunshine--favorite',
 					'a_class' => 'sunshine--open-modal',
 					'attr'    => array(
 						'data-image-id' => $image->get_id(),
-						'data-hook'   => 'require_login',
+						'data-hook'     => 'require_login',
 						'data-after'    => 'sunshine_add_favorite',
 					),
 				);
 			}
 		}
 
-		if ( ! $image->products_disabled() && ! SPC()->get_option( 'proofing', false ) ) {
+		if ( $image->can_purchase() && ! SPC()->get_option( 'proofing', false ) ) {
 			if ( SPC()->get_option( 'products_require_account' ) && ! is_user_logged_in() ) {
 				$menu[20] = array(
 					'name'    => __( 'Purchase options', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
-					//'url'     => '#purchase',
+					// 'url'     => '#purchase',
 					'class'   => 'sunshine--purchase',
 					'a_class' => 'sunshine--open-modal',
 					'attr'    => array(
 						'data-image-id' => $image->get_id(),
-						'data-hook'   => 'require_login',
-						'data-reason' => 'products_require_account',
+						'data-hook'     => 'require_login',
+						'data-reason'   => 'products_require_account',
 						'aria-haspopup' => 'dialog',
 					),
 				);
 			} else {
 				$menu[20] = array(
 					'name'    => __( 'Purchase options', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
-					//'url'     => '#purchase',
+					// 'url'     => '#purchase',
 					'class'   => 'sunshine--purchase',
 					'a_class' => 'sunshine--open-modal',
 					'attr'    => array(
 						'data-image-id' => $image->get_id(),
-						'data-hook'   => 'add_to_cart',
+						'data-hook'     => 'add_to_cart',
 						'aria-haspopup' => 'dialog',
 					),
 				);
@@ -632,13 +633,13 @@ class SPC_Frontend {
 			}
 			$menu[30] = array(
 				'name'    => __( 'Comments', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
-				//'url'     => $image->get_permalink() . '#comments',
+				// 'url'     => $image->get_permalink() . '#comments',
 				'class'   => 'sunshine--comments',
 				'after_a' => $after_a,
 				'a_class' => 'sunshine--open-modal',
 				'attr'    => array(
 					'data-image-id' => $image->get_id(),
-					'data-hook'   => 'comments',
+					'data-hook'     => 'comments',
 					'aria-haspopup' => 'dialog',
 				),
 			);
@@ -647,12 +648,12 @@ class SPC_Frontend {
 		if ( ! SPC()->get_option( 'disable_image_sharing' ) && $image->allow_image_sharing() ) {
 			$menu[50] = array(
 				'name'    => __( 'Share', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
-				//'url'     => $image->get_permalink() . '#share',
+				// 'url'     => $image->get_permalink() . '#share',
 				'class'   => 'sunshine--share',
 				'a_class' => 'sunshine--open-modal',
 				'attr'    => array(
 					'data-image-id' => $image->get_id(),
-					'data-hook'   => 'share',
+					'data-hook'     => 'share',
 					'aria-haspopup' => 'dialog',
 				),
 			);
@@ -720,12 +721,12 @@ class SPC_Frontend {
 					),
 				);
 
-				$url = sunshine_get_page_url( 'favorites' );
-				$url = wp_nonce_url( $url, 'sunshine_clear_favorites', 'clear_favorites' );
+				$url      = sunshine_get_page_url( 'favorites' );
+				$url      = wp_nonce_url( $url, 'sunshine_clear_favorites', 'clear_favorites' );
 				$menu[11] = array(
-					'name'    => __( 'Clear All Favorites', 'sunshine-photo-cart' ),
-					'url' => $url,
-					'class'   => 'sunshine--favorites-clear',
+					'name'  => __( 'Clear All Favorites', 'sunshine-photo-cart' ),
+					'url'   => $url,
+					'class' => 'sunshine--favorites-clear',
 				);
 
 			}
@@ -736,26 +737,25 @@ class SPC_Frontend {
 				if ( empty( $gallery ) ) {
 					return;
 				}
-				$url = $gallery->get_permalink();
+				$url                  = $gallery->get_permalink();
 				$current_gallery_page = SPC()->session->get( 'current_gallery_page' );
 				if ( ! empty( $current_gallery_page ) ) {
 					$url = add_query_arg( 'pagination', $current_gallery_page[1], $url );
 				}
 				$menu[12] = array(
-					'name'    => sprintf( __( 'Return to gallery "%s"', 'sunshine-photo-cart' ), esc_html( $gallery->get_name() ) ),
-					'class'   => 'sunshine--gallery-return',
-					'url'     => $url,
+					'name'  => sprintf( __( 'Return to gallery "%s"', 'sunshine-photo-cart' ), esc_html( $gallery->get_name() ) ),
+					'class' => 'sunshine--gallery-return',
+					'url'   => $url,
 				);
 
 			}
-
 		}
 
 		if ( $this->is_order() ) {
 			$menu[20] = array(
-				'name'    => __( 'View invoice', 'sunshine-photo-cart' ),
-				'class'   => 'sunshine--icon--purchase-order',
-				'url'     => $this->current_order->get_invoice_permalink(),
+				'name'  => __( 'View invoice', 'sunshine-photo-cart' ),
+				'class' => 'sunshine--icon--purchase-order',
+				'url'   => $this->current_order->get_invoice_permalink(),
 			);
 		}
 
@@ -993,17 +993,20 @@ class SPC_Frontend {
 			return false;
 		}
 
-		$password = sanitize_text_field( $_POST['sunshine_password'] );
-		$galleries = sunshine_get_galleries(array(
-			'meta_query' => array(
-				array(
-					'key' => 'password',
-					'value' => $password,
-				)
-			)
-		), 'all' );
+		$password  = sanitize_text_field( $_POST['sunshine_password'] );
+		$galleries = sunshine_get_galleries(
+			array(
+				'meta_query' => array(
+					array(
+						'key'   => 'password',
+						'value' => $password,
+					),
+				),
+			),
+			'all'
+		);
 		if ( ! empty( $galleries ) ) {
-			$gallery = array_shift( $galleries );
+			$gallery            = array_shift( $galleries );
 			$password_galleries = SPC()->session->get( 'gallery_passwords' );
 			if ( is_array( $password_galleries ) ) {
 				$password_galleries[] = $gallery->get_id();
@@ -1041,7 +1044,7 @@ class SPC_Frontend {
 
 		$redirect   = false;
 		$gallery_id = intval( $_POST['sunshine_gallery_id'] );
-		$gallery = sunshine_get_gallery( $gallery_id );
+		$gallery    = sunshine_get_gallery( $gallery_id );
 
 		if ( isset( $_POST['sunshine_gallery_password'] ) ) {
 
@@ -1076,7 +1079,10 @@ class SPC_Frontend {
 
 			$email = sanitize_email( $_POST['sunshine_gallery_email'] );
 			if ( is_email( $email ) ) {
-				$gallery_emails   = SPC()->session->get( 'gallery_emails' );
+				$gallery_emails = SPC()->session->get( 'gallery_emails' );
+				if ( empty( $gallery_emails ) ) {
+					$gallery_emails = array();
+				}
 				$gallery_emails[] = $gallery_id;
 				SPC()->session->set( 'gallery_emails', $gallery_emails );
 				SPC()->session->set( 'email', $email );
@@ -1091,7 +1097,6 @@ class SPC_Frontend {
 				SPC()->notices->add( __( 'Not a valid email address', 'sunshine-photo-cart' ), 'error' );
 				SPC()->log( __( 'Invalid email address provided for ' . $gallery->get_name() . ': ' . $email, 'sunshine-photo-cart' ) );
 			}
-
 		}
 
 		if ( $redirect ) {
@@ -1125,6 +1130,16 @@ class SPC_Frontend {
 			define( 'DONOTCACHEPAGE', true );
 		}
 	}
+
+	public function post_thumbnail_size( $size, $post_id ) {
+		// Check if the post type is the one you want to target
+		if ( get_post_type( $post_id ) === 'sunshine-gallery' ) {
+			$size = 'sunshine-large'; // Replace with your desired image size
+		}
+
+		return $size;
+	}
+
 
 }
 ?>

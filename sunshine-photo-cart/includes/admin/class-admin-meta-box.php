@@ -509,7 +509,8 @@ class Sunshine_Admin_Meta_Boxes {
 					            data: function(params) {
 					                return {
 					                    action: "sunshine_search_users",
-					                    search: params.term
+					                    search: params.term,
+										security: "' . wp_create_nonce( 'sunshine_search_users' ) . '",
 					                };
 					            },
 					            processResults: function(data) {
@@ -969,6 +970,10 @@ class Sunshine_Admin_Meta_Boxes {
 
 	public function search_users() {
 
+		if ( ! wp_verify_nonce( $_REQUEST['security'], 'sunshine_search_users' ) || ! current_user_can( 'sunshine_manage_options' ) ) {
+			return false;
+		}
+
 		$search = sanitize_text_field( $_GET['search'] );
 
 	    $args = array(
@@ -1031,7 +1036,7 @@ class Sunshine_Admin_Meta_Boxes {
 			's' => $search,
 			'number' => -1,
 		);
-		$galleries = sunshine_get_galleries( $args );
+		$galleries = sunshine_get_galleries( $args, 'all' );
 
 		$data = array();
 

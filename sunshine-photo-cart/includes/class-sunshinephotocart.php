@@ -249,8 +249,8 @@ final class Sunshine_Photo_Cart {
 		}
 
 		if ( is_admin() || wp_doing_cron() ) {
-			$this->plans['pro'] = new SPC_License( 44, 'Sunshine Photo Cart Pro', SUNSHINE_PHOTO_CART_VERSION, '', 'pro' );
-			$this->plans['plus'] = new SPC_License( 129771, 'Sunshine Photo Cart Plus', SUNSHINE_PHOTO_CART_VERSION, '', 'plus' );
+			$this->plans['pro']   = new SPC_License( 44, 'Sunshine Photo Cart Pro', SUNSHINE_PHOTO_CART_VERSION, '', 'pro' );
+			$this->plans['plus']  = new SPC_License( 129771, 'Sunshine Photo Cart Plus', SUNSHINE_PHOTO_CART_VERSION, '', 'plus' );
 			$this->plans['basic'] = new SPC_License( 129769, 'Sunshine Photo Cart Basic', SUNSHINE_PHOTO_CART_VERSION, '', 'basic' );
 			foreach ( $this->plans as $plan ) {
 				if ( $plan->is_valid() ) {
@@ -368,7 +368,7 @@ final class Sunshine_Photo_Cart {
 			'map_meta_cap'        => true,
 			'show_in_rest'        => true,
 			'rewrite'             => array(
-				'slug' => $base_path . SPC()->get_option( 'endpoint_gallery', 'gallery' ),
+				'slug'       => $base_path . SPC()->get_option( 'endpoint_gallery', 'gallery' ),
 				'with_front' => false,
 			),
 			'supports'            => array( 'title', 'editor', 'page-attributes', 'thumbnail' ),
@@ -427,8 +427,8 @@ final class Sunshine_Photo_Cart {
 			'separate_items_with_commas' => __( 'Separate categories with commas', 'sunshine-photo-cart' ),
 			'choose_from_most_used'      => __( 'Choose from the most used categories', 'sunshine-photo-cart' ),
 			'popular_items'              => null,
-			'name_field_description' => '',
-			'desc_field_description' => '',
+			'name_field_description'     => '',
+			'desc_field_description'     => '',
 		);
 		$args   = array(
 			'label'              => __( 'Product Category', 'sunshine-photo-cart' ),
@@ -450,23 +450,23 @@ final class Sunshine_Photo_Cart {
 		register_taxonomy( 'sunshine-product-category', 'sunshine-product', $args );
 
 		$labels = array(
-			'name'              => __( 'Price Levels', 'sunshine-photo-cart' ),
-			'singular_name'     => __( 'Price Level', 'sunshine-photo-cart' ),
-			'search_items'      => __( 'Search Price Levels', 'sunshine-photo-cart' ),
-			'all_items'         => __( 'All Price Levels', 'sunshine-photo-cart' ),
-			'parent_item'       => __( 'Parent Price Level', 'sunshine-photo-cart' ),
-			'parent_item_colon' => __( 'Parent Price Level:', 'sunshine-photo-cart' ),
-			'edit_item'         => __( 'Edit Price Level', 'sunshine-photo-cart' ),
-			'update_item'       => __( 'Update Price Level', 'sunshine-photo-cart' ),
-			'add_new_item'      => __( 'Add New Price Level', 'sunshine-photo-cart' ),
-			'new_item_name'     => __( 'New Price Level', 'sunshine-photo-cart' ),
+			'name'                   => __( 'Price Levels', 'sunshine-photo-cart' ),
+			'singular_name'          => __( 'Price Level', 'sunshine-photo-cart' ),
+			'search_items'           => __( 'Search Price Levels', 'sunshine-photo-cart' ),
+			'all_items'              => __( 'All Price Levels', 'sunshine-photo-cart' ),
+			'parent_item'            => __( 'Parent Price Level', 'sunshine-photo-cart' ),
+			'parent_item_colon'      => __( 'Parent Price Level:', 'sunshine-photo-cart' ),
+			'edit_item'              => __( 'Edit Price Level', 'sunshine-photo-cart' ),
+			'update_item'            => __( 'Update Price Level', 'sunshine-photo-cart' ),
+			'add_new_item'           => __( 'Add New Price Level', 'sunshine-photo-cart' ),
+			'new_item_name'          => __( 'New Price Level', 'sunshine-photo-cart' ),
 			'name_field_description' => '',
 			'desc_field_description' => '',
 		);
 		$args   = array(
 			'label'              => __( 'Price Level', 'sunshine-photo-cart' ),
 			'labels'             => $labels,
-			'capabilities'    	=> array(
+			'capabilities'       => array(
 				'manage_terms' => 'edit_sunshine_products',
 				'edit_terms'   => 'edit_sunshine_products',
 				'delete_terms' => 'edit_sunshine_products',
@@ -511,21 +511,21 @@ final class Sunshine_Photo_Cart {
 			'query_var'           => true,
 			'capability_type'     => 'sunshine_order',
 			'capabilities'        => array(
-		        'edit_post'              => 'edit_sunshine_order',
-		        'read_post'              => 'read_sunshine_order',
-		        'delete_post'            => 'delete_sunshine_order',
-		        'edit_posts'             => 'edit_sunshine_orders',
-		        'edit_others_posts'      => 'edit_others_sunshine_orders',
-		        'publish_posts'          => 'publish_sunshine_orders',
-		        'read_private_posts'     => 'read_private_sunshine_orders',
-		        'delete_posts'           => 'delete_sunshine_orders',
-		        'delete_private_posts'   => 'delete_private_sunshine_orders',
-		        'delete_published_posts' => 'delete_published_sunshine_orders',
-		        'delete_others_posts'    => 'delete_others_sunshine_orders',
-		        'edit_private_posts'     => 'edit_private_sunshine_orders',
-		        'edit_published_posts'   => 'edit_published_sunshine_orders',
-		        'create_posts'           => 'do_not_allow',
-		    ),
+				'edit_post'              => 'edit_sunshine_order',
+				'read_post'              => 'read_sunshine_order',
+				'delete_post'            => 'delete_sunshine_order',
+				'edit_posts'             => 'edit_sunshine_orders',
+				'edit_others_posts'      => 'edit_others_sunshine_orders',
+				'publish_posts'          => 'publish_sunshine_orders',
+				'read_private_posts'     => 'read_private_sunshine_orders',
+				'delete_posts'           => 'delete_sunshine_orders',
+				'delete_private_posts'   => 'delete_private_sunshine_orders',
+				'delete_published_posts' => 'delete_published_sunshine_orders',
+				'delete_others_posts'    => 'delete_others_sunshine_orders',
+				'edit_private_posts'     => 'edit_private_sunshine_orders',
+				'edit_published_posts'   => 'edit_published_sunshine_orders',
+				'create_posts'           => 'do_not_allow',
+			),
 			'map_meta_cap'        => false,
 			'has_archive'         => false,
 			'hierarchical'        => false,
@@ -552,12 +552,12 @@ final class Sunshine_Photo_Cart {
 			'show_ui'           => true,
 			'query_var'         => true,
 			'show_in_nav_menus' => false,
-			'capabilities' => array(
+			'capabilities'      => array(
 				'manage_terms' => 'manage_sunshine_order_statuses',
-				'edit_terms' => 'edit_sunshine_order_statuses',
+				'edit_terms'   => 'edit_sunshine_order_statuses',
 				'delete_terms' => 'delete_sunshine_order_statuses',
 				'assign_terms' => 'assign_sunshine_order_statuses',
-			)
+			),
 		);
 		register_taxonomy( 'sunshine-order-status', 'sunshine-order', $args );
 
@@ -575,12 +575,12 @@ final class Sunshine_Photo_Cart {
 		}
 
 		// Define Sunshine's thumbnail image size
-		$thumbnail_size = $this->get_option( 'thumbnail_size' );
+		$thumbnail_size   = $this->get_option( 'thumbnail_size' );
 		$thumbnail_width  = ( ! empty( $thumbnail_size['w'] ) ) ? $thumbnail_size['w'] : 600;
-		$thumbnail_height  = ( ! empty( $thumbnail_size['h'] ) ) ? $thumbnail_size['h'] : 450;
-		$large_size = $this->get_option( 'large_size' );
-		$large_width  = ( ! empty( $large_size['w'] ) ) ? $large_size['w'] : 1200;
-		$large_height  = (! empty(  $large_size['h'] ) ) ? $large_size['h'] : 1200;
+		$thumbnail_height = ( ! empty( $thumbnail_size['h'] ) ) ? $thumbnail_size['h'] : 450;
+		$large_size       = $this->get_option( 'large_size' );
+		$large_width      = ( ! empty( $large_size['w'] ) ) ? $large_size['w'] : 1200;
+		$large_height     = ( ! empty( $large_size['h'] ) ) ? $large_size['h'] : 1200;
 		add_image_size( 'sunshine-thumbnail', $thumbnail_width, $thumbnail_height, $this->get_option( 'thumbnail_crop' ) );
 		add_image_size( 'sunshine-large', $large_width, $large_height, false );
 

@@ -35,7 +35,6 @@ function sunshine_update_cart() {
 			}
 		}
 
-		SPC()->cart->update_cart();
 		SPC()->notices->add( __( 'Cart updated', 'sunshine-photo-cart' ) );
 		do_action( 'sunshine_cart_update' );
 

@@ -11,7 +11,7 @@
 	</div>
 	<div id="sunshine--image--add-to-cart--content">
 
-		<div id="sunshine--image--add-to-cart--nav" role="tablist">
+		<div id="sunshine--image--add-to-cart--nav" class="sunshine--modal--tablist--nav" role="tablist">
 			<?php
 			$categories = sunshine_get_product_categories( $image->get_price_level(), sunshine_get_allowed_product_types_for_image() );
 			if ( ! empty( $categories ) && count( $categories ) > 1 ) {

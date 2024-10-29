@@ -280,6 +280,44 @@ function sunshine_galleries_columns_content( $column, $post_id ) {
 	}
 }
 
+function ajax_load_edit_image_modal() {
+	// Check if the attachment ID is passed
+	if ( isset( $_POST['attachment_id'] ) && ! empty( $_POST['attachment_id'] ) ) {
+		$attachment_id = intval( $_POST['attachment_id'] );
+		// Get the attachment
+		$attachment = get_post( $attachment_id );
+
+		if ( $attachment ) {
+			// Capture the output of get_media_item()
+			$modal_content = get_media_item( $attachment_id, array( 'delete' => false, 'send' => false, 'show_title' => false, 'toggle' => false ) );
+			wp_send_json_success( $modal_content );
+		}
+	}
+	wp_die( 'Invalid attachment ID' );
+}
+add_action( 'wp_ajax_load_edit_image_modal', 'ajax_load_edit_image_modal' );
+
+// Handle the custom AJAX request to save the attachment fields
+function save_attachment_fields_via_ajax() {
+	sunshine_log( $_POST, 'save attachment fields' );
+	// Verify required data
+	if ( isset( $_POST['form_data'] ) && isset( $_POST['attachment_id'] ) ) {
+		parse_str( $_POST['form_data'], $fields ); // Parse serialized form data
+		$attachment_id = intval( $_POST['attachment_id'] );
+		$fields_to_save = $fields['attachments'][ $attachment_id ];
+		$attachment = get_post( $attachment_id, 'ARRAY_A' );
+		if ( $attachment ) {
+			$attachment = apply_filters( 'attachment_fields_to_save', $attachment, $fields_to_save );
+			wp_send_json_success();
+		}
+	}
+
+	// If something is wrong, return an error response
+	wp_send_json_error();
+}
+add_action( 'wp_ajax_save_attachment_fields', 'save_attachment_fields_via_ajax' );
+
+
 /* Custom Meta Box Field Display for gallery image upload */
 add_action( 'sunshine_meta_gallery_images_display', 'sunshine_meta_gallery_images_display' );
 function sunshine_meta_gallery_images_display() {
@@ -373,6 +411,8 @@ function sunshine_meta_gallery_images_display() {
 		var offset = 20;
 		var count = 20;
 
+		/*
+		NOT USED
 		$( '#media-browse-button' ).click(function(e) {
 
 			   e.preventDefault();
@@ -417,13 +457,97 @@ function sunshine_meta_gallery_images_display() {
 
 			});
 
-			  gallery_images.open();
+			gallery_images.open();
 
 		  });
 
 		/**********
 		IMAGE ACTIONS
 		**********/
+
+		// Function to open the Edit Image modal for a specific attachment ID
+		function openEditImageModal(attachmentId) {
+			// Perform AJAX request to load the Edit Image modal content
+			$.post(ajaxurl, {
+				action: 'load_edit_image_modal',
+				attachment_id: attachmentId
+			}, function(response) {
+				if (response.success) {
+
+					var modalHtml = '<form id="sunshine-edit-attachment" data-id="' + attachmentId + '" class="edit-attachment-frame">';
+
+					modalHtml += '<div class="media-modal wp-core-ui">';
+					modalHtml += '<div class="media-modal-content">';
+					modalHtml += '<div class="edit-attachment-frame mode-select hide-router">';
+
+						modalHtml += '<div class="edit-media-header">';
+							modalHtml += '<button type="button" class="media-modal-close"><span class="media-modal-icon"><span class="screen-reader-text">Close dialog</span></span></button>';
+						modalHtml += '</div>';
+
+					modalHtml += '<div class="media-frame-title"><h1>Attachment Details</h1></div>';
+
+					modalHtml += '<div class="media-frame-content">';
+					modalHtml += '<div class="attachment-details save-ready">';
+					modalHtml += response.data;
+					modalHtml += '</div>';
+					modalHtml += '</div>';
+
+					modalHtml += '</div>';
+					modalHtml += '</div>';
+					modalHtml += '</div>';
+
+					modalHtml += '<div class="media-modal-backdrop"></div>';
+					modalHtml += '</form>';
+
+					// Append the modal to the body
+					$( 'body' ).append( modalHtml );
+					$( 'td.savesend' ).html( '<p><input type="submit" class="button button-primary button-large" value="<?php echo esc_js( 'Update' ); ?>"></p>' );
+
+					// Close modal on click of the close button
+					$('.media-modal-close').on('click', function() {
+						$( '#sunshine-edit-attachment' ).remove(); // Close and remove the modal
+					});
+				} else {
+					alert('Unable to load the edit modal.');
+				}
+			});
+		}
+
+		$( '.sunshine-image-editXXX' ).on( 'click', function(e) {
+			e.preventDefault();
+			var attachmentId = $( this ).data( 'image-id' );
+			openEditImageModal( attachmentId );
+		});
+
+		$( document ).on( 'submit', '#sunshine-edit-attachment', function(e) {
+
+			e.preventDefault();
+
+			// Get all form data within the div
+			var form_data = $( this ).serialize();
+			var attachment_id = $( this ).data( 'id' );
+
+			// Perform AJAX request to trigger the attachment_fields_to_save action
+			$.ajax({
+				url: ajaxurl, // WordPress's built-in AJAX handler URL
+				type: 'POST',
+				data: {
+					action: 'save_attachment_fields', // Custom AJAX action
+					form_data: form_data, // Serialized form data
+					attachment_id: attachment_id // Assuming you have the attachment ID stored in a data attribute
+				},
+				success: function(response) {
+					if (response.success) {
+						console.log('Attachment fields saved successfully.');
+					} else {
+						console.log('Failed to save attachment fields.');
+					}
+				},
+				error: function() {
+					console.log('Error occurred while saving attachment fields.');
+				}
+			});
+		});
 
 		$( '#sunshine-load-more-go' ).on('click', function(){
 			$( this ).html( '<?php echo esc_js( __( 'Loading', 'sunshine-photo-cart' ) ); ?> ' );
@@ -809,7 +933,7 @@ function sunshine_admin_gallery_image_thumbnail( $image, $echo = true ) {
 	$html  = '<li id="image-' . esc_attr( $image->get_id() ) . '" data-image-id="' . esc_attr( $image->get_id() ) . '">';
 	$html .= '<div class="sunshine-image-container"><img src="' . $image->get_image_url() . '" data-image-id="' . esc_attr( $image->get_id() ) . '" alt="" /></div>';
 	$html .= '<span class="sunshine-image-actions">';
-	$html .= '<a href="post.php?post=' . esc_attr( $image->get_id() ) . '&action=edit" class="sunshine-image-edit dashicons dashicons-edit" target="_blank"></a> ';
+	$html .= '<a href="post.php?post=' . esc_attr( $image->get_id() ) . '&action=edit" class="sunshine-image-edit dashicons dashicons-edit"  data-image-id="' . esc_attr( $image->get_id() ) . '" target="_blank"></a> ';
 	$html .= '<a href="#" class="sunshine-image-delete dashicons dashicons-trash remove" data-image-id="' . esc_attr( $image->get_id() ) . '"></a> ';
 	$html .= '<a href="#" class="sunshine-image-featured dashicons dashicons-star-filled" data-image-id="' . esc_attr( $image->get_id() ) . '"></a> ';
 	$html .= '</span>';
@@ -1174,7 +1298,6 @@ function sunshine_gallery_save_post( $post_id, $post = '' ) {
 
 add_filter( 'sunshine_meta_gallery_images_validate', 'sunshine_meta_gallery_images_unique' );
 function sunshine_meta_gallery_images_unique( $image_ids ) {
-	sunshine_log( $image_ids );
 	return $image_ids;
 }
 

@@ -6,10 +6,10 @@ function sunshine_get_orders( $args = array(), $mode = 'live' ) {
 		'date_query' => array( 'inclusive' => true ),
 		'meta_query' => array(
 			'mode' => array(
-				'key' => 'mode',
+				'key'   => 'mode',
 				'value' => $mode,
-			)
-		)
+			),
+		),
 	);
 
 	if ( $mode == 'all' ) {
@@ -45,7 +45,7 @@ function sunshine_get_orders( $args = array(), $mode = 'live' ) {
 	if ( ! empty( $args['before'] ) ) {
 		if ( is_array( $args['before'] ) ) {
 			$args['date_query']['inclusive'] = true;
-			$args['date_query']['before'] = array(
+			$args['date_query']['before']    = array(
 				'year'  => ( ! empty( $args['before']['year'] ) ? $args['before']['year'] : '' ),
 				'month' => ( ! empty( $args['before']['month'] ) ? $args['before']['month'] : '' ),
 				'day'   => ( ! empty( $args['before']['day'] ) ? $args['before']['day'] : '' ),
@@ -57,7 +57,7 @@ function sunshine_get_orders( $args = array(), $mode = 'live' ) {
 	if ( ! empty( $args['after'] ) ) {
 		if ( is_array( $args['after'] ) ) {
 			$args['date_query']['inclusive'] = true;
-			$args['date_query']['after'] = array(
+			$args['date_query']['after']     = array(
 				'year'  => ( ! empty( $args['after']['year'] ) ? $args['after']['year'] : '' ),
 				'month' => ( ! empty( $args['after']['month'] ) ? $args['after']['month'] : '' ),
 				'day'   => ( ! empty( $args['after']['day'] ) ? $args['after']['day'] : '' ),

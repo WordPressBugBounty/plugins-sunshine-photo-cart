@@ -75,8 +75,8 @@ class Sunshine_Admin {
 		add_action( 'admin_init', array( $this, 'deactivate_old_addons' ) );
 
 		// Attachments.
-		add_filter( 'attachment_fields_to_edit', array( $this, 'show_keywords_on_attachment' ), 10, 2 );
-		add_filter( 'attachment_fields_to_save', array( $this, 'save_keywords_on_attachment' ), 10, 2 );
+		add_filter( 'attachment_fields_to_edit', array( $this, 'attachment_fields' ), 10, 2 );
+		add_filter( 'attachment_fields_to_save', array( $this, 'save_attachment_fields' ), 10, 2 );
 
 		add_action( 'add_meta_boxes', array( $this, 'attachment_meta_box_setup' ) );
 
@@ -707,35 +707,86 @@ class Sunshine_Admin {
 
 	}
 
-	public function show_keywords_on_attachment( $form_fields, $post ) {
-		$metadata = wp_get_attachment_metadata( $post->ID );
+	public function attachment_fields( $form_fields, $post ) {
 
-		if ( isset( $metadata['image_meta']['keywords'] ) && is_array( $metadata['image_meta']['keywords'] ) ) {
-			$keywords = join( ', ', $metadata['image_meta']['keywords'] );
-		} else {
-			$keywords = 'No keywords found';
+		$parent_id = wp_get_post_parent_id( $post->ID );
+		if ( $parent_id && get_post_type( $parent_id ) === 'sunshine-gallery' ) {
+
+			unset( $form_fields['url'] );
+			unset( $form_fields['menu_order'] );
+			unset( $form_fields['image_url'] );
+			unset( $form_fields['align'] );
+			unset( $form_fields['image-size'] );
+
+			$metadata = wp_get_attachment_metadata( $post->ID );
+
+			if ( isset( $metadata['image_meta']['keywords'] ) && is_array( $metadata['image_meta']['keywords'] ) ) {
+				$keywords = join( ', ', $metadata['image_meta']['keywords'] );
+			}
+
+			$form_fields['keywords'] = array(
+				'label' => __( 'Keywords', 'sunshine-photo-cart' ),
+				'input' => 'text',
+				'value' => $keywords
+			);
+
+			// Define the options for the dropdown
+			$price_levels = sunshine_get_price_levels();
+
+			$image_price_level = get_post_meta( $post->ID, 'sunshine_price_level', true );
+
+			// Build the dropdown HTML
+			$html = '<select name="attachments[' . $post->ID . '][sunshine_price_level]">';
+			$html .= '<option value="" ' . selected( $image_price_level, '', false ) . '>' . __( 'Use gallery price level', 'sunshine-photo-cart' ) . '</option>';
+			foreach ( $price_levels as $price_level ) {
+				$html .= '<option value="' . esc_attr( $price_level->get_id() ) . '" ' . selected( $image_price_level, $price_level->get_id(), false ) . '>' . $price_level->get_name() . '</option>';
+			}
+			$html .= '</select>';
+
+			// Add the dropdown field
+			$form_fields['sunshine_price_level'] = array(
+				'label' => __( 'Price Level', 'sunshine-photo-cart' ),
+				'input' => 'html',
+				'html'  => $html,
+			);
+
+			// Retrieve the existing meta value for the 'sunshine_disable_purchase' field
+			$disable_purchase = get_post_meta( $post->ID, 'sunshine_disable_purchase', true );
+
+			// Add the checkbox field
+			$form_fields['sunshine_disable_purchase'] = array(
+				'label' => __( 'Disable Purchasing', 'textdomain' ),
+				'input' => 'html',
+				'html'  => "<input type='checkbox' name='attachments[{$post->ID}][sunshine_disable_purchase]' value='1' " . checked( $disable_purchase, 1, false ) . " />",
+			);
+
 		}
-
-		$form_fields['keywords'] = array(
-			'label' => __( 'Keywords', 'sunshine-photo-cart' ),
-			'input' => 'text',
-			'value' => $keywords
-		);
 
 		return $form_fields;
 	}
 
-	public function save_keywords_on_attachment( $post, $attachment ) {
+	public function save_attachment_fields( $post, $attachment ) {
+
+		sunshine_log( $attachment, 'Saving attachment fields' );
+
 		if ( isset( $attachment['keywords'] ) ) {
 			$metadata = wp_get_attachment_metadata( $post['ID'] );
-
-			// Split the keywords string into an array and remove spaces
 			$keywords = explode( ', ', $attachment['keywords'] );
 			$keywords = array_map( 'trim', $keywords );  // Remove start and end spaces
-
 			$metadata['image_meta']['keywords'] = $keywords;
-
 			wp_update_attachment_metadata( $post['ID'], $metadata );
+		}
+
+		if ( isset( $attachment['sunshine_disable_purchase'] ) ) {
+			update_post_meta( $post['ID'], 'sunshine_disable_purchase', sanitize_text_field( $attachment['sunshine_disable_purchase'] ) );
+		} else {
+			delete_post_meta( $post['ID'], 'sunshine_disable_purchase' );
+		}
+
+		if ( isset( $attachment['sunshine_price_level'] ) ) {
+			update_post_meta( $post['ID'], 'sunshine_price_level', intval( $attachment['sunshine_price_level'] ) );
+		} else {
+			delete_post_meta( $post['ID'], 'sunshine_price_level' );
 		}
 
 		return $post;

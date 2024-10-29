@@ -39,6 +39,7 @@ class SPC_Customer extends WP_User {
 		}
 	}
 
+	
 	public function update_meta( $key, $value ) {
 		if ( $this->ID > 0 ) {
 
@@ -79,25 +80,55 @@ class SPC_Customer extends WP_User {
 			return $this->display_name;
 		}
 	}
+	/**
+	 * Get the customer's first name.
+	 *
+	 * @return string The customer's first name or an empty string if not set.
+	 */
 	public function get_first_name() {
 		return ( ! empty( $this->data->first_name ) ) ? $this->data->first_name : '';
 	}
+	/**
+	 * Get the customer's last name.
+	 *
+	 * @return string The customer's last name or an empty string if not set.
+	 */
 	public function get_last_name() {
 		return ( ! empty( $this->data->last_name ) ) ? $this->data->last_name : '';
 	}
 
+	/**
+	 * Get the customer's email address.
+	 *
+	 * @return string The customer's email address or an empty string if not set.
+	 */
 	public function get_email() {
 		return ( ! empty( $this->data->user_email ) ) ? $this->data->user_email : '';
 	}
 
+	/**
+	 * Set the customer's cart contents.
+	 *
+	 * @param mixed $contents The cart contents to set.
+	 */
 	public function set_cart( $contents ) {
 		$this->update_meta( 'cart', $contents );
 	}
 
+	/**
+	 * Get the customer's cart contents.
+	 *
+	 * @return mixed The customer's cart contents.
+	 */
 	public function get_cart() {
 		return $this->get_meta( 'cart' );
 	}
 
+	/**
+	 * Get the customer's cart items.
+	 *
+	 * @return array|false An array of SPC_Cart_Item objects or false if the cart is empty.
+	 */
 	public function get_cart_items() {
 		$cart = $this->get_cart();
 		if ( ! empty( $cart ) ) {
@@ -113,31 +144,60 @@ class SPC_Customer extends WP_User {
 		return false;
 	}
 
-
+	/**
+	 * Set the customer's credits.
+	 *
+	 * @param float $credits The amount of credits to set.
+	 */
 	public function set_credits( $credits ) {
 		$this->update_meta( 'credits', floatval( $credits ) );
 	}
 
+	/**
+	 * Get the customer's credits.
+	 *
+	 * @return float The customer's current credits.
+	 */
 	public function get_credits() {
 		return $this->credits;
 	}
 
+	/**
+	 * Decrease the customer's credits.
+	 *
+	 * @param float $amount The amount to decrease.
+	 */
 	public function decrease_credits( $amount ) {
 		$credits = $this->get_credits();
 		$credits -= $amount;
 		$this->set_credits( max( $credits, 0 ) );
 	}
 
+	/**
+	 * Increase the customer's credits.
+	 *
+	 * @param float $amount The amount to increase.
+	 */
 	public function increase_credits( $amount ) {
 		$credits = $this->get_credits();
 		$credits += $amount;
 		$this->set_credits( max( $credits, 0 ) );
 	}
 
+	/**
+	 * Get the customer's favorite image IDs.
+	 *
+	 * @return array An array of favorite image IDs.
+	 */
 	public function get_favorite_ids() {
 		return $this->favorite_ids;
 	}
 
+	/**
+	 * Get the customer's favorite images.
+	 *
+	 * @return array|false An array of favorite image objects or false if no favorites.
+	 */
 	public function get_favorites() {
 		if ( ! empty( $this->favorites ) ) {
 			return $this->favorites;
@@ -156,10 +216,20 @@ class SPC_Customer extends WP_User {
 		return false;
 	}
 
+	/**
+	 * Get the count of customer's favorites.
+	 *
+	 * @return int The number of favorite images.
+	 */
 	public function get_favorites_count() {
 		return count( $this->get_favorite_ids() );
 	}
 
+	/**
+	 * Add an image to the customer's favorites.
+	 *
+	 * @param int $image_id The ID of the image to add to favorites.
+	 */
 	public function add_favorite( $image_id ) {
 
 		$image_id = intval( $image_id );
@@ -172,6 +242,11 @@ class SPC_Customer extends WP_User {
 
 	}
 
+	/**
+	 * Delete an image from the customer's favorites.
+	 *
+	 * @param int $image_id The ID of the image to remove from favorites.
+	 */
 	public function delete_favorite( $image_id ) {
 
 		$key = array_search( $image_id, $this->favorite_ids, true );
@@ -184,6 +259,11 @@ class SPC_Customer extends WP_User {
 
 	}
 
+	/**
+	 * Check if the customer has any favorites.
+	 *
+	 * @return bool True if the customer has favorites, false otherwise.
+	 */
 	public function has_favorites() {
 		if ( ! empty( $this->favorite_ids ) ) {
 			return true;
@@ -191,6 +271,12 @@ class SPC_Customer extends WP_User {
 		return false;
 	}
 
+	/**
+	 * Check if a specific image is in the customer's favorites.
+	 *
+	 * @param int $image_id The ID of the image to check.
+	 * @return bool True if the image is a favorite, false otherwise.
+	 */
 	public function has_favorite( $image_id ) {
 		if ( ! empty( $this->favorite_ids ) && in_array( $image_id, $this->favorite_ids ) ) {
 			return true;
@@ -198,6 +284,11 @@ class SPC_Customer extends WP_User {
 		return false;
 	}
 
+	/**
+	 * Get the count of customer's favorites.
+	 *
+	 * @return int The number of favorite images.
+	 */
 	public function get_favorite_count() {
 		if ( empty( $this->favorite_ids ) ) {
 			return 0;
@@ -205,6 +296,9 @@ class SPC_Customer extends WP_User {
 		return count( $this->favorite_ids );
 	}
 
+	/**
+	 * Clear all of the customer's favorites.
+	 */
 	public function clear_favorites() {
 		$favorite_ids = $this->get_favorite_ids();
 		if ( ! empty( $favorite_ids ) ) {
@@ -215,6 +309,11 @@ class SPC_Customer extends WP_User {
 		}
 	}
 
+	/**
+	 * Get the customer's favorite key.
+	 *
+	 * @return string The customer's favorite key.
+	 */
 	public function get_favorite_key() {
 		if ( empty( $this->favorite_key ) ) {
 			$this->favorite_key = wp_generate_password( 20, false );
@@ -223,31 +322,71 @@ class SPC_Customer extends WP_User {
 		return $this->favorite_key;
 	}
 
-	/* SHIPPING */
+	/**
+	 * Get the customer's shipping address line 1.
+	 *
+	 * @return string The shipping address line 1.
+	 */
 	public function get_shipping_address1() {
 		$key = SPC()->prefix . 'shipping_address1';
 		return $this->{$key};
 	}
+
+	/**
+	 * Get the customer's shipping address line 2.
+	 *
+	 * @return string The shipping address line 2.
+	 */
 	public function get_shipping_address2() {
 		$key = SPC()->prefix . 'shipping_address2';
 		return $this->{$key};
 	}
+
+	/**
+	 * Get the customer's shipping city.
+	 *
+	 * @return string The shipping city.
+	 */
 	public function get_shipping_city() {
 		$key = SPC()->prefix . 'shipping_city';
 		return $this->{$key};
 	}
+
+	/**
+	 * Get the customer's shipping state.
+	 *
+	 * @return string The shipping state.
+	 */
 	public function get_shipping_state() {
 		$key = SPC()->prefix . 'shipping_state';
 		return $this->{$key};
 	}
+
+	/**
+	 * Get the customer's shipping postcode.
+	 *
+	 * @return string The shipping postcode.
+	 */
 	public function get_shipping_postcode() {
 		$key = SPC()->prefix . 'shipping_postcode';
 		return $this->{$key};
 	}
+
+	/**
+	 * Get the customer's shipping country.
+	 *
+	 * @return string The shipping country.
+	 */
 	public function get_shipping_country() {
 		$key = SPC()->prefix . 'shipping_country';
 		return $this->{$key};
 	}
+
+	/**
+	 * Get the customer's formatted shipping address.
+	 *
+	 * @return string The formatted shipping address.
+	 */
 	public function get_shipping_address_formatted() {
 		$args = array(
 			'address1'   => $this->get_shipping_address1(),
@@ -260,6 +399,11 @@ class SPC_Customer extends WP_User {
 		return SPC()->countries->get_formatted_address( $args );
 	}
 
+	/**
+	 * Check if the customer has a shipping address.
+	 *
+	 * @return bool True if the customer has a shipping address, false otherwise.
+	 */
 	public function has_shipping_address() {
 		if ( $this->get_shipping_address1() ) {
 			return true;
@@ -267,32 +411,71 @@ class SPC_Customer extends WP_User {
 		return false;
 	}
 
-
-	/* BILLING */ // TODO: Use prefix like shipping
+	/**
+	 * Get the customer's billing address line 1.
+	 *
+	 * @return string The billing address line 1.
+	 */
 	public function get_billing_address1() {
 		$key = SPC()->prefix . 'billing_address1';
 		return $this->{$key};
 	}
+
+	/**
+	 * Get the customer's billing address line 2.
+	 *
+	 * @return string The billing address line 2.
+	 */
 	public function get_billing_address2() {
 		$key = SPC()->prefix . 'billing_address2';
 		return $this->{$key};
 	}
+
+	/**
+	 * Get the customer's billing city.
+	 *
+	 * @return string The billing city.
+	 */
 	public function get_billing_city() {
 		$key = SPC()->prefix . 'billing_city';
 		return $this->{$key};
 	}
+
+	/**
+	 * Get the customer's billing state.
+	 *
+	 * @return string The billing state.
+	 */
 	public function get_billing_state() {
 		$key = SPC()->prefix . 'billing_state';
 		return $this->{$key};
 	}
+
+	/**
+	 * Get the customer's billing postcode.
+	 *
+	 * @return string The billing postcode.
+	 */
 	public function get_billing_postcode() {
 		$key = SPC()->prefix . 'billing_postcode';
 		return $this->{$key};
 	}
+
+	/**
+	 * Get the customer's billing country.
+	 *
+	 * @return string The billing country.
+	 */
 	public function get_billing_country() {
 		$key = SPC()->prefix . 'billing_country';
 		return $this->{$key};
 	}
+
+	/**
+	 * Get the customer's formatted billing address.
+	 *
+	 * @return string The formatted billing address.
+	 */
 	public function get_billing_address_formatted() {
 		$args = array(
 			'address1'   => $this->get_billing_address1(),
@@ -304,6 +487,12 @@ class SPC_Customer extends WP_User {
 		);
 		return SPC()->countries->get_formatted_address( $args );
 	}
+
+	/**
+	 * Check if the customer has a billing address.
+	 *
+	 * @return bool True if the customer has a billing address, false otherwise.
+	 */
 	public function has_billing_address() {
 		if ( $this->get_billing_address1() ) {
 			return true;
@@ -311,12 +500,22 @@ class SPC_Customer extends WP_User {
 		return false;
 	}
 
-	/* OTHER FIELDS */
+	/**
+	 * Get the customer's phone number.
+	 *
+	 * @return string The customer's phone number.
+	 */
 	public function get_phone() {
-		$this->sunshine_phone;
+		return $this->sunshine_phone;
 	}
+
+	/**
+	 * Get the customer's VAT number.
+	 *
+	 * @return string The customer's VAT number.
+	 */
 	public function get_vat() {
-		$this->vat;
+		return $this->vat;
 	}
 
 	public function get_galleries() {

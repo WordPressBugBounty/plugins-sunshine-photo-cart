@@ -29,17 +29,12 @@ function sunshine_get_galleries( $custom_args = array(), $conditional_method = '
 		'order'          => $orderby,
 		'posts_per_page' => -1,
 		// 'update_post_meta_cache' => false,
-		'meta_query'     => array(
-			array(
-				'key'     => 'access_type',
-				'value'   => 'url',
-				'compare' => '!=',
-			),
-		),
-		'post_status' => array( 'publish' )
+		'post_status'    => array( 'publish' ),
 	);
 
 	$args = wp_parse_args( $custom_args, $args );
+	$args = apply_filters( 'sunshine_get_galleries_args', $args );
+
 	$galleries = new WP_Query( $args );
 
 	if ( $galleries->have_posts() ) {
@@ -49,14 +44,22 @@ function sunshine_get_galleries( $custom_args = array(), $conditional_method = '
 			if ( $conditional_method === 'all' ) {
 				$final_galleries[ $gallery->get_id() ] = $gallery;
 			} elseif ( $conditional_method === 'view' && $gallery->can_view() ) {
+				if ( $gallery->get_access_type() == 'url' && ! current_user_can( 'sunshine_manage_options' ) ) {
+					continue;
+				}
 				$final_galleries[ $gallery->get_id() ] = $gallery;
 			} elseif ( $conditional_method === 'access' && $gallery->can_access() ) {
+				if ( $gallery->get_access_type() == 'url' && ! current_user_can( 'sunshine_manage_options' ) ) {
+					continue;
+				}
 				$final_galleries[ $gallery->get_id() ] = $gallery;
 			}
 		}
 		return $final_galleries;
 	}
+
 	return false;
+
 }
 
 function sunshine_get_gallery_descendants( $gallery_id ) {
@@ -70,7 +73,7 @@ function sunshine_get_gallery_descendants( $gallery_id ) {
 			'suppress_filters' => false,
 		)
 	);
-	// now grab the grand children
+	// now grab the grand children.
 	foreach ( $galleries as $child ) {
 		$gchildren = sunshine_get_gallery_descendants( $child->ID );
 		if ( ! empty( $gchildren ) ) {

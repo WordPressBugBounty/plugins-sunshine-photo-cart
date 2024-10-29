@@ -1,6 +1,6 @@
 <div class="sunshine--cart-item--product-option-images">
 	<?php
-	$images = $item->get_option( 'images' );
+	$images      = $item->get_option( 'images' );
 	$image_count = ( $images ) ? count( $images ) : 0;
 	if ( empty( $images ) || ( $item->product && $image_count < $item->product->get_meta_value( 'image_count' ) ) ) { ?>
 		<div class="sunshine--cart-item--product-option-images--incomplete">

@@ -91,11 +91,14 @@ function sunshine_modal_add_item_to_cart() {
 		$options = array_map( 'sanitize_text_field', $_POST['options'] );
 	}
 
-	$image = $product = $gallery = '';
+	$image = $product = $gallery = $price_level = '';
+
 	if ( ! empty( $gallery_id ) ) {
-		$gallery     = sunshine_get_gallery( $gallery_id );
+		$gallery = sunshine_get_gallery( $gallery_id );
 		$price_level = $gallery->get_price_level();
-	} elseif ( ! empty( $image_id ) ) {
+	}
+
+	if ( ! empty( $image_id ) ) {
 		$image       = sunshine_get_image( $image_id );
 		$price_level = $image->get_price_level();
 	}
