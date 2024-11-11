@@ -115,50 +115,56 @@ function sunshine_base_install() {
 		'endpoint_gallery'                => 'gallery',
 		'endpoint_order_received'         => 'receipt',
 		'endpoint_store'                  => 'store',
-		'account_orders_endpoint' => 'my-orders',
-		'account_view_order_endpoint' => '',
-		'account_addresses_endpoint' => '',
-		'account_edit_endpoint' => '',
-		'account_login_endpoint' => '',
+		'account_orders_endpoint'         => 'my-orders',
+		'account_view_order_endpoint'     => '',
+		'account_addresses_endpoint'      => '',
+		'account_edit_endpoint'           => '',
+		'account_login_endpoint'          => '',
 		'account_reset_password_endpoint' => '',
-		'account_logout_endpoint' => '',
-		'account_logout_endpoint' => '',
+		'account_logout_endpoint'         => '',
+		'account_logout_endpoint'         => '',
 
-		'delete_images' => true,
-		'delete_images_folder' => false,
-		'show_media_library' => false,
+		'delete_images'                   => true,
+		'delete_images_folder'            => false,
+		'show_media_library'              => false,
 
-		'hide_galleries' => false,
-		'gallery_order' => 'date_new_old',
-		'image_order' => 'date_new_old',
+		'hide_galleries'                  => false,
+		'gallery_order'                   => 'date_new_old',
+		'image_order'                     => 'date_new_old',
 		'gallery_layout'                  => 'justified',
 		'image_layout'                    => 'justified',
 		'columns'                         => 4,
-		'per_page'                         => 20,
-		'pagination'                    => 'numbers',
-		'disable_right_click'                    => false,
-		'proofing'                    => false,
-		'show_image_data'                    => '',
-		'disable_favorites'                    => false,
-		'disable_sharing'                    => false,
+		'per_page'                        => 20,
+		'pagination'                      => 'numbers',
+		'disable_right_click'             => false,
+		'proofing'                        => false,
+		'show_image_data'                 => '',
+		'disable_favorites'               => false,
+		'disable_sharing'                 => false,
 
-		'thumbnail_size' => array( 'w' => 400, 'h' => 400 ),
-		'thumbnail_crop' => false,
-		'large_size' => array( 'w' => 1000, 'h' => 1000 ),
-		'image_quality' => 95,
+		'thumbnail_size'                  => array(
+			'w' => 400,
+			'h' => 400,
+		),
+		'thumbnail_crop'                  => false,
+		'large_size'                      => array(
+			'w' => 1000,
+			'h' => 1000,
+		),
+		'image_quality'                   => 95,
 
-		'display_price' => 'without_tax',
-		'price_has_tax' => 'no',
+		'display_price'                   => 'without_tax',
+		'price_has_tax'                   => 'no',
 
-		'checkout_standalone' => false,
-		'allow_guest_checkout' => true,
+		'checkout_standalone'             => false,
+		'allow_guest_checkout'            => true,
 
-		'main_menu' => true,
+		'main_menu'                       => true,
 
-		'from_name' => get_bloginfo( 'name' ),
-		'from_email' => get_bloginfo( 'admin_email' ),
+		'from_name'                       => get_bloginfo( 'name' ),
+		'from_email'                      => get_bloginfo( 'admin_email' ),
 
-		'theme' => 'theme',
+		'theme'                           => 'theme',
 	);
 
 	$options = wp_parse_args( $options, $defaults );
@@ -366,7 +372,7 @@ function sunshine_base_install() {
 	}
 	if ( ! wp_next_scheduled( 'sunshine_send_summary' ) ) {
 		$week_start = (int) get_option( 'start_of_week' );
-		$start = strtotime( "Sunday + $week_start days 8am" );
+		$start      = strtotime( "Sunday + $week_start days 8am" );
 		wp_schedule_event( $start, 'weekly', 'sunshine_send_summary' );
 	}
 	if ( ! wp_next_scheduled( 'sunshine_license_check' ) ) {
@@ -374,6 +380,9 @@ function sunshine_base_install() {
 	}
 	if ( ! wp_next_scheduled( 'sunshine_tracking_send' ) ) {
 		wp_schedule_event( time() + DAY_IN_SECONDS, 'weekly', 'sunshine_tracking_send' );
+	}
+	if ( ! wp_next_scheduled( 'sunshine_daily' ) ) {
+		wp_schedule_event( time(), 'daily', 'sunshine_daily' );
 	}
 
 	// Make default directory for uploads.
@@ -395,6 +404,8 @@ function sunshine_base_install() {
 	foreach ( $options as $key => $value ) {
 		update_option( 'sunshine_' . $key, $value, false );
 	}
+
+	sunshine_create_htaccess();
 
 	flush_rewrite_rules();
 
@@ -492,11 +503,12 @@ function sunshine_install_page( $step = '' ) {
 		wp_enqueue_media();
 
 		$sunshine_install_error = get_transient( 'sunshine_install_error' );
-		if ( ! empty( $sunshine_install_error ) ) { ?>
+		if ( ! empty( $sunshine_install_error ) ) {
+			?>
 			<div class="sunshine-install--error" style="background:red; padding: 5px 20px; text-align: center; color: #FFF; border-radius: 5px; max-width: 750px; margin: 40px auto -50px auto;">
 				<p><?php echo esc_html( $sunshine_install_error ); ?></p>
 			</div>
-		<?php
+			<?php
 			delete_transient( 'sunshine_install_error' );
 		}
 
@@ -562,7 +574,7 @@ function sunshine_install_process_data() {
 			return;
 		}
 
-		$plan = SPC()->plans[ $product ];
+		$plan      = SPC()->plans[ $product ];
 		$activated = $plan->activate( $license );
 		if ( $activated ) {
 			update_option( 'sunshine_plan', $product );
@@ -574,25 +586,25 @@ function sunshine_install_process_data() {
 
 	} elseif ( isset( $_POST['sunshine_install_updates'] ) && wp_verify_nonce( $_POST['sunshine_install_updates'], 'sunshine_install_updates' ) ) {
 
-		$email = sanitize_text_field( $_POST['email'] );
+		$email      = sanitize_text_field( $_POST['email'] );
 		$first_name = sanitize_text_field( $_POST['first_name'] );
 
 		$contact_data = array(
-			'email' => $email,
+			'email'      => $email,
 			'first_name' => $first_name,
-			'time_zone' => wp_timezone()->getName()
+			'time_zone'  => wp_timezone()->getName(),
 		);
-		$args = [
+		$args         = array(
 			'method'      => 'POST',
-			'headers'     => [
+			'headers'     => array(
 				'Content-type' => sprintf( 'application/json; charset=%s', get_bloginfo( 'charset' ) ),
-			],
+			),
 			'body'        => wp_json_encode( $contact_data ),
 			'data_format' => 'body',
 			'sslverify'   => true,
-			'user-agent'  => 'SunshinePhotoCart/' . SUNSHINE_PHOTO_CART_VERSION . '; ' . home_url()
-		];
-		$response = wp_remote_post( 'https://www.sunshinephotocart.com/wp-json/gh/v4/webhooks/121-webhook-listener?token=t5YM9nJ', $args );
+			'user-agent'  => 'SunshinePhotoCart/' . SUNSHINE_PHOTO_CART_VERSION . '; ' . home_url(),
+		);
+		$response     = wp_remote_post( 'https://www.sunshinephotocart.com/wp-json/gh/v4/webhooks/121-webhook-listener?token=t5YM9nJ', $args );
 		if ( $response ) {
 			$json = json_decode( wp_remote_retrieve_body( $response ) );
 			if ( ! empty( $json->contact ) ) {

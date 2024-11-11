@@ -58,13 +58,14 @@ function sunshine_gallery_loop_display( $galleries = array() ) {
 	sunshine_get_template( 'galleries/galleries', array( 'galleries' => $galleries ) );
 }
 
-/* SINGLE GALLERY */
-//add_action( 'sunshine_single_gallery', 'sunshine_show_page_content', 9 );
+/*
+ SINGLE GALLERY */
+// add_action( 'sunshine_single_gallery', 'sunshine_show_page_content', 9 );
 function sunshine_show_page_content() {
 
 	$content = get_the_content();
 	if ( $content && ! SPC()->frontend->is_store() ) {
- 		echo '<div id="sunshine--content">' . do_shortcode( wp_kses_post( $content ) ) . '</div>';
+		echo '<div id="sunshine--content">' . do_shortcode( wp_kses_post( $content ) ) . '</div>';
 	}
 
 }
@@ -105,8 +106,8 @@ function sunshine_single_gallery_display( $gallery = '' ) {
 			sunshine_get_template(
 				'account/login-signup',
 				array(
-					'message' => apply_filters( 'sunshine_gallery_require_login_signup_message', __( 'The gallery you tried to access is private and requires you to login first', 'sunshine-photo-cart' ), $gallery ),
-					'redirect' => $gallery->get_permalink()
+					'message'  => apply_filters( 'sunshine_gallery_require_login_signup_message', __( 'The gallery you tried to access is private and requires you to login first', 'sunshine-photo-cart' ), $gallery ),
+					'redirect' => $gallery->get_permalink(),
 				)
 			);
 			return;
@@ -116,8 +117,8 @@ function sunshine_single_gallery_display( $gallery = '' ) {
 			sunshine_get_template(
 				'account/login',
 				array(
-					'message' => apply_filters( 'sunshine_gallery_require_login_message', __( 'You must have proper permissions to view this gallery', 'sunshine-photo-cart' ), $gallery ),
-					'redirect' => $gallery->get_permalink()
+					'message'  => apply_filters( 'sunshine_gallery_require_login_message', __( 'You must have proper permissions to view this gallery', 'sunshine-photo-cart' ), $gallery ),
+					'redirect' => $gallery->get_permalink(),
 				)
 			);
 			return;
@@ -146,9 +147,9 @@ function sunshine_single_gallery_display( $gallery = '' ) {
 						sunshine_get_template(
 							'gallery/access',
 							array(
-								'gallery'  => $ancestor_gallery,
-								'password' => true,
-								'email'    => $ancestor_gallery->email_required(),
+								'gallery'     => $ancestor_gallery,
+								'password'    => true,
+								'email'       => $ancestor_gallery->email_required(),
 								'redirect_to' => $gallery->get_permalink(),
 							)
 						);
@@ -182,7 +183,13 @@ function sunshine_single_gallery_display( $gallery = '' ) {
 	} else {
 		$images = $gallery->get_images();
 		if ( ! empty( $images ) ) {
-			sunshine_get_template( 'gallery/images', array( 'gallery' => $gallery, 'images' => $images ) );
+			sunshine_get_template(
+				'gallery/images',
+				array(
+					'gallery' => $gallery,
+					'images'  => $images,
+				)
+			);
 		} else {
 			sunshine_get_template( 'gallery/no-images', array( 'gallery' => $gallery ) );
 		}
@@ -356,11 +363,17 @@ function sunshine_display_account() {
 	} elseif ( SPC()->get_option( 'account_login_endpoint' ) === $this_endpoint || SPC()->get_option( 'disable_signup' ) ) {
 		sunshine_get_template( 'account/login' );
 	} elseif ( SPC()->get_option( 'account_reset_password_endpoint' ) === $this_endpoint && isset( $_GET['key'] ) && isset( $_GET['login'] ) ) {
-		$key = sanitize_text_field( $_GET['key'] );
-		$login = sanitize_text_field( $_GET['login'] );
+		$key     = sanitize_text_field( $_GET['key'] );
+		$login   = sanitize_text_field( $_GET['login'] );
 		$allowed = check_password_reset_key( $key, $login );
 		if ( ! is_wp_error( $allowed ) ) {
-			sunshine_get_template( 'account/reset-password', array( 'key' => $key, 'login' => $login ) );
+			sunshine_get_template(
+				'account/reset-password',
+				array(
+					'key'   => $key,
+					'login' => $login,
+				)
+			);
 		} else {
 			echo esc_html( $allowed->get_error_message() );
 		}
@@ -400,22 +413,25 @@ add_action( 'sunshine_account_addresses', 'sunshine_display_account_addresses' )
 function sunshine_display_account_addresses() {
 
 	$default_country = SPC()->customer->get_shipping_country();
-	$fields = SPC()->countries->get_address_fields( $default_country, 'shipping_' );
+	$fields          = SPC()->countries->get_address_fields( $default_country, 'shipping_' );
 	if ( ! empty( $fields ) ) {
 
 		foreach ( $fields as $key => $field ) {
 			$fields[ $key ]['default'] = SPC()->customer->get_meta( $field['id'] );
 		}
 
-		$fields = array_merge( array( array(
-				'id' => 'shipping_address',
-				'name' => __( 'Shipping Address', 'sunshine-photo-cart' ),
-				'type' => 'legend',
-			) ),
+		$fields   = array_merge(
+			array(
+				array(
+					'id'   => 'shipping_address',
+					'name' => __( 'Shipping Address', 'sunshine-photo-cart' ),
+					'type' => 'legend',
+				),
+			),
 			$fields,
 		);
 		$fields[] = array(
-			'id' => 'save_addresses',
+			'id'   => 'save_addresses',
 			'type' => 'submit',
 			'name' => __( 'Save Changes', 'sunshine-photo-cart' ),
 		);
@@ -432,9 +448,9 @@ function sunshine_display_account_galleries() {
 
 add_action( 'sunshine_account_profile', 'sunshine_display_account_profile' );
 function sunshine_display_account_profile() {
-	$fields = sunshine_get_profile_fields();
+	$fields   = sunshine_get_profile_fields();
 	$fields[] = array(
-		'id' => 'save_profile',
+		'id'   => 'save_profile',
 		'type' => 'submit',
 		'name' => __( 'Save Changes', 'sunshine-photo-cart' ),
 	);
@@ -460,7 +476,13 @@ function sunshine_display_reset_password() {
 		if ( ! is_wp_error( $valid_key ) ) {
 			SPC()->session->set( 'reset_password_key', $key );
 			SPC()->session->set( 'reset_password_login', $login );
-			sunshine_get_template( 'account/reset-password', array( 'key' => $key, 'login' => $login ) );
+			sunshine_get_template(
+				'account/reset-password',
+				array(
+					'key'   => $key,
+					'login' => $login,
+				)
+			);
 			return;
 		}
 	}

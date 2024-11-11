@@ -10,7 +10,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 	private $total    = 0;
 	private $currency = 'USD';
 	private $accessToken;  // Use this to store and use the access token throughout the class
-    private $environmentUrl; // 'https://connect.squareup.com' or 'https://connect.squareupsandbox.com' based on mode
+	private $environmentUrl; // 'https://connect.squareup.com' or 'https://connect.squareupsandbox.com' based on mode
 
 	public function init() {
 
@@ -36,12 +36,12 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		add_action( 'wp', array( $this, 'init_setup' ) );
 
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-		//add_filter( 'sunshine_checkout_field_payment_method_square', array( $this, 'buttons' ) );
+		// add_filter( 'sunshine_checkout_field_payment_method_square', array( $this, 'buttons' ) );
 
 		add_action( 'wp_ajax_nopriv_sunshine_square_init_order', array( $this, 'init_order' ) );
 		add_action( 'wp_ajax_sunshine_square_init_order', array( $this, 'init_order' ) );
 
-		add_action( 'sunshine_checkout_create_order', array( $this, 'create_order' ), 10, 2 );
+		add_action( 'sunshine_checkout_process_payment_square', array( $this, 'create_order' ) );
 
 		// add_action( 'template_redirect', array( $this, 'square_return_listener' ), 999 );
 		// add_action( 'template_redirect', array( $this, 'webhooks' ) );
@@ -82,10 +82,10 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		);
 
 		$options[] = array(
-			'name'       => __( 'Connect (Production)', 'sunshine-photo-cart' ),
-			'id'         => $this->id . '_connect_live',
-			'type'       => 'square_connect',
-			'conditions' => array(
+			'name'             => __( 'Connect (Production)', 'sunshine-photo-cart' ),
+			'id'               => $this->id . '_connect_live',
+			'type'             => 'square_connect',
+			'conditions'       => array(
 				array(
 					'field'   => $this->id . '_mode',
 					'compare' => '==',
@@ -97,11 +97,11 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		);
 
 		$options[] = array(
-			'name'        => __( 'Sandbox Settings', 'sunshine-photo-cart' ),
-			'id'          => $this->id . '_sandbox_settings',
-			'type'        => 'header',
-			'description' => sprintf( __( 'Sandbox details can be created at: %s', 'sunshine-photo-cart' ), '<a href="https://developer.squareup.com/apps" target="_blank">https://developer.squareup.com/apps</a>' ),
-			'conditions'  => array(
+			'name'             => __( 'Sandbox Settings', 'sunshine-photo-cart' ),
+			'id'               => $this->id . '_sandbox_settings',
+			'type'             => 'header',
+			'description'      => sprintf( __( 'Sandbox details can be created at: %s', 'sunshine-photo-cart' ), '<a href="https://developer.squareup.com/apps" target="_blank">https://developer.squareup.com/apps</a>' ),
+			'conditions'       => array(
 				array(
 					'field'   => $this->id . '_mode',
 					'compare' => '==',
@@ -113,10 +113,10 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		);
 
 		$options[] = array(
-			'name'       => __( 'Sandbox Application ID', 'sunshine-photo-cart' ),
-			'id'         => $this->id . '_application_id_test',
-			'type'       => 'text',
-			'conditions' => array(
+			'name'             => __( 'Sandbox Application ID', 'sunshine-photo-cart' ),
+			'id'               => $this->id . '_application_id_test',
+			'type'             => 'text',
+			'conditions'       => array(
 				array(
 					'field'   => $this->id . '_mode',
 					'compare' => '==',
@@ -127,10 +127,10 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 			'hide_system_info' => true,
 		);
 		$options[] = array(
-			'name'       => __( 'Sandbox Access Token', 'sunshine-photo-cart' ),
-			'id'         => $this->id . '_access_token_test',
-			'type'       => 'text',
-			'conditions' => array(
+			'name'             => __( 'Sandbox Access Token', 'sunshine-photo-cart' ),
+			'id'               => $this->id . '_access_token_test',
+			'type'             => 'text',
+			'conditions'       => array(
 				array(
 					'field'   => $this->id . '_mode',
 					'compare' => '==',
@@ -148,12 +148,12 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 				$locations = array_merge( $locations, $square_locations );
 			}
 			$options[] = array(
-				'name'        => __( 'Location (Production)', 'sunshine-photo-cart' ),
-				'id'          => $this->id . '_location_id_live',
-				'type'        => 'select',
-				'options'     => $locations,
-				'description' => '<a href="' . wp_nonce_url( admin_url( 'admin.php?sunshine_square_refresh_locations' ), 'sunshine_square_refresh_locations' ) . '">' . __( 'Refresh locations', 'sunshine-photo-cart' ) . '</a>',
-				'conditions'  => array(
+				'name'             => __( 'Location (Production)', 'sunshine-photo-cart' ),
+				'id'               => $this->id . '_location_id_live',
+				'type'             => 'select',
+				'options'          => $locations,
+				'description'      => '<a href="' . wp_nonce_url( admin_url( 'admin.php?sunshine_square_refresh_locations' ), 'sunshine_square_refresh_locations' ) . '">' . __( 'Refresh locations', 'sunshine-photo-cart' ) . '</a>',
+				'conditions'       => array(
 					array(
 						'field'   => $this->id . '_mode',
 						'compare' => '==',
@@ -172,12 +172,12 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 				$locations = array_merge( $locations, $square_locations );
 			}
 			$options[] = array(
-				'name'        => __( 'Sandbox Location', 'sunshine-photo-cart' ),
-				'id'          => $this->id . '_location_id_test',
-				'type'        => 'select',
-				'options'     => $locations,
-				'description' => '<a href="' . wp_nonce_url( admin_url( 'admin.php?sunshine_square_refresh_locations' ), 'sunshine_square_refresh_locations' ) . '">' . __( 'Refresh locations', 'sunshine-photo-cart' ) . '</a>',
-				'conditions'  => array(
+				'name'             => __( 'Sandbox Location', 'sunshine-photo-cart' ),
+				'id'               => $this->id . '_location_id_test',
+				'type'             => 'select',
+				'options'          => $locations,
+				'description'      => '<a href="' . wp_nonce_url( admin_url( 'admin.php?sunshine_square_refresh_locations' ), 'sunshine_square_refresh_locations' ) . '">' . __( 'Refresh locations', 'sunshine-photo-cart' ) . '</a>',
+				'conditions'       => array(
 					array(
 						'field'   => $this->id . '_mode',
 						'compare' => '==',
@@ -213,7 +213,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 			<p><a href="https://www.sunshinephotocart.com/?square_connect=1&mode=<?php echo $mode; ?>&nonce=<?php echo wp_create_nonce( 'sunshine_square_connect' ); ?>&return_url=<?php echo admin_url( 'admin.php' ); ?>" class="button"><?php _e( 'Connect to Square', 'sunshine-photo-cart' ); ?></a></p>
 
 			<?php
-		}
+	}
 
 	}
 
@@ -276,7 +276,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		$request = array(
 			'body'    => array(
 				'merchant_id' => $this->get_merchant_id(),
-				//'access_token' => $this->get_access_token(),
+				// 'access_token' => $this->get_access_token(),
 			),
 			'timeout' => 45,
 		);
@@ -337,9 +337,9 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 			SPC()->log( 'Failed Square location: ' . print_r( $response, 1 ) );
 			SPC()->notices->add_admin( 'square_locations', __( 'Cannot get locations', 'sunshine-photo-cart' ) );
 			return;
-        }
+		}
 
-        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! empty( $body['errors'] ) ) {
 			SPC()->log( 'Failed Square location body: ' . print_r( $body, 1 ) );
 			SPC()->notices->add_admin( 'square_locations', __( 'Cannot get locations', 'sunshine-photo-cart' ) );
@@ -455,12 +455,12 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 			return false;
 		}
 
-        $this->environmentUrl = ( $mode === 'live' ) ? 'https://connect.squareup.com' : 'https://connect.squareupsandbox.com';
+		$this->environmentUrl = ( $mode === 'live' ) ? 'https://connect.squareup.com' : 'https://connect.squareupsandbox.com';
 
 		if ( empty( SPC()->cart ) ) {
 			SPC()->cart->setup();
 		}
-		$this->total = floor( 100 * SPC()->cart->get_total() );
+		$this->total    = floor( 100 * SPC()->cart->get_total() );
 		$this->currency = SPC()->get_option( 'currency' );
 
 	}
@@ -513,7 +513,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 	public function get_application_id() {
 		if ( $this->get_mode() == 'live' ) {
-			//return 'sandbox-sq0idb-aNDJReIdhctf2o3OZA0FTA';
+			// return 'sandbox-sq0idb-aNDJReIdhctf2o3OZA0FTA';
 			return 'sq0idp-19QAyk7l68V7ymxc2Fl9EQ';
 		}
 		return $this->get_option( 'application_id_test' );
@@ -610,27 +610,27 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		return substr( apply_filters( 'sunshine_square_idempotency_key', sha1( get_option( 'siteurl' ) . $key_input ) . ( $append_key_input ? ':' . $key_input : '' ) ), -40 );
 	}
 
-	private function api_request( $endpoint, $body = [], $method = 'POST', $mode = '' ) {
+	private function api_request( $endpoint, $body = array(), $method = 'POST', $mode = '' ) {
 
 		if ( empty( $mode ) ) {
 			$mode = $this->get_mode();
 		}
 
-        $url = trailingslashit( $this->environmentUrl ) . $endpoint;
-        $args = [
-            'method'    => $method,
-            'headers'   => [
-                'Authorization' => 'Bearer ' . $this->get_access_token( $mode ),
-                'Content-Type'  => 'application/json',
-                'Accept'        => 'application/json',
-            ],
-            'body'      => ( ! empty( $body ) ) ? json_encode( $body ) : '',
-            'timeout'   => 45
-        ];
+		$url  = trailingslashit( $this->environmentUrl ) . $endpoint;
+		$args = array(
+			'method'  => $method,
+			'headers' => array(
+				'Authorization' => 'Bearer ' . $this->get_access_token( $mode ),
+				'Content-Type'  => 'application/json',
+				'Accept'        => 'application/json',
+			),
+			'body'    => ( ! empty( $body ) ) ? json_encode( $body ) : '',
+			'timeout' => 45,
+		);
 
-        return wp_remote_request( $url, $args );
+		return wp_remote_request( $url, $args );
 
-    }
+	}
 
 	public function init_order() {
 
@@ -649,20 +649,20 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		$this->setup();
 
 		$args = array(
-			'source_id' => $source_id,
+			'source_id'       => $source_id,
 			'idempotency_key' => $this->get_idempotency_key( $source_id ),
-			'amount_money' => array(
-				'amount' => $this->total,
+			'amount_money'    => array(
+				'amount'   => $this->total,
 				'currency' => $this->currency,
 			),
-			'autocomplete' => true,
-			'location_id' => $this->get_location_id(),
+			'autocomplete'    => true,
+			'location_id'     => $this->get_location_id(),
 		);
 
 		$app_fee = $this->get_application_fee_amount();
 		if ( $app_fee ) {
 			$args['app_fee_money'] = array(
-				'amount' => $app_fee,
+				'amount'   => $app_fee,
 				'currency' => $this->currency,
 			);
 		}
@@ -673,9 +673,9 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 			SPC()->log( 'Failed Square payment request: ' . print_r( $response, 1 ) );
 			wp_send_json_error( array( 'reasons' => $response->get_error_message() ) );
 			return;
-        }
+		}
 
-        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! empty( $body['errors'] ) ) {
 			SPC()->log( 'Failed Square payment body: ' . print_r( $body, 1 ) );
 			wp_send_json_error( array( 'reasons' => $body['errors'][0]['detail'] ) );
@@ -693,11 +693,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 	}
 
-	public function create_order( $order, $data ) {
-
-		if ( empty( $data['payment_method'] ) || $data['payment_method'] != $this->id || empty( $_POST['square_payment_id'] ) ) {
-			return;
-		}
+	public function create_order( $order ) {
 
 		$this->setup();
 
@@ -707,12 +703,12 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		$order->set_status( 'new' );
 
 		$response = $this->api_request( 'v2/payments/' . $payment_id, '', 'GET' );
-		if ( is_wp_error( $response )) {
+		if ( is_wp_error( $response ) ) {
 			wp_send_json_error( array( 'reasons' => $response->get_error_message() ) );
 			return;
-        }
+		}
 
-        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! empty( $body['errors'] ) ) {
 			return;
 		}
@@ -774,7 +770,6 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 	}
 
-
 	function order_actions( $actions, $post_id ) {
 		$order = new SPC_Order( $post_id );
 		if ( $order->get_payment_method() == $this->id ) {
@@ -828,32 +823,31 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 		$args = array(
 			'idempotency_key' => md5( time() . $payment_id ),
-			'payment_id' => $payment_id,
-			'amount_money' => array(
-				'amount' => $refund_amount_square,
+			'payment_id'      => $payment_id,
+			'amount_money'    => array(
+				'amount'   => $refund_amount_square,
 				'currency' => $order->get_currency(),
 			),
 		);
 
 		$app_fee = $this->get_app_fee( $order );
 		if ( $app_fee ) {
-			$refund_percent = $refund_amount / $order->get_total_minus_refunds();
-			$refund_app_fee = ( $app_fee * $refund_percent ) * 100;
+			$refund_percent        = $refund_amount / $order->get_total_minus_refunds();
+			$refund_app_fee        = ( $app_fee * $refund_percent ) * 100;
 			$args['app_fee_money'] = array(
-				'amount' => intval( $refund_app_fee ),
+				'amount'   => intval( $refund_app_fee ),
 				'currency' => $order->get_currency(),
 			);
 		}
-
 
 		$response = $this->api_request( 'v2/refunds', $args );
 
 		if ( is_wp_error( $response ) ) {
 			SPC()->notices->add_admin( 'square_refund_fail_' . $payment_id, sprintf( __( 'Could not refund payment: %s', 'sunshine-photo-cart' ), print_r( $reasons, 1 ) ), 'error' );
 			return;
-        }
+		}
 
-        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! empty( $body['errors'] ) ) {
 			SPC()->notices->add_admin( 'square_refund_fail_' . $payment_id, sprintf( __( 'Could not refund payment: %s', 'sunshine-photo-cart' ), $body['errors'][0]['detail'] ), 'error' );
 			return;

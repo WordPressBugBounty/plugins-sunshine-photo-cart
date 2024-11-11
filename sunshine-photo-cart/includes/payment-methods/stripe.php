@@ -32,14 +32,14 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 
-		//add_filter( 'sunshine_checkout_allow_order_notify', array( $this, 'order_notify' ), 10, 2 );
+		// add_filter( 'sunshine_checkout_allow_order_notify', array( $this, 'order_notify' ), 10, 2 );
 		add_action( 'wp_ajax_nopriv_sunshine_stripe_init_order', array( $this, 'init_order' ) );
 		add_action( 'wp_ajax_sunshine_stripe_init_order', array( $this, 'init_order' ) );
 		add_action( 'wp', array( $this, 'payment_return' ), 20 );
 
-		add_action( 'sunshine_checkout_create_order', array( $this, 'create_order' ), 10, 2 );
+		add_action( 'sunshine_checkout_process_payment_stripe', array( $this, 'create_order' ) );
 
-		//add_action( 'template_redirect', array( $this, 'payment_return_listener' ), 999 );
+		// add_action( 'template_redirect', array( $this, 'payment_return_listener' ), 999 );
 		add_action( 'template_redirect', array( $this, 'webhooks' ) );
 
 		add_filter( 'sunshine_order_transaction_url', array( $this, 'transaction_url' ) );
@@ -75,15 +75,15 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		}
 
 		$options[] = array(
-			'name'    => __( 'Layout', 'sunshine-photo-cart' ),
-			'id'      => $this->id . '_layout',
-			'type'    => 'radio',
-			'options' => array(
-				'tabs' => __( 'Tabs', 'sunshine-photo-cart' ),
+			'name'        => __( 'Layout', 'sunshine-photo-cart' ),
+			'id'          => $this->id . '_layout',
+			'type'        => 'radio',
+			'options'     => array(
+				'tabs'      => __( 'Tabs', 'sunshine-photo-cart' ),
 				'accordion' => __( 'Accordion', 'sunshine-photo-cart' ),
 			),
 			'description' => '<a href="https://docs.stripe.com/payments/payment-element#layout" target="_blank">' . __( 'See differences in layout options', 'sunshine-photo-cart' ) . '</a>',
-			'default' => 'tabs',
+			'default'     => 'tabs',
 		);
 
 		$options[] = array(
@@ -98,10 +98,10 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		);
 
 		$options[] = array(
-			'name'       => __( 'Stripe Connection (Live)', 'sunshine-photo-cart' ),
-			'id'         => $this->id . '_connect_live',
-			'type'       => 'stripe_connect',
-			'conditions' => array(
+			'name'             => __( 'Stripe Connection (Live)', 'sunshine-photo-cart' ),
+			'id'               => $this->id . '_connect_live',
+			'type'             => 'stripe_connect',
+			'conditions'       => array(
 				array(
 					'field'   => $this->id . '_mode',
 					'compare' => '==',
@@ -112,10 +112,10 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 			'hide_system_info' => true,
 		);
 		$options[] = array(
-			'name'       => __( 'Stripe Connection (Test)', 'sunshine-photo-cart' ),
-			'id'         => $this->id . '_connect_test',
-			'type'       => 'stripe_connect',
-			'conditions' => array(
+			'name'             => __( 'Stripe Connection (Test)', 'sunshine-photo-cart' ),
+			'id'               => $this->id . '_connect_test',
+			'type'             => 'stripe_connect',
+			'conditions'       => array(
 				array(
 					'field'   => $this->id . '_mode',
 					'compare' => '==',
@@ -261,11 +261,9 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 			return false;
 		}
 
-		//\Stripe\Stripe::setAppInfo( 'WordPress Sunshine Photo Cart', SUNSHINE_PHOTO_CART_VERSION, get_bloginfo( 'url' ) );
+		// \Stripe\Stripe::setAppInfo( 'WordPress Sunshine Photo Cart', SUNSHINE_PHOTO_CART_VERSION, get_bloginfo( 'url' ) );
 
-		//$this->stripe = new \Stripe\StripeClient( $this->get_secret_key( $mode ) );
-
-
+		// $this->stripe = new \Stripe\StripeClient( $this->get_secret_key( $mode ) );
 	}
 
 	private function get_mode() {
@@ -308,7 +306,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 				'account_id'        => $this->get_account_id(),
 				'client_secret'     => $this->get_client_secret(),
 				'payment_intent_id' => $this->get_payment_intent_id(),
-				'layout'			=> ( $this->get_option( 'layout' ) ) ? $this->get_option( 'layout' ) : 'tabs',
+				'layout'            => ( $this->get_option( 'layout' ) ) ? $this->get_option( 'layout' ) : 'tabs',
 				'return_url'        => sunshine_get_page_url( 'checkout' ) . '?section=payment&stripe_payment_return',
 				'ajax_url'          => admin_url( 'admin-ajax.php' ),
 				'security'          => wp_create_nonce( 'sunshine_stripe' ),
@@ -331,41 +329,44 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		}
 
 		// Set the cart total in cents
-		$cart_total  = SPC()->cart->get_total();
+		$cart_total = SPC()->cart->get_total();
 		if ( $cart_total <= 0 ) {
 			return; // Don't create if there is no amount to charge yet.
 		}
 
 		$this->total = round( 100 * $cart_total );
 
-		//sunshine_log( 'stripe total: ' . $this->total );
+		// sunshine_log( 'stripe total: ' . $this->total );
 
 		// See if we have a valid customer
 		$stripe_customer_id = $this->get_stripe_customer_id();
 		if ( $stripe_customer_id ) {
-		    $response = wp_remote_get("https://api.stripe.com/v1/customers/$stripe_customer_id", array(
-		        'headers' => array(
-		            'Authorization' => 'Bearer ' . $this->get_secret_key(),
-		            'Content-Type'  => 'application/x-www-form-urlencoded',
-		        )
-		    ));
+			$response = wp_remote_get(
+				"https://api.stripe.com/v1/customers/$stripe_customer_id",
+				array(
+					'headers' => array(
+						'Authorization' => 'Bearer ' . $this->get_secret_key(),
+						'Content-Type'  => 'application/x-www-form-urlencoded',
+					),
+				)
+			);
 
-		    if ( is_wp_error( $response ) ) {
-		        // Handle WordPress HTTP error
-		        $this->set_stripe_customer_id( '' );
-		        $stripe_customer_id = '';
-		    } else {
-		        $stripe_customer = json_decode( wp_remote_retrieve_body( $response ), true );
-		        if ( isset( $stripe_customer['error'] ) ) {
-		            // Handle Stripe error, unset customer ID if not found or other API issue
-		            $this->set_stripe_customer_id('');
-		            $stripe_customer_id = '';
-		        }
-		    }
+			if ( is_wp_error( $response ) ) {
+				// Handle WordPress HTTP error
+				$this->set_stripe_customer_id( '' );
+				$stripe_customer_id = '';
+			} else {
+				$stripe_customer = json_decode( wp_remote_retrieve_body( $response ), true );
+				if ( isset( $stripe_customer['error'] ) ) {
+					// Handle Stripe error, unset customer ID if not found or other API issue
+					$this->set_stripe_customer_id( '' );
+					$stripe_customer_id = '';
+				}
+			}
 		}
 
 		// Set up payment intent
-		if ( empty( SPC()->session->get( 'stripe_payment_intent_id' ) ) ) {
+		if ( empty( SPC()->session->get( 'stripe_payment_intent_idx' ) ) ) {
 
 			$args = array(
 				'amount'                    => $this->total,
@@ -390,17 +391,19 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 				$args['customer'] = $stripe_customer_id;
 			}
 
-			$response = wp_remote_post('https://api.stripe.com/v1/payment_intents', array(
-				'method'      => 'POST',
-				'timeout'     => 45,
-				'redirection' => 5,
-				'httpversion' => '1.0',
-				'blocking'    => true,
-				'headers'     => array(
-					'Authorization' => 'Bearer ' . $this->get_secret_key(),
-					'Content-Type'  => 'application/x-www-form-urlencoded',
-				),
-				'body'        => http_build_query( $args ),
+			$response = wp_remote_post(
+				'https://api.stripe.com/v1/payment_intents',
+				array(
+					'method'      => 'POST',
+					'timeout'     => 45,
+					'redirection' => 5,
+					'httpversion' => '1.0',
+					'blocking'    => true,
+					'headers'     => array(
+						'Authorization' => 'Bearer ' . $this->get_secret_key(),
+						'Content-Type'  => 'application/x-www-form-urlencoded',
+					),
+					'body'        => http_build_query( $args ),
 				)
 			);
 
@@ -417,15 +420,14 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 				SPC()->log( 'Created stripe payment intent: ' . $intent['id'] );
 				SPC()->session->set( 'stripe_payment_intent_id', $intent['id'] );
 				$this->payment_intent_id = $intent['id'];
-				$this->client_secret = $intent['client_secret'];
+				$this->client_secret     = $intent['client_secret'];
 				return;
 			}
-
 		} elseif ( ! isset( $_GET['stripe_payment_return'] ) ) { // Don't force create during redirect process
 
 			$args = array(
-				'amount'                 => $this->total,
-				'currency'               => $this->currency,
+				'amount'   => $this->total,
+				'currency' => $this->currency,
 			);
 			if ( $this->get_application_fee_amount() ) {
 				$args['application_fee_amount'] = $this->get_application_fee_amount();
@@ -445,7 +447,9 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 			$payment_intent_id = SPC()->session->get( 'stripe_payment_intent_id' );
 
-			$response = wp_remote_post("https://api.stripe.com/v1/payment_intents/{$payment_intent_id}", array(
+			$response = wp_remote_post(
+				"https://api.stripe.com/v1/payment_intents/{$payment_intent_id}",
+				array(
 					'method'      => 'POST',
 					'timeout'     => 45,
 					'redirection' => 5,
@@ -478,7 +482,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 				}
 				SPC()->log( 'Updated Stripe payment intent: ' . $intent['id'] );
 				$this->payment_intent_id = $intent['id'];
-				$this->client_secret = $intent['client_secret'];
+				$this->client_secret     = $intent['client_secret'];
 				return;
 			}
 
@@ -498,17 +502,19 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 				// $args['setup_future_usage'] = 'on_session'; // on_session = person must be present. We are only storing this for easier future use when checking out on website not for automated recurring billing
 			}
 
-			$response = wp_remote_post('https://api.stripe.com/v1/payment_intents', array(
-				'method'      => 'POST',
-				'timeout'     => 45,
-				'redirection' => 5,
-				'httpversion' => '1.0',
-				'blocking'    => true,
-				'headers'     => array(
-					'Authorization' => 'Bearer ' . $this->get_secret_key(),
-					'Content-Type'  => 'application/x-www-form-urlencoded',
-				),
-				'body'        => http_build_query( $args ),
+			$response = wp_remote_post(
+				'https://api.stripe.com/v1/payment_intents',
+				array(
+					'method'      => 'POST',
+					'timeout'     => 45,
+					'redirection' => 5,
+					'httpversion' => '1.0',
+					'blocking'    => true,
+					'headers'     => array(
+						'Authorization' => 'Bearer ' . $this->get_secret_key(),
+						'Content-Type'  => 'application/x-www-form-urlencoded',
+					),
+					'body'        => http_build_query( $args ),
 				)
 			);
 
@@ -525,10 +531,9 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 				SPC()->log( 'Fallback create Stripe payment intent: ' . $intent['id'] );
 				SPC()->session->set( 'stripe_payment_intent_id', $intent['id'] );
 				$this->payment_intent_id = $intent['id'];
-				$this->client_secret = $intent['client_secret'];
+				$this->client_secret     = $intent['client_secret'];
 				return;
 			}
-
 		}
 
 	}
@@ -542,21 +547,24 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		SPC()->log( 'Returned from Stripe after async payment' );
 
 		$payment_intent_id = sanitize_text_field( $_GET['payment_intent'] );
-		$client_secret = sanitize_text_field( $_GET['payment_intent_client_secret'] );
+		$client_secret     = sanitize_text_field( $_GET['payment_intent_client_secret'] );
 
-		$response = wp_remote_get("https://api.stripe.com/v1/payment_intents/$payment_intent_id", array(
-	        'headers' => array(
-	            'Authorization' => 'Bearer ' . $this->get_secret_key(),
-	            'Content-Type'  => 'application/x-www-form-urlencoded',
-	        )
-	    ));
+		$response = wp_remote_get(
+			"https://api.stripe.com/v1/payment_intents/$payment_intent_id",
+			array(
+				'headers' => array(
+					'Authorization' => 'Bearer ' . $this->get_secret_key(),
+					'Content-Type'  => 'application/x-www-form-urlencoded',
+				),
+			)
+		);
 
-	    if (is_wp_error($response) || 200 !== wp_remote_retrieve_response_code($response)) {
-	        // Handle error or invalid response
-	        return;
-	    }
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			// Handle error or invalid response
+			return;
+		}
 
-	    $payment_intent_object = json_decode( wp_remote_retrieve_body( $response ), true );
+		$payment_intent_object = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( isset( $payment_intent_object['error'] ) ) {
 			SPC()->log( 'Check payment intent on checkout error: ' . $payment_intent_object['error'] );
 			return;
@@ -684,18 +692,20 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 				$body = http_build_query( $args );
 
-				$response = wp_remote_post('https://api.stripe.com/v1/customers', array(
-					'method'      => 'POST',
-					'timeout'     => 45,
-					'redirection' => 5,
-					'httpversion' => '1.0',
-					'blocking'    => true,
-					'headers'     => array(
-						'Authorization' => 'Bearer ' . $this->get_secret_key(),
-						'Content-Type'  => 'application/x-www-form-urlencoded',
-					),
-					'body'        => $body,
-					'cookies'     => array()
+				$response = wp_remote_post(
+					'https://api.stripe.com/v1/customers',
+					array(
+						'method'      => 'POST',
+						'timeout'     => 45,
+						'redirection' => 5,
+						'httpversion' => '1.0',
+						'blocking'    => true,
+						'headers'     => array(
+							'Authorization' => 'Bearer ' . $this->get_secret_key(),
+							'Content-Type'  => 'application/x-www-form-urlencoded',
+						),
+						'body'        => $body,
+						'cookies'     => array(),
 					)
 				);
 
@@ -704,7 +714,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 					SPC()->log( 'Failed creating Stripe customer: ' . $error_message );
 					return;
 				} else {
-					$customer = json_decode(wp_remote_retrieve_body($response), true);
+					$customer = json_decode( wp_remote_retrieve_body( $response ), true );
 					if ( isset( $customer['error'] ) ) {
 						SPC()->log( 'Stripe create customer error: ' . $customer['error']['message'] );
 						wp_send_json_error( array( 'reasons' => 'Could not create customer in Stripe: ' . $customer['error']['message'] ) );
@@ -712,14 +722,13 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 					SPC()->customer->update_meta( 'stripe_customer_id', $customer['id'] );
 					$this->setup_payment_intent(); // Reset payment intent so it includes new stripe customer id
 				}
-
 			} else {
 
 				$customer_id = $this->get_stripe_customer_id(); // Retrieve the Stripe customer ID
-				$args = array(
-					'email'    => SPC()->customer->get_email(),
-					'name'     => SPC()->customer->get_name(),
-					'shipping[name]'         => SPC()->customer->get_name(),
+				$args        = array(
+					'email'                          => SPC()->customer->get_email(),
+					'name'                           => SPC()->customer->get_name(),
+					'shipping[name]'                 => SPC()->customer->get_name(),
 					'shipping[address][city]'        => SPC()->customer->get_shipping_city(),
 					'shipping[address][country]'     => SPC()->customer->get_shipping_country(),
 					'shipping[address][line1]'       => SPC()->customer->get_shipping_address(),
@@ -728,21 +737,24 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 					'shipping[address][state]'       => SPC()->customer->get_shipping_state(),
 				);
 
-				$body = http_build_query($args);
+				$body = http_build_query( $args );
 
-				$response = wp_remote_post("https://api.stripe.com/v1/customers/$customer_id", array(
-					'method'      => 'POST',
-					'timeout'     => 45,
-					'redirection' => 5,
-					'httpversion' => '1.0',
-					'blocking'    => true,
-					'headers'     => array(
-						'Authorization' => 'Bearer ' . $this->get_secret_key(),
-						'Content-Type'  => 'application/x-www-form-urlencoded',
-					),
-					'body'        => $body,
-					'cookies'     => array()
-				));
+				$response = wp_remote_post(
+					"https://api.stripe.com/v1/customers/$customer_id",
+					array(
+						'method'      => 'POST',
+						'timeout'     => 45,
+						'redirection' => 5,
+						'httpversion' => '1.0',
+						'blocking'    => true,
+						'headers'     => array(
+							'Authorization' => 'Bearer ' . $this->get_secret_key(),
+							'Content-Type'  => 'application/x-www-form-urlencoded',
+						),
+						'body'        => $body,
+						'cookies'     => array(),
+					)
+				);
 
 				if ( is_wp_error( $response ) ) {
 					$error_message = $response->get_error_message();
@@ -757,9 +769,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 						return;
 					}
 				}
-
 			}
-
 		}
 
 		wp_send_json_success();
@@ -790,7 +800,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		}
 
 		$endpoint_secret = $this->get_option( 'stripe_webhook_secret_' . $mode );
-		//$endpoint_secret = 'whsec_e44d4ef0b753a2ce80c9eacf0f00a183f68462f29dff87a6bb6418f7c9613e21'; // TODO: Remove, for Local testing
+		// $endpoint_secret = 'whsec_e44d4ef0b753a2ce80c9eacf0f00a183f68462f29dff87a6bb6418f7c9613e21'; // TODO: Remove, for Local testing
 
 		$sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'];
 		$event      = null;
@@ -840,11 +850,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 	}
 
-	public function create_order( $order, $data ) {
-
-		if ( empty( $data['payment_method'] ) || $data['payment_method'] != $this->id ) {
-			return;
-		}
+	public function create_order( $order ) {
 
 		$payment_intent_id = SPC()->session->get( 'stripe_payment_intent_id' );
 
@@ -855,61 +861,67 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 		$this->setup();
 
-		$response = wp_remote_get( "https://api.stripe.com/v1/payment_intents/$payment_intent_id", array(
-	        'headers' => array(
-	            'Authorization' => 'Bearer ' . $this->get_secret_key(),
-	            'Content-Type'  => 'application/x-www-form-urlencoded',
-	        )
-	    ));
+		$response = wp_remote_get(
+			"https://api.stripe.com/v1/payment_intents/$payment_intent_id",
+			array(
+				'headers' => array(
+					'Authorization' => 'Bearer ' . $this->get_secret_key(),
+					'Content-Type'  => 'application/x-www-form-urlencoded',
+				),
+			)
+		);
 
-	    if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
-	        // Handle error or invalid response
-	        return;
-	    }
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			// Handle error or invalid response
+			return;
+		}
 
-	    $payment_intent_object = json_decode( wp_remote_retrieve_body( $response ), true );
-	    if ( isset( $payment_intent_object['error'] ) ) {
+		$payment_intent_object = json_decode( wp_remote_retrieve_body( $response ), true );
+		if ( isset( $payment_intent_object['error'] ) ) {
 			SPC()->log( 'Create order get payment intent error' );
-	        // Handle Stripe error
-	        return;
-	    }
+			// Handle Stripe error
+			return;
+		}
 
-	    if ( ! empty( $payment_intent_object['source'] ) ) {
-	        $order->update_meta_value( 'source', sanitize_text_field( $payment_intent_object['source'] ) );
-	    }
-	    if ( ! empty( $payment_intent_object['application_fee_amount'] ) ) {
-	        $order->update_meta_value( 'application_fee_amount', sanitize_text_field( $payment_intent_object['application_fee_amount'] ) / 100 );
-	    }
+		if ( ! empty( $payment_intent_object['source'] ) ) {
+			$order->update_meta_value( 'source', sanitize_text_field( $payment_intent_object['source'] ) );
+		}
+		if ( ! empty( $payment_intent_object['application_fee_amount'] ) ) {
+			$order->update_meta_value( 'application_fee_amount', sanitize_text_field( $payment_intent_object['application_fee_amount'] ) / 100 );
+		}
 
-	    // Continue to update metadata
-	    $args = array(
-	        'metadata' => array(
-	            'order_id'  => $order->get_id(),
-	            'site'      => get_bloginfo('name'),
-	            'order_url' => admin_url('post.php?post=' . $order->get_id() . '&action=edit'),
-	        ),
-	    );
-	    $body = http_build_query( array( 'metadata' => json_encode($args['metadata'] ) ) );
+		// Continue to update metadata
+		$args = array(
+			'metadata' => array(
+				'order_id'  => $order->get_id(),
+				'site'      => get_bloginfo( 'name' ),
+				'order_url' => admin_url( 'post.php?post=' . $order->get_id() . '&action=edit' ),
+			),
+		);
+		$body = http_build_query( array( 'metadata' => json_encode( $args['metadata'] ) ) );
 
-	    $update_response = wp_remote_post("https://api.stripe.com/v1/paymentIntents/$payment_intent_id", array(
-	        'method'      => 'POST',
-	        'headers'     => array(
-	            'Authorization' => 'Bearer ' . $this->get_secret_key(),
-	            'Content-Type'  => 'application/x-www-form-urlencoded',
-	        ),
-	        'body'        => $body,
-	    ));
+		$update_response = wp_remote_post(
+			"https://api.stripe.com/v1/paymentIntents/$payment_intent_id",
+			array(
+				'method'  => 'POST',
+				'headers' => array(
+					'Authorization' => 'Bearer ' . $this->get_secret_key(),
+					'Content-Type'  => 'application/x-www-form-urlencoded',
+				),
+				'body'    => $body,
+			)
+		);
 
-	    if ( is_wp_error( $update_response ) || 200 !== wp_remote_retrieve_response_code( $update_response ) ) {
-	        // Handle error or invalid response during update
-	        return;
-	    }
+		if ( is_wp_error( $update_response ) || 200 !== wp_remote_retrieve_response_code( $update_response ) ) {
+			// Handle error or invalid response during update
+			return;
+		}
 
-	    $updated_intent = json_decode( wp_remote_retrieve_body( $update_response ), true);
-	    if ( isset( $updated_intent['error'] ) ) {
-	        // Handle Stripe error during update
-	        return;
-	    }
+		$updated_intent = json_decode( wp_remote_retrieve_body( $update_response ), true );
+		if ( isset( $updated_intent['error'] ) ) {
+			// Handle Stripe error during update
+			return;
+		}
 
 	}
 
@@ -977,7 +989,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 	function order_actions( $actions, $post_id ) {
 		$order = new SPC_Order( $post_id );
 		if ( $order->get_payment_method() == $this->id ) {
-			$actions[ $this->id . '_refund'] = sprintf( __( 'Refund payment in %s', 'sunshine-photo-cart' ), $this->name );
+			$actions[ $this->id . '_refund' ] = sprintf( __( 'Refund payment in %s', 'sunshine-photo-cart' ), $this->name );
 		}
 		return $actions;
 	}
@@ -1017,13 +1029,16 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 		$payment_intent_id = $order->get_meta_value( 'stripe_payment_intent_id' );
 
-		$response = wp_remote_get("https://api.stripe.com/v1/payment_intents/$payment_intent_id", array(
-			'timeout'     => 45,
-			'headers'     => array(
-				'Authorization' => 'Bearer ' . $this->get_secret_key( $order->get_mode() ),
-				'Content-Type'  => 'application/x-www-form-urlencoded',
+		$response = wp_remote_get(
+			"https://api.stripe.com/v1/payment_intents/$payment_intent_id",
+			array(
+				'timeout' => 45,
+				'headers' => array(
+					'Authorization' => 'Bearer ' . $this->get_secret_key( $order->get_mode() ),
+					'Content-Type'  => 'application/x-www-form-urlencoded',
+				),
 			)
-		));
+		);
 
 		if ( is_wp_error( $response ) ) {
 			$error_message = $response->get_error_message();
@@ -1056,9 +1071,9 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 			return;
 		}
 
-		$args = array(
-			'payment_intent'         => $payment_intent_id,
-			'amount'                 => $refund_amount_stripe,
+		$args                   = array(
+			'payment_intent' => $payment_intent_id,
+			'amount'         => $refund_amount_stripe,
 		);
 		$application_fee_amount = $order->get_meta_value( 'application_fee_amount' );
 		if ( $application_fee_amount ) {
@@ -1067,29 +1082,32 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 		$body = http_build_query( $args );
 
-	    $response = wp_remote_post( "https://api.stripe.com/v1/refunds", array(
-	        'method'      => 'POST',
-	        'timeout'     => 45,
-	        'headers'     => array(
-	            'Authorization' => 'Bearer ' . $this->get_secret_key( $order->get_mode() ),
-	            'Content-Type'  => 'application/x-www-form-urlencoded',
-	        ),
-	        'body' => $body,
-	    ));
+		$response = wp_remote_post(
+			'https://api.stripe.com/v1/refunds',
+			array(
+				'method'  => 'POST',
+				'timeout' => 45,
+				'headers' => array(
+					'Authorization' => 'Bearer ' . $this->get_secret_key( $order->get_mode() ),
+					'Content-Type'  => 'application/x-www-form-urlencoded',
+				),
+				'body'    => $body,
+			)
+		);
 
-	    if ( is_wp_error( $response ) ) {
-	        $error_message = $response->get_error_message();
-	        SPC()->notices->add_admin( 'stripe_refund_fail_' . $payment_intent_id, sprintf( __( 'Could not refund payment: %s', 'sunshine-photo-cart' ), $error_message), 'error' );
-	        $order->add_log( sprintf( 'Could not refund payment in Stripe: %s', $error_message ) );
-	        return;
-	    }
+		if ( is_wp_error( $response ) ) {
+			$error_message = $response->get_error_message();
+			SPC()->notices->add_admin( 'stripe_refund_fail_' . $payment_intent_id, sprintf( __( 'Could not refund payment: %s', 'sunshine-photo-cart' ), $error_message ), 'error' );
+			$order->add_log( sprintf( 'Could not refund payment in Stripe: %s', $error_message ) );
+			return;
+		}
 
-	    $refund_response = json_decode( wp_remote_retrieve_body( $response ), true );
-	    if ( isset( $refund_response['error'] ) ) {
-	        SPC()->notices->add_admin( 'stripe_refund_fail_' . $payment_intent_id, sprintf( __( 'Could not refund payment: %s', 'sunshine-photo-cart' ), $refund_response['error']['message'] ), 'error' );
-	        $order->add_log( sprintf( 'Could not refund payment in Stripe: %s', $refund_response['error']['message'] ) );
-	        return;
-	    }
+		$refund_response = json_decode( wp_remote_retrieve_body( $response ), true );
+		if ( isset( $refund_response['error'] ) ) {
+			SPC()->notices->add_admin( 'stripe_refund_fail_' . $payment_intent_id, sprintf( __( 'Could not refund payment: %s', 'sunshine-photo-cart' ), $refund_response['error']['message'] ), 'error' );
+			$order->add_log( sprintf( 'Could not refund payment in Stripe: %s', $refund_response['error']['message'] ) );
+			return;
+		}
 
 		$order->set_status( 'refunded' );
 		$order->add_refund( $refund_amount );

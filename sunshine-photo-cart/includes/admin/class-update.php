@@ -3,10 +3,10 @@
 class SPC_Update {
 
 	private $current_version;
-	private $need_update = false;
+	private $need_update    = false;
 	private $update_actions = array();
-	private $notices = array();
-	private $batch = 500;
+	private $notices        = array();
+	private $batch          = 500;
 
 	function __construct() {
 
@@ -48,7 +48,7 @@ class SPC_Update {
 
 	function update_check() {
 
-		$update_3 = SPC()->get_option( 'update_3' );
+		$update_3    = SPC()->get_option( 'update_3' );
 		$old_options = get_option( 'sunshine_options' );
 		if ( $old_options && ! $update_3 && ( ! isset( $_GET['page'] ) || $_GET['page'] != 'sunshine-update' ) ) {
 			SPC()->notices->add_admin( 'update_3', 'Sunshine has been updated to version 3 and needs the database to be updated. <a href="' . admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-update' ) . '">Click here to start the update process</a>', 'error' );
@@ -66,8 +66,8 @@ class SPC_Update {
 	}
 
 	function menu() {
-		$base = '';
-		$update_3 = SPC()->get_option( 'update_3' );
+		$base        = '';
+		$update_3    = SPC()->get_option( 'update_3' );
 		$old_options = get_option( 'sunshine_options' );
 		if ( $old_options && ! $update_3 ) {
 			// Make the link visible in the admin menu.
@@ -96,7 +96,7 @@ class SPC_Update {
 	}
 
 	function add_notice( $message ) {
-		$notices = SPC()->get_option( 'update_3_notices' );
+		$notices   = SPC()->get_option( 'update_3_notices' );
 		$notices[] = $message;
 		SPC()->update_option( 'update_3_notices', $notices );
 	}
@@ -112,7 +112,7 @@ class SPC_Update {
 		}
 		if ( ! wp_next_scheduled( 'sunshine_send_summary' ) ) {
 			$week_start = (int) get_option( 'start_of_week' );
-			$start = strtotime( "Sunday + $week_start days 8am" );
+			$start      = strtotime( "Sunday + $week_start days 8am" );
 			wp_schedule_event( $start, 'weekly', 'sunshine_send_summary' );
 		}
 		if ( ! wp_next_scheduled( 'sunshine_license_check' ) ) {
@@ -120,6 +120,9 @@ class SPC_Update {
 		}
 		if ( ! wp_next_scheduled( 'sunshine_tracking_send' ) ) {
 			wp_schedule_event( time() + DAY_IN_SECONDS, 'weekly', 'sunshine_tracking_send' );
+		}
+		if ( ! wp_next_scheduled( 'sunshine_daily' ) ) {
+			wp_schedule_event( time(), 'daily', 'sunshine_daily' );
 		}
 
 		$allowed_tracking = get_option( 'sunshine_allow_tracking' );
@@ -204,7 +207,7 @@ class SPC_Update {
 		// Almost all options became their own row with the "sunshine_" prefix, so assume that for all for quick change first.
 		foreach ( $options as $key => $value ) {
 			if ( substr( $key, -4 ) === 'desc' ) {
-			    $key = substr_replace( $key, 'description', -4 );
+				$key = substr_replace( $key, 'description', -4 );
 			}
 			update_option( 'sunshine_' . $key, $value, false );
 		}
@@ -213,16 +216,19 @@ class SPC_Update {
 		$options3 = array();
 
 		if ( ! empty( $options['sunshine_license_key'] ) ) {
-			$type = get_option( 'sunshine_license_type' );
+			$type             = get_option( 'sunshine_license_type' );
 			$options3['plan'] = $type;
-			$options3['license_sunshine-photo-cart-' . $type ] = $options['sunshine_license_key'];
-			$options3['license_status_sunshine-photo-cart-' . $type ] = get_option( 'sunshine_license_active' );
-			$options3['license_expiration_sunshine-photo-cart-' . $type ] = get_transient( 'sunshine_license_expiration' );
+			$options3[ 'license_sunshine-photo-cart-' . $type ]            = $options['sunshine_license_key'];
+			$options3[ 'license_status_sunshine-photo-cart-' . $type ]     = get_option( 'sunshine_license_active' );
+			$options3[ 'license_expiration_sunshine-photo-cart-' . $type ] = get_transient( 'sunshine_license_expiration' );
 		}
 
-		$options3['per_page'] = $options['columns'] * $options['rows'];
-		$options3['thumbnail_size'] = array( 'w' => $options['thumbnail_width'], 'h' => $options['thumbnail_height'] );
-		$options3['large_size'] = array(
+		$options3['per_page']       = $options['columns'] * $options['rows'];
+		$options3['thumbnail_size'] = array(
+			'w' => $options['thumbnail_width'],
+			'h' => $options['thumbnail_height'],
+		);
+		$options3['large_size']     = array(
 			'w' => ( ! empty( $options['lowres_width'] ) ) ? $options['lowres_width'] : 1000,
 			'h' => ( ! empty( $options['lowres_height'] ) ) ? $options['lowres_height'] : 1000,
 		);
@@ -245,7 +251,6 @@ class SPC_Update {
 			if ( ! empty( $options['template_gallery_password_box'] ) ) {
 				$options3['classic_password'] = $options['template_gallery_password_box'];
 			}
-
 		}
 
 		if ( ! empty( $options['template_logo'] ) ) {
@@ -262,25 +267,25 @@ class SPC_Update {
 		}
 
 		if ( ! empty( $options['lightbox'] ) ) {
-			$options3['lightbox_enabled'] = 1;
+			$options3['lightbox_enabled']            = 1;
 			$options3['lightbox_slideshow_interval'] = ! empty( $options['slideshow_interval'] ) ? $options['slideshow_interval'] : 5;
-			$options3['lightbox_navigation'] = 'thumbnail';
-			$options3['lightbox_slideshow'] = 1;
+			$options3['lightbox_navigation']         = 'thumbnail';
+			$options3['lightbox_slideshow']          = 1;
 		}
 
 		if ( ! empty( $options['mosaic'] ) ) {
 			$options3['gallery_layout'] = 'justified';
-			$options3['images_layout'] = 'justified';
+			$options3['images_layout']  = 'justified';
 		}
 
 		if ( ! empty( $options['tax_rate'] ) ) {
-			$tax_location = explode( '|', $options['tax_location'] );
-			$tax_data = array(
+			$tax_location              = explode( '|', $options['tax_location'] );
+			$tax_data                  = array(
 				'country' => $tax_location[0],
-				'state' => $tax_location[1],
-				'rate' => $options['tax_rate'],
+				'state'   => $tax_location[1],
+				'rate'    => $options['tax_rate'],
 			);
-			$options3['tax_rates'] = array( $tax_data );
+			$options3['tax_rates']     = array( $tax_data );
 			$options3['taxes_enabled'] = 1;
 		}
 
@@ -288,25 +293,25 @@ class SPC_Update {
 			$this->add_notice( 'Please visit the <a href="' . admin_url( 'admin.php?page=sunshine&section=payment_methods&payment_method=paypal' ) . '" target="_blank">Payment settings</a> to reconnect PayPal' );
 		}
 		$options3['paypal_active'] = 0;
-		$options3['paypal_mode'] = ( ! empty( $options['paypal_test_mode'] ) ) ? 'test' : 'live';
+		$options3['paypal_mode']   = ( ! empty( $options['paypal_test_mode'] ) ) ? 'test' : 'live';
 
 		if ( ! empty( $options['square_active'] ) ) {
 			$this->add_notice( 'Please visit the <a href="' . admin_url( 'admin.php?page=sunshine&section=payment_methods&payment_method=square' ) . '" target="_blank">Payment settings</a> to reconnect Square' );
 		}
 		$options3['square_active'] = 0;
-		$options3['square_mode'] = ( !empty( $options['square_test'] ) ) ? 'test' : 'live';
+		$options3['square_mode']   = ( ! empty( $options['square_test'] ) ) ? 'test' : 'live';
 
 		if ( ! empty( $options['stripe_active'] ) ) {
 			$this->add_notice( 'Please visit the <a href="' . admin_url( 'admin.php?page=sunshine&section=payment_methods&payment_method=stripe' ) . '" target="_blank">Payment settings</a> to reconnect Stripe' );
 		}
 		$options3['stripe_active'] = 0;
-		$options3['stripe_mode'] = ( $options['stripe_test'] ) ? 'test' : 'live';
+		$options3['stripe_mode']   = ( $options['stripe_test'] ) ? 'test' : 'live';
 
 		if ( ! empty( $options['authorizenet_active'] ) ) {
-			$options3['authorizenet_mode'] = ( $options['authorizenet_test'] ) ? 'test' : 'live';
-			$options3['authorizenet_login_id_test'] = $options['authorizenet_test_login'];
+			$options3['authorizenet_mode']                 = ( $options['authorizenet_test'] ) ? 'test' : 'live';
+			$options3['authorizenet_login_id_test']        = $options['authorizenet_test_login'];
 			$options3['authorizenet_transaction_key_test'] = $options['authorizenet_test_key'];
-			$options3['authorizenet_login_id_live'] = $options['authorizenet_live_login'];
+			$options3['authorizenet_login_id_live']        = $options['authorizenet_live_login'];
 			$options3['authorizenet_transaction_key_live'] = $options['authorizenet_live_key'];
 		}
 
@@ -321,37 +326,37 @@ class SPC_Update {
 		$options3['shipping_methods'] = array();
 
 		if ( ! empty( $options['flat_rate_active'] ) ) {
-			$key = wp_hash( 'flat_rate' . current_time( 'timestamp' ) );
-			$options3['shipping_methods'][ $key ] = array(
-				'id' => 'flat_rate',
+			$key                                     = wp_hash( 'flat_rate' . current_time( 'timestamp' ) );
+			$options3['shipping_methods'][ $key ]    = array(
+				'id'     => 'flat_rate',
 				'active' => 1,
 			);
-			$options3['flat_rate_name_' . $key ] = $options['flat_rate_name'];
-			$options3['flat_rate_taxable_' . $key ] = $options['flat_rate_taxable'];
-			$options3['flat_rate_price_' . $key ] = $options['flat_rate_cost'];
+			$options3[ 'flat_rate_name_' . $key ]    = $options['flat_rate_name'];
+			$options3[ 'flat_rate_taxable_' . $key ] = $options['flat_rate_taxable'];
+			$options3[ 'flat_rate_price_' . $key ]   = $options['flat_rate_cost'];
 		}
 
 		// Convert Tiered Shipping - each one needs it's own shipping instance now.
 		if ( ! empty( $options['tiered_shipping_rates'] ) ) {
 			$rates = explode( '|', $options['tiered_shipping_rates'] );
 			$count = 1;
-			$min = 0;
+			$min   = 0;
 			foreach ( $rates as $rate ) {
 				$rate_data = explode( ':', $rate );
 				if ( empty( $rate_data[0] ) || empty( $rate_data[1] ) ) {
 					continue;
 				}
-				$key = wp_hash( 'flat_rate' . $count . wp_generate_password() );
-				$options3['shipping_methods'][ $key ] = array(
-					'id' => 'flat_rate',
+				$key                                        = wp_hash( 'flat_rate' . $count . wp_generate_password() );
+				$options3['shipping_methods'][ $key ]       = array(
+					'id'     => 'flat_rate',
 					'active' => 1,
 				);
-				$options3['flat_rate_name_' . $key ] = $options['tiered_shipping_name'] . ' (' . $count . ')';
-				$options3['flat_rate_taxable_' . $key ] = $options['tiered_shipping_taxable'];
-				$options3['flat_rate_price_' . $key ] = $rate_data[1];
-				$options3['flat_rate_order_min_' . $key ] = $min;
-				$options3['flat_rate_order_max_' . $key ] = $rate_data[0];
-				$options3['flat_rate_price_type_' . $key ] = 'cart';
+				$options3[ 'flat_rate_name_' . $key ]       = $options['tiered_shipping_name'] . ' (' . $count . ')';
+				$options3[ 'flat_rate_taxable_' . $key ]    = $options['tiered_shipping_taxable'];
+				$options3[ 'flat_rate_price_' . $key ]      = $rate_data[1];
+				$options3[ 'flat_rate_order_min_' . $key ]  = $min;
+				$options3[ 'flat_rate_order_max_' . $key ]  = $rate_data[0];
+				$options3[ 'flat_rate_price_type_' . $key ] = 'cart';
 				$count++;
 				$min = $rate_data[0] + 0.01;
 			}
@@ -360,15 +365,15 @@ class SPC_Update {
 		}
 
 		if ( ! empty( $options['local_active'] ) ) {
-			$key = wp_hash( 'local' . current_time( 'timestamp' ) );
-			$options3['shipping_methods'][ $key ] = array(
-				'id' => 'local',
+			$key                                   = wp_hash( 'local' . current_time( 'timestamp' ) );
+			$options3['shipping_methods'][ $key ]  = array(
+				'id'     => 'local',
 				'active' => 1,
 			);
-			$options3['local_name_' . $key ] = $options['local_name'];
-			$options3['local_taxable_' . $key ] = $options['local_taxable'];
-			$options3['local_price_' . $key ] = $options['local_cost'];
-			$options3['local_postcodes_' . $key ] = ( ! empty( $options['local_zipcodes'] ) ) ? $options['local_zipcodes'] : '';
+			$options3[ 'local_name_' . $key ]      = $options['local_name'];
+			$options3[ 'local_taxable_' . $key ]   = $options['local_taxable'];
+			$options3[ 'local_price_' . $key ]     = $options['local_cost'];
+			$options3[ 'local_postcodes_' . $key ] = ( ! empty( $options['local_zipcodes'] ) ) ? $options['local_zipcodes'] : '';
 		}
 
 		// Make new terms page.
@@ -387,38 +392,38 @@ class SPC_Update {
 		}
 
 		// Email subjects, signatures, and content.
-		$options3['email_signup_active'] = 1;
-		$options3['email_reset-password_active'] = 1;
-		$options3['email_customer-receipt_active'] = 1;
-		$options3['email_admin-receipt_active'] = 1;
-		$options3['email_order-comment_active'] = 1;
-		$options3['email_admin-favorites_active'] = 1;
-		$options3['email_custom-favorites_active'] = 1;
-		$options3['email_summary_active'] = 1;
-		$options3['email_image-comment_active'] = 1;
-		$options3['email_message-custom_active'] = 1;
-		$options3['email_message-gallery_active'] = 1;
-		$options3['email_message-user_active'] = 1;
-		$options3['email_order-files-notify_active'] = 1;
-		$options3['email_admin-receipt_recipients'] = ( ! empty( $options['order_notifications'] ) ) ? $options['order_notifications'] : get_bloginfo( 'admin_email' );
+		$options3['email_signup_active']              = 1;
+		$options3['email_reset-password_active']      = 1;
+		$options3['email_customer-receipt_active']    = 1;
+		$options3['email_admin-receipt_active']       = 1;
+		$options3['email_order-comment_active']       = 1;
+		$options3['email_admin-favorites_active']     = 1;
+		$options3['email_custom-favorites_active']    = 1;
+		$options3['email_summary_active']             = 1;
+		$options3['email_image-comment_active']       = 1;
+		$options3['email_message-custom_active']      = 1;
+		$options3['email_message-gallery_active']     = 1;
+		$options3['email_message-user_active']        = 1;
+		$options3['email_order-files-notify_active']  = 1;
+		$options3['email_admin-receipt_recipients']   = ( ! empty( $options['order_notifications'] ) ) ? $options['order_notifications'] : get_bloginfo( 'admin_email' );
 		$options3['email_admin-favorites_recipients'] = ( ! empty( $options['favorite_notifications'] ) ) ? $options['favorite_notifications'] : get_bloginfo( 'admin_email' );
-		$options3['email_summary_recipients'] = ( ! empty( $options['order_notifications'] ) ) ? $options['order_notifications'] : get_bloginfo( 'admin_email' );
-		$options3['email_image-comment_recipients'] = ( ! empty( $options['order_notifications'] ) ) ? $options['order_notifications'] : get_bloginfo( 'admin_email' );
-		$options3['email_signup_subject'] = $options['email_subject_register'];
-		$options3['email_customer-receipt_subject'] = $options['email_subject_order_receipt'];
-		$options3['email_order-comment_subject'] = $options['email_subject_order_comment'];
-		$options3['email_signup_message'] = $options['email_register'];
-		$options3['email_customer-receipt_message'] = ( ! empty( $options['email_receipt'] ) ) ? $options['email_receipt'] : '';
-		$options3['email_order-comment_message'] = ( ! empty( $options['email_order_status'] ) ) ? $options['email_order_status'] : '';
+		$options3['email_summary_recipients']         = ( ! empty( $options['order_notifications'] ) ) ? $options['order_notifications'] : get_bloginfo( 'admin_email' );
+		$options3['email_image-comment_recipients']   = ( ! empty( $options['order_notifications'] ) ) ? $options['order_notifications'] : get_bloginfo( 'admin_email' );
+		$options3['email_signup_subject']             = $options['email_subject_register'];
+		$options3['email_customer-receipt_subject']   = $options['email_subject_order_receipt'];
+		$options3['email_order-comment_subject']      = $options['email_subject_order_comment'];
+		$options3['email_signup_message']             = $options['email_register'];
+		$options3['email_customer-receipt_message']   = ( ! empty( $options['email_receipt'] ) ) ? $options['email_receipt'] : '';
+		$options3['email_order-comment_message']      = ( ! empty( $options['email_order_status'] ) ) ? $options['email_order_status'] : '';
 
 		// Messaging templates.
-		$options3['email_message-custom_active'] = 1;
-		$options3['email_message-gallery_active'] = 1;
+		$options3['email_message-custom_active']   = 1;
+		$options3['email_message-gallery_active']  = 1;
 		$options3['email_message-gallery_subject'] = ( ! empty( $options['message_gallery_invite_subject'] ) ) ? $options['message_gallery_invite_subject'] : '';
 		$options3['email_message-gallery_message'] = ( ! empty( $options['message_gallery_invite_content'] ) ) ? $options['message_gallery_invite_content'] : '';
-		$options3['email_message-gallery_active'] = 1;
-		$options3['email_message-user_subject'] = ( ! empty( $options['message_register_invite_subject'] ) ) ? $options['message_register_invite_subject'] : '';
-		$options3['email_message-user_message'] = ( ! empty( $options['message_register_invite_content'] ) ) ? $options['message_register_invite_content'] : '';
+		$options3['email_message-gallery_active']  = 1;
+		$options3['email_message-user_subject']    = ( ! empty( $options['message_register_invite_subject'] ) ) ? $options['message_register_invite_subject'] : '';
+		$options3['email_message-user_message']    = ( ! empty( $options['message_register_invite_content'] ) ) ? $options['message_register_invite_content'] : '';
 
 		foreach ( $options3 as $key => $value ) {
 			update_option( 'sunshine_' . $key, $value, false );
@@ -428,63 +433,75 @@ class SPC_Update {
 		if ( ! empty( $options['page'] ) ) {
 			$page = get_post( $options['page'] );
 			if ( $page ) {
-				if ( has_shortcode ( $page->post_content, 'sunshine' ) ) {
+				if ( has_shortcode( $page->post_content, 'sunshine' ) ) {
 					$page->post_content = str_replace( '[sunshine]', '[sunshine_galleries]', $post->post_content );
 				}
-				if ( ! has_shortcode ( $page->post_content, 'sunshine_galleries' ) ) {
+				if ( ! has_shortcode( $page->post_content, 'sunshine_galleries' ) ) {
 					$page->post_content .= '<!-- wp:shortcode -->[sunshine_galleries]<!-- /wp:shortcode -->';
-			    }
-				wp_update_post(array(
-					'ID'           => $options['page'],
-					'post_content' => $page->post_content,
-				));
+				}
+				wp_update_post(
+					array(
+						'ID'           => $options['page'],
+						'post_content' => $page->post_content,
+					)
+				);
 			}
 		}
 		if ( ! empty( $options['page_account'] ) ) {
 			$page = get_post( $options['page_account'] );
 			if ( $page && ! has_shortcode( $page->post_content, 'sunshine_account' ) ) {
-				wp_update_post( array(
-					'ID'           => $options['page_account'],
-					'post_content' => $page->post_content . '<!-- wp:shortcode -->[sunshine_account]<!-- /wp:shortcode -->',
-				));
+				wp_update_post(
+					array(
+						'ID'           => $options['page_account'],
+						'post_content' => $page->post_content . '<!-- wp:shortcode -->[sunshine_account]<!-- /wp:shortcode -->',
+					)
+				);
 			}
 		}
 		if ( ! empty( $options['page_cart'] ) ) {
 			$page = get_post( $options['page_cart'] );
 			if ( $page && ! has_shortcode( $page->post_content, 'sunshine_cart' ) ) {
-				wp_update_post( array(
-					'ID'           => $options['page_cart'],
-					'post_content' => $page->post_content . '<!-- wp:shortcode -->[sunshine_cart]<!-- /wp:shortcode -->',
-				));
+				wp_update_post(
+					array(
+						'ID'           => $options['page_cart'],
+						'post_content' => $page->post_content . '<!-- wp:shortcode -->[sunshine_cart]<!-- /wp:shortcode -->',
+					)
+				);
 			}
 		}
 		if ( ! empty( $options['page_checkout'] ) ) {
 			$page = get_post( $options['page_checkout'] );
 			if ( $page && ! has_shortcode( $page->post_content, 'sunshine_checkout' ) ) {
-				wp_update_post( array(
-					'ID'           => $options['page_checkout'],
-					'post_content' => $page->post_content . '<!-- wp:shortcode -->[sunshine_checkout]<!-- /wp:shortcode -->',
-				));
+				wp_update_post(
+					array(
+						'ID'           => $options['page_checkout'],
+						'post_content' => $page->post_content . '<!-- wp:shortcode -->[sunshine_checkout]<!-- /wp:shortcode -->',
+					)
+				);
 			}
 		}
 		if ( ! empty( $options['page_favorites'] ) ) {
 			$page = get_post( $options['page_favorites'] );
 			if ( $page && ! has_shortcode( $page->post_content, 'sunshine_favorites' ) ) {
-				wp_update_post( array(
-					'ID'           => $options['page_favorites'],
-					'post_content' => $page->post_content . '<!-- wp:shortcode -->[sunshine_favorites]<!-- /wp:shortcode -->',
-				));
+				wp_update_post(
+					array(
+						'ID'           => $options['page_favorites'],
+						'post_content' => $page->post_content . '<!-- wp:shortcode -->[sunshine_favorites]<!-- /wp:shortcode -->',
+					)
+				);
 			}
 		}
 
 		register_taxonomy( 'sunshine-product-option', 'sunshine-product' );
 
 		// Product Options.
-		$product_options = get_posts(array(
-			'post_type' => 'sunshine-product-opt',
-			'nopaging' => true,
-			'post_parent' => 0,
-		));
+		$product_options = get_posts(
+			array(
+				'post_type'   => 'sunshine-product-opt',
+				'nopaging'    => true,
+				'post_parent' => 0,
+			)
+		);
 		if ( ! empty( $product_options ) ) {
 			foreach ( $product_options as $product_option ) {
 				$term = wp_insert_term(
@@ -495,19 +512,21 @@ class SPC_Update {
 					)
 				);
 				if ( ! is_wp_error( $term ) ) {
-					$product_option_items = get_posts(array(
-						'post_type' => 'sunshine-product-opt',
-						'nopaging' => true,
-						'post_parent' => $product_option->ID,
-					));
+					$product_option_items = get_posts(
+						array(
+							'post_type'   => 'sunshine-product-opt',
+							'nopaging'    => true,
+							'post_parent' => $product_option->ID,
+						)
+					);
 					if ( ! empty( $product_option_items ) ) {
 						$options = array();
 						foreach ( $product_option_items as $product_option_item ) {
 							$options[] = array(
-								'id'          => wp_generate_password( 8, false ),
-								'name'        => $product_option_item->post_title,
-								'description' => '',
-								'image'       => get_post_meta( $product_option_item->ID, 'sunshine_image', true ),
+								'id'             => wp_generate_password( 8, false ),
+								'name'           => $product_option_item->post_title,
+								'description'    => '',
+								'image'          => get_post_meta( $product_option_item->ID, 'sunshine_image', true ),
 								'product_opt_id' => $product_option_item->ID,
 							);
 						}
@@ -521,7 +540,7 @@ class SPC_Update {
 
 		// All product categories need a new order meta and set first as default.
 		// Using $wpdb because without any 'order' meta yet, we get no results in our plugin.
-		$sql = "
+		$sql                = "
 		SELECT t.term_id, t.name, t.slug
 		FROM {$wpdb->terms} AS t
 		INNER JOIN {$wpdb->term_taxonomy} AS tt ON t.term_id = tt.term_id
@@ -541,7 +560,7 @@ class SPC_Update {
 		}
 
 		// Move Upload folders to new location.
-		require_once( ABSPATH . 'wp-admin/includes/file.php' );
+		require_once ABSPATH . 'wp-admin/includes/file.php';
 
 		WP_Filesystem();
 		global $wp_filesystem;
@@ -551,16 +570,16 @@ class SPC_Update {
 		$new_folder = $upload_dir['basedir'] . '/sunshine/upload';
 
 		if ( ! $wp_filesystem->is_dir( $new_folder ) ) {
-		    $wp_filesystem->mkdir( $new_folder );
+			$wp_filesystem->mkdir( $new_folder );
 		}
 		$dirlist = $wp_filesystem->dirlist( $old_folder );
 		if ( ! empty( $dirlist ) ) {
 			foreach ( $dirlist as $dirname => $dirinfo ) {
-			    // If the directory name is not numeric
-			    if ( $dirinfo['type'] === 'd' && ! is_numeric( $dirname ) ) {
-			        // Move the directory to the new location
-			        $wp_filesystem->move( $old_folder . '/' . $dirname, $new_folder . '/' . $dirname );
-			    }
+				// If the directory name is not numeric
+				if ( $dirinfo['type'] === 'd' && ! is_numeric( $dirname ) ) {
+					// Move the directory to the new location
+					$wp_filesystem->move( $old_folder . '/' . $dirname, $new_folder . '/' . $dirname );
+				}
 			}
 		}
 
@@ -578,7 +597,7 @@ class SPC_Update {
 
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
-		$query = "
+		$query     = "
 			SELECT *
 			FROM {$wpdb->prefix}users
 			WHERE NOT EXISTS (
@@ -596,21 +615,23 @@ class SPC_Update {
 
 			$object->add_role( sunshine_get_customer_role() );
 
-			$orders = get_posts(array(
-				'post_type' => 'sunshine-order',
-				'meta_key' => '_sunshine_customer_id',
-				'meta_value' => $object->ID,
-			));
+			$orders = get_posts(
+				array(
+					'post_type'  => 'sunshine-order',
+					'meta_key'   => '_sunshine_customer_id',
+					'meta_value' => $object->ID,
+				)
+			);
 			if ( $orders ) {
 
 				if ( empty( $object->first_name ) ) {
-					$last_order = $orders[0];
+					$last_order      = $orders[0];
 					$last_order_data = get_post_meta( $last_order->ID, '_sunshine_order_data', true );
 					if ( ! empty( $last_order_data['first_name'] ) ) {
 						$userdata = array(
-							'ID' => $object->ID,
-							'first_name' => $last_order_data['first_name'],
-							'last_name' => $last_order_data['last_name'],
+							'ID'           => $object->ID,
+							'first_name'   => $last_order_data['first_name'],
+							'last_name'    => $last_order_data['last_name'],
 							'display_name' => $last_order_data['first_name'] . ' ' . $last_order_data['last_name'],
 						);
 						wp_update_user( $userdata );
@@ -642,7 +663,7 @@ class SPC_Update {
 
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
-		$query = "
+		$query    = "
 			SELECT *
 			FROM {$wpdb->prefix}posts
 			WHERE post_type = 'sunshine-product'
@@ -667,21 +688,21 @@ class SPC_Update {
 			}
 
 			// Determine type.
-			$type = 'print';
+			$type        = 'print';
 			$is_download = get_post_meta( $object->ID, 'sunshine_product_download', true );
 			if ( $is_download ) {
 				$type = 'download';
 			} else {
 				$is_package = get_post_meta( $object->ID, 'sunshine_product_package', true );
 				if ( $is_package ) {
-					$type = 'package';
+					$type            = 'package';
 					$package_options = get_post_meta( $object->ID, 'sunshine_product_package_option' );
 					if ( ! empty( $package_options ) ) {
 						$new_package_items = array();
 						foreach ( $package_options as $package_option ) {
 							$new_package_items[] = array(
 								'product' => $package_option['product_id'],
-								'qty' => $package_option['qty'],
+								'qty'     => $package_option['qty'],
 							);
 						}
 						add_post_meta( $object->ID, 'package', $new_package_items );
@@ -707,7 +728,7 @@ class SPC_Update {
 			}
 
 			$dimensions = array();
-			$width = get_post_meta( $object->ID, 'sunshine_product_download_width', true );
+			$width      = get_post_meta( $object->ID, 'sunshine_product_download_width', true );
 			if ( $width ) {
 				$dimensions['w'] = $width;
 			}
@@ -741,19 +762,21 @@ class SPC_Update {
 				register_taxonomy( 'sunshine-product-option', 'sunshine-product' );
 
 				// Get all product options and put into array with term_id => id.
-				$product_option_terms = get_terms(array(
-					'taxonomy'   => 'sunshine-product-option',
-    				'hide_empty' => false,
-				));
+				$product_option_terms = get_terms(
+					array(
+						'taxonomy'   => 'sunshine-product-option',
+						'hide_empty' => false,
+					)
+				);
 				if ( ! is_wp_error( $product_option_terms ) && ! empty( $product_option_terms ) ) {
 
-					$base_product_options = array();
+					$base_product_options      = array();
 					$base_product_option_terms = array();
 					foreach ( $product_option_terms as $term ) {
 						$term_options = get_term_meta( $term->term_id, 'options', true );
 						if ( ! empty( $term_options ) ) {
 							foreach ( $term_options as $term_option ) {
-								$base_product_options[ $term_option['product_opt_id'] ] = $term_option['id'];
+								$base_product_options[ $term_option['product_opt_id'] ]      = $term_option['id'];
 								$base_product_option_terms[ $term_option['product_opt_id'] ] = $term->term_id;
 							}
 						}
@@ -774,7 +797,6 @@ class SPC_Update {
 					}
 					update_post_meta( $object->ID, 'options', $new_product_options );
 				}
-
 			}
 
 			// Tiered Pricing.
@@ -786,7 +808,7 @@ class SPC_Update {
 						continue;
 					}
 					$new_tiered_pricing['items'][] = array(
-						'qty' => intval( $tiered_pricing_option['qty'] ),
+						'qty'      => intval( $tiered_pricing_option['qty'] ),
 						'discount' => floatval( $tiered_pricing_option['discount'] ),
 					);
 				}
@@ -809,7 +831,7 @@ class SPC_Update {
 
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
-		$query = "
+		$query   = "
 			SELECT *
 			FROM {$wpdb->prefix}posts
 			WHERE post_type = 'sunshine-order'
@@ -878,9 +900,9 @@ class SPC_Update {
 			}
 
 			// Anything commented out matched the old key and didn't need to be changed.
-			$orderdata['order_key'] = sunshine_generate_order_key();
-			$orderdata['customer_id'] = get_post_meta( $object->ID, '_sunshine_customer_id', true );
-			$orderdata['currency'] = SPC()->get_option( 'currency' );
+			$orderdata['order_key']     = sunshine_generate_order_key();
+			$orderdata['customer_id']   = get_post_meta( $object->ID, '_sunshine_customer_id', true );
+			$orderdata['currency']      = SPC()->get_option( 'currency' );
 			$orderdata['display_price'] = SPC()->get_option( 'display_price' );
 			if ( ! empty( $orderdata['shipping_cost'] ) ) {
 				$orderdata['shipping'] = $orderdata['shipping_cost'];
@@ -889,16 +911,16 @@ class SPC_Update {
 			if ( ! empty( $orderdata['tax_shipping'] ) ) {
 				$orderdata['shipping_tax'] = $orderdata['tax_shipping'];
 			}
-			//$orderdata['subtotal'] = '';
-			//$orderdata['subtotal_tax'] = '';
+			// $orderdata['subtotal'] = '';
+			// $orderdata['subtotal_tax'] = '';
 			if ( ! empty( $orderdata['tax_cart'] ) ) {
 				$orderdata['tax'] = $orderdata['tax_cart'];
 			}
-			//$orderdata['total'] = '';
-			//$orderdata['first_name'] = '';
-			//$orderdata['last_name'] = '';
-			//$orderdata['email'] = '';
-			//$orderdata['credits'] = '';
+			// $orderdata['total'] = '';
+			// $orderdata['first_name'] = '';
+			// $orderdata['last_name'] = '';
+			// $orderdata['email'] = '';
+			// $orderdata['credits'] = '';
 			$orderdata['price_has_tax'] = SPC()->get_option( 'price_has_tax' );
 
 			if ( ! empty( $orderdata['discount_total'] ) ) {
@@ -938,8 +960,8 @@ class SPC_Update {
 			}
 
 			$conversions = array(
-				'txn_id' => 'paypal_order_id',
-				'payer_id' => 'paypal_payer_id',
+				'txn_id'      => 'paypal_order_id',
+				'payer_id'    => 'paypal_payer_id',
 				'payment_fee' => 'paypal_fee',
 			);
 			foreach ( $conversions as $current_key => $new_key ) {
@@ -950,10 +972,10 @@ class SPC_Update {
 			}
 
 			if ( ! empty( $orderdata['shipping_method'] ) && $orderdata['shipping_method'] == 'pickup' ) {
-				$orderdata['delivery_method'] = 'pickup';
+				$orderdata['delivery_method']      = 'pickup';
 				$orderdata['delivery_method_name'] = __( 'Pickup', 'sunshine-photo-cart' );
 			} else {
-				$orderdata['delivery_method'] = 'shipping';
+				$orderdata['delivery_method']      = 'shipping';
 				$orderdata['delivery_method_name'] = __( 'Ship', 'sunshine-photo-cart' );
 
 				if ( ! empty( $orderdata['shipping_method'] ) ) {
@@ -962,7 +984,7 @@ class SPC_Update {
 						if ( $orderdata['shipping_method'] == 'local' ) {
 							foreach ( $shipping_methods as $instance_id => $shipping_method ) {
 								if ( $shipping_method['id'] == 'local' ) {
-									$orderdata['shipping_method'] = $instance_id;
+									$orderdata['shipping_method']      = $instance_id;
 									$orderdata['shipping_method_name'] = SPC()->get_option( $shipping_method['id'] . '_name_' . $instance_id );
 									break;
 								}
@@ -970,7 +992,7 @@ class SPC_Update {
 						} else {
 							foreach ( $shipping_methods as $instance_id => $shipping_method ) {
 								if ( $shipping_method['id'] == 'flat_rate' ) {
-									$orderdata['shipping_method'] = $instance_id;
+									$orderdata['shipping_method']      = $instance_id;
 									$orderdata['shipping_method_name'] = SPC()->get_option( $shipping_method['id'] . '_name_' . $instance_id );
 									break;
 								}
@@ -1014,7 +1036,7 @@ class SPC_Update {
 
 					if ( empty( $orderitem['gallery_id'] ) ) {
 						$orderitem['gallery_id'] = 0;
-						$image = sunshine_get_image( $orderitem['image_id'] );
+						$image                   = sunshine_get_image( $orderitem['image_id'] );
 						if ( $image->exists() ) {
 							$orderitem['gallery_id'] = $image->get_gallery_id();
 						}
@@ -1024,14 +1046,14 @@ class SPC_Update {
 					$insert_result = $wpdb->insert(
 						$wpdb->prefix . 'sunshine_order_items',
 						array(
-							'order_id' => $object->ID,
-							'type' => $type,
-							'image_id' => $orderitem['image_id'],
-							'qty' => $orderitem['qty'],
-							'product_id' => $orderitem['product_id'],
-							'gallery_id' => $orderitem['gallery_id'],
+							'order_id'    => $object->ID,
+							'type'        => $type,
+							'image_id'    => $orderitem['image_id'],
+							'qty'         => $orderitem['qty'],
+							'product_id'  => $orderitem['product_id'],
+							'gallery_id'  => $orderitem['gallery_id'],
 							'price_level' => $orderitem['price_level'],
-							'price' => $orderitem['price'],
+							'price'       => $orderitem['price'],
 						)
 					);
 
@@ -1041,15 +1063,15 @@ class SPC_Update {
 						if ( $order_item_id ) {
 
 							$meta = array(
-								'gallery_name' => get_the_title( $orderitem['gallery_id'] ),
-								'image_name' => get_the_title( $orderitem['image_id'] ),
-								'product_name' => get_the_title( $orderitem['product_id'] ),
+								'gallery_name'     => get_the_title( $orderitem['gallery_id'] ),
+								'image_name'       => get_the_title( $orderitem['image_id'] ),
+								'product_name'     => get_the_title( $orderitem['product_id'] ),
 								'product_cat_name' => '',
 							);
 
 							if ( ! empty( $orderitem['filename'] ) ) {
-								$filename = parse_url( $orderitem['filename'], PHP_URL_PATH ); // Get the path part of the URL
-								$filename = pathinfo( $filename, PATHINFO_BASENAME ); // Extract the base name of the file
+								$filename         = parse_url( $orderitem['filename'], PHP_URL_PATH ); // Get the path part of the URL
+								$filename         = pathinfo( $filename, PATHINFO_BASENAME ); // Extract the base name of the file
 								$meta['filename'] = $filename;
 							}
 
@@ -1057,15 +1079,15 @@ class SPC_Update {
 							if ( ! empty( $orderitem['product_options'] ) ) {
 								$meta['options'] = array();
 								foreach ( $orderitem['product_options'] as $product_option_item_id => $product_option_item ) {
-									$new_option_item = array(
+									$new_option_item          = array(
 										'price' => $product_option_item['amount'],
-										'name' => $product_option_item['name'],
+										'name'  => $product_option_item['name'],
 									);
 									$product_option_item_post = get_post( $product_option_item_id );
 									if ( $product_option_item_post && $product_option_item_post->post_parent > 0 ) {
 										$product_option_post = get_post( $product_option_item_post->post_parent );
 										if ( $product_option_post ) {
-											$new_option_item['name'] = $product_option_post->post_title;
+											$new_option_item['name']  = $product_option_post->post_title;
 											$new_option_item['value'] = $product_option_item['name'];
 										}
 									}
@@ -1095,18 +1117,18 @@ class SPC_Update {
 												$gallery_name = $image->get_gallery()->get_name();
 											}
 											$image_data[] = array(
-												'id' => $image->get_id(),
-												'name' => $image->get_name(),
+												'id'       => $image->get_id(),
+												'name'     => $image->get_name(),
 												'filename' => $image->get_file_name(),
 												'gallery_name' => $gallery_name,
 											);
 										}
 									}
 									$package[] = array(
-										'product' => $package_product['product_id'],
+										'product'      => $package_product['product_id'],
 										'product_name' => $product_name,
-										'qty' => $package_product['qty'],
-										'images' => $image_data,
+										'qty'          => $package_product['qty'],
+										'images'       => $image_data,
 									);
 								}
 								$meta['package'] = $package;
@@ -1123,8 +1145,8 @@ class SPC_Update {
 									$wpdb->prefix . 'sunshine_order_itemmeta',
 									array(
 										'order_item_id' => $order_item_id,
-										'meta_key' => $key,
-										'meta_value' => maybe_serialize( $value ),
+										'meta_key'      => $key,
+										'meta_value'    => maybe_serialize( $value ),
 									)
 								);
 							}
@@ -1149,7 +1171,7 @@ class SPC_Update {
 
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
-		$query = "
+		$query   = "
 			SELECT *
 			FROM {$wpdb->prefix}posts
 			WHERE post_type = 'sunshine-discount'
@@ -1184,7 +1206,7 @@ class SPC_Update {
 
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
-		$search = array(
+		$search  = array(
 			'{gallery_name}',
 			'{gallery_url}',
 			'{gallery_password}',
@@ -1236,7 +1258,7 @@ class SPC_Update {
 			}
 		}
 
-		$query = "
+		$query   = "
 			SELECT *
 			FROM {$wpdb->prefix}posts
 			WHERE post_type = 'sunshine-email'
@@ -1257,22 +1279,38 @@ class SPC_Update {
 
 			$subject = str_replace( $search, $replace, $subject );
 			$content = str_replace( $search, $replace, $object->post_content );
-			wp_update_post(array(
-				'ID' => $object->ID,
-				'post_title' => $subject,
-				'post_content' => $content,
-			));
+			wp_update_post(
+				array(
+					'ID'           => $object->ID,
+					'post_title'   => $subject,
+					'post_content' => $content,
+				)
+			);
 
-			$time = get_post_meta( $object->ID, 'time', true );
+			$time     = get_post_meta( $object->ID, 'time', true );
 			$interval = get_post_meta( $object->ID, 'time_interval', true );
 			if ( $time && $interval ) {
-				update_post_meta( $object->ID, 'time', array( 'time' => $time, 'interval' => $interval ) );
+				update_post_meta(
+					$object->ID,
+					'time',
+					array(
+						'time'     => $time,
+						'interval' => $interval,
+					)
+				);
 			}
 
-			$discount_time = get_post_meta( $object->ID, 'discount_time', true );
+			$discount_time          = get_post_meta( $object->ID, 'discount_time', true );
 			$discount_time_interval = get_post_meta( $object->ID, 'discount_time_interval', true );
 			if ( $discount_time && $discount_time_interval ) {
-				update_post_meta( $object->ID, 'discount_time', array( 'time' => $discount_time, 'interval' => $discount_time_interval ) );
+				update_post_meta(
+					$object->ID,
+					'discount_time',
+					array(
+						'time'     => $discount_time,
+						'interval' => $discount_time_interval,
+					)
+				);
 			}
 
 			update_post_meta( $object->ID, 'update_3', true );
@@ -1289,24 +1327,24 @@ class SPC_Update {
 		global $wpdb;
 
 		$conversions = array(
-			'sunshine_gallery_price_level' => 'price_level',
-			'sunshine_gallery_password_hint' => 'password_hint',
+			'sunshine_gallery_price_level'       => 'price_level',
+			'sunshine_gallery_password_hint'     => 'password_hint',
 			'sunshine_free_image_download_count' => 'free_image_download_count',
-			'sunshine_download_users' => 'download_users',
-			'sunshine_gallery_minimum_order' => 'minimum_order',
-			'sunshine_gallery_status' => 'status',
-			'sunshine_gallery_access' => 'access_type',
-			'sunshine_gallery_image_comments' => 'image_comments',
-			'sunshine_gallery_images_directory' => 'images_directory',
-			'sunshine_gallery_disable_products' => 'disable_products',
+			'sunshine_download_users'            => 'download_users',
+			'sunshine_gallery_minimum_order'     => 'minimum_order',
+			'sunshine_gallery_status'            => 'status',
+			'sunshine_gallery_access'            => 'access_type',
+			'sunshine_gallery_image_comments'    => 'image_comments',
+			'sunshine_gallery_images_directory'  => 'images_directory',
+			'sunshine_gallery_disable_products'  => 'disable_products',
 			'sunshine_gallery_disable_favorites' => 'disable_favorites',
-			'sunshine_gallery_private_user' => 'private_users',
-			'sunshine_gallery_end_date' => 'end_date',
-			'sunshine_email_exclusions' => 'email_exclusions',
-			'sunshine_gallery_view' => 'view_list',
+			'sunshine_gallery_private_user'      => 'private_users',
+			'sunshine_gallery_end_date'          => 'end_date',
+			'sunshine_email_exclusions'          => 'email_exclusions',
+			'sunshine_gallery_view'              => 'view_list',
 		);
-		$total = count( $conversions );
-		$current = 0;
+		$total       = count( $conversions );
+		$current     = 0;
 		foreach ( $conversions as $current_key => $new_key ) {
 
 			$current++;
@@ -1328,10 +1366,15 @@ class SPC_Update {
 						$current_key,
 					)
 				);
-				wp_send_json_success( array( 'current' => $current, 'total' => $total, 'updated' => $new_key ) );
+				wp_send_json_success(
+					array(
+						'current' => $current,
+						'total'   => $total,
+						'updated' => $new_key,
+					)
+				);
 
 			}
-
 		}
 
 		SPC()->update_option( 'update_3_galleries_common', time() );
@@ -1344,7 +1387,7 @@ class SPC_Update {
 
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
-		$query = "
+		$query   = "
 			SELECT *
 			FROM {$wpdb->prefix}posts
 			WHERE post_type = 'sunshine-gallery'
@@ -1369,7 +1412,7 @@ class SPC_Update {
 
 			if ( empty( $meta['images'] ) ) {
 				// Gallery data like images.
-				$query = $wpdb->prepare( "SELECT DISTINCT ID FROM $wpdb->posts WHERE post_parent = %d AND post_type = 'attachment'", $object->ID );
+				$query       = $wpdb->prepare( "SELECT DISTINCT ID FROM $wpdb->posts WHERE post_parent = %d AND post_type = 'attachment'", $object->ID );
 				$attachments = $wpdb->get_col( $query );
 				if ( ! empty( $attachments ) ) {
 					$meta_updates['images'] = maybe_serialize( $attachments );
@@ -1388,44 +1431,46 @@ class SPC_Update {
 					"UPDATE {$wpdb->posts}
 					SET post_password = %s, post_status = %s
 					WHERE ID = %d",
-					'', $object->post_status, $object->ID
+					'',
+					$object->post_status,
+					$object->ID
 				)
 			);
 
-			//update_post_meta( $object->ID, 'password', $object->post_password );
+			// update_post_meta( $object->ID, 'password', $object->post_password );
 			if ( $object->post_password ) {
 				$meta_updates['password'] = $object->post_password;
 			}
 
-			//$image_sharing = get_post_meta( $object->ID, 'sunshine_image_share', true );
+			// $image_sharing = get_post_meta( $object->ID, 'sunshine_image_share', true );
 			if ( ! empty( $meta['sunshine_image_share'][0] ) == 'disallow' ) {
-				//update_post_meta( $object->ID, 'disable_image_sharing', true );
+				// update_post_meta( $object->ID, 'disable_image_sharing', true );
 				$meta_updates['disable_image_sharing'] = true;
 			}
 
-			//$gallery_sharing = get_post_meta( $object->ID, 'sunshine_gallery_share', true );
+			// $gallery_sharing = get_post_meta( $object->ID, 'sunshine_gallery_share', true );
 			if ( ! empty( $meta['sunshine_gallery_share'][0] ) == 'disallow' ) {
-				//update_post_meta( $object->ID, 'disable_gallery_sharing', true );
+				// update_post_meta( $object->ID, 'disable_gallery_sharing', true );
 				$meta_updates['sunshine_gallery_share'] = true;
 			}
 
 			$free_downloads = array();
-			//$free_image_downloads = get_post_meta( $object->ID, 'sunshine_free_image_downloads', true );
+			// $free_image_downloads = get_post_meta( $object->ID, 'sunshine_free_image_downloads', true );
 			if ( ! empty( $meta['sunshine_free_image_downloads'][0] ) ) {
 				$free_downloads[] = 'image';
 			}
-			//$free_gallery_downloads = get_post_meta( $object->ID, 'sunshine_free_gallery_downloads', true );
+			// $free_gallery_downloads = get_post_meta( $object->ID, 'sunshine_free_gallery_downloads', true );
 			if ( ! empty( $meta['sunshine_free_gallery_downloads'][0] ) ) {
 				$free_downloads[] = 'gallery';
 			}
 			if ( ! empty( $free_downloads ) ) {
-				//update_post_meta( $object->ID, 'free_downloads', $free_downloads );
+				// update_post_meta( $object->ID, 'free_downloads', $free_downloads );
 				$meta_updates['free_downloads'] = maybe_serialize( $free_downloads );
 			}
 
-			//$gallery_download = get_post_meta( $object->ID, 'sunshine_product_gallery_download', true );
+			// $gallery_download = get_post_meta( $object->ID, 'sunshine_product_gallery_download', true );
 			if ( ! empty( $meta['sunshine_product_gallery_download'][0] ) ) {
-				//update_post_meta( $object->ID, 'gallery_download', true );
+				// update_post_meta( $object->ID, 'gallery_download', true );
 				$meta_updates['gallery_download'] = true;
 			}
 
@@ -1434,13 +1479,17 @@ class SPC_Update {
 			if ( ! empty( $meta_updates ) ) {
 				foreach ( $meta_updates as $meta_key => $meta_value ) {
 					$wpdb->insert(
-			            $wpdb->postmeta,
-			            array( 'post_id' => $object->ID, 'meta_key' => $meta_key, 'meta_value' => $meta_value )
-			        );
+						$wpdb->postmeta,
+						array(
+							'post_id'    => $object->ID,
+							'meta_key'   => $meta_key,
+							'meta_value' => $meta_value,
+						)
+					);
 				}
 			}
 
-			//update_post_meta( $object->ID, 'update_3', time() );
+			// update_post_meta( $object->ID, 'update_3', time() );
 			wp_send_json_success( array( 'updated' => $object->ID ) );
 
 		}
@@ -1461,12 +1510,12 @@ class SPC_Update {
 			 WHERE meta_key = '_wp_attachment_metadata'
 			 AND meta_value LIKE %s
 			 LIMIT %d",
-			 's:15:"sunshine-lowres";',
-			 's:14:"sunshine-large";',
-			 '%s:15:"sunshine-lowres";%',
-			 $this->batch
+			's:15:"sunshine-lowres";',
+			's:14:"sunshine-large";',
+			'%s:15:"sunshine-lowres";%',
+			$this->batch
 		);
-		$result = $wpdb->query( $prepared_sql );
+		$result       = $wpdb->query( $prepared_sql );
 		if ( $wpdb->rows_affected >= $this->batch ) {
 			wp_send_json_success( array( 'updated' => $wpdb->rows_affected ) );
 		}
@@ -1481,7 +1530,7 @@ class SPC_Update {
 
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
-		$query = "
+		$query   = "
 			SELECT *
 			FROM {$wpdb->prefix}posts
 			WHERE post_type = 'sunshine-gallery'
@@ -1498,7 +1547,8 @@ class SPC_Update {
 
 			$object = $objects[0];
 
-			$query = $wpdb->prepare("
+			$query = $wpdb->prepare(
+				"
 				DELETE wp1
 				FROM {$wpdb->postmeta} wp1
 				INNER JOIN {$wpdb->postmeta} wp2
@@ -1508,9 +1558,11 @@ class SPC_Update {
 					wp1.meta_key = wp2.meta_key AND
 					wp1.meta_value = wp2.meta_value AND
 					wp1.post_id = %d
-			", $object->ID);
+			",
+				$object->ID
+			);
 
-			$result = $wpdb->query($query);
+			$result = $wpdb->query( $query );
 
 			update_post_meta( $object->ID, 'update_3_duplicate_meta', time() );
 			wp_send_json_success( array( 'updated' => $object->ID ) );
@@ -1541,60 +1593,60 @@ class SPC_Update {
 
 		// Delete postmeta.
 		$wpdb->query(
-		    $wpdb->prepare(
-		        "
+			$wpdb->prepare(
+				"
 		        DELETE FROM {$wpdb->postmeta}
 		        WHERE meta_key = %s
 		        ",
-		        'update_3'
-		    )
+				'update_3'
+			)
 		);
 
 		// Delete usermeta.
 		$wpdb->query(
-		    $wpdb->prepare(
-		        "
+			$wpdb->prepare(
+				"
 		        DELETE FROM {$wpdb->usermeta}
 		        WHERE meta_key = %s
 		        ",
-		        'sunshine_update_3'
-		    )
+				'sunshine_update_3'
+			)
 		);
 
 		delete_option( 'sunshine_update_3_settings' );
 
 		// Delete the old metadata rows with the meta_key "sunshine_favorite"
 		$wpdb->query(
-		    $wpdb->prepare(
-		        "
+			$wpdb->prepare(
+				"
 		        DELETE FROM {$wpdb->usermeta}
 		        WHERE meta_key = %s
 		        ",
-		        'sunshine_favorite'
-		    )
+				'sunshine_favorite'
+			)
 		);
 
 		// Delete all product option CPT posts.
-		$args = array(
-		    'post_type'      => 'sunshine-product-opt',
-		    'post_status'    => 'any',
-		    'posts_per_page' => -1,
-		    'fields'         => 'ids',
+		$args         = array(
+			'post_type'      => 'sunshine-product-opt',
+			'post_status'    => 'any',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
 		);
 		$product_opts = get_posts( $args );
 		if ( ! empty( $product_opts ) ) {
 			foreach ( $product_opts as $post ) {
-			    wp_delete_post( $post, true );
+				wp_delete_post( $post, true );
 			}
 		}
 
 		// Delete no longer used postmeta.
 		$meta_key = $wpdb->esc_like( 'sunshine_' ) . '%'; // Escaping the meta key prefix and adding wildcard (%)
-		$query = $wpdb->prepare("DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE %s", $meta_key );
+		$query    = $wpdb->prepare( "DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE %s", $meta_key );
 		$wpdb->query( $query );
 
 		$meta_key = $wpdb->esc_like( '_sunshine_' ) . '%'; // Escaping the meta key prefix and adding wildcard (%)
-		$query = $wpdb->prepare("DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE %s", $meta_key );
+		$query    = $wpdb->prepare( "DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE %s", $meta_key );
 		$wpdb->query( $query );
 
 		$keys = array(
@@ -1605,7 +1657,7 @@ class SPC_Update {
 			'payer_id',
 		);
 		foreach ( $keys as $key ) {
-			$query = $wpdb->prepare("DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE %s", $key );
+			$query = $wpdb->prepare( "DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE %s", $key );
 			$wpdb->query( $query );
 		}
 

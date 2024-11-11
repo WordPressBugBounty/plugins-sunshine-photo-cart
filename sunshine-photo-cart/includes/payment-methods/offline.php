@@ -11,7 +11,7 @@ class SPC_Payment_Method_Offline extends SPC_Payment_Method {
 		$this->needs_billing_address = false;
 
 		add_action( 'sunshine_order', array( $this, 'show_instructions' ), 12 );
-		add_action( 'sunshine_email_order_receipt', array( $this, 'show_instructions_email' ), 12 );
+		add_action( 'sunshine_email_order_customer_receipt_extra', array( $this, 'show_instructions_email' ), 12 );
 
 	}
 
@@ -57,7 +57,7 @@ class SPC_Payment_Method_Offline extends SPC_Payment_Method {
 	}
 
 	public function get_submit_label() {
- 		return __( 'Submit order', 'sunshine-photo-cart' );
+		return __( 'Submit order', 'sunshine-photo-cart' );
 	}
 
 	/*

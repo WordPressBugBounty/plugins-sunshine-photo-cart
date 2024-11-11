@@ -329,9 +329,9 @@ function sunshine_doing_upload( $gallery_id ) {
 
 function sunshine_custom_upload_dir( $param ) {
 	if ( ! empty( SUNSHINE_UPLOAD ) && 'sunshine-gallery' == get_post_type( SUNSHINE_UPLOAD ) ) {
-		$custom_directory         = '/sunshine/' . SUNSHINE_UPLOAD;
-		$param['path'] = $param['basedir'] . $custom_directory;
-		$param['url']  = $param['baseurl'] . $custom_directory;
+		$custom_directory = '/sunshine/' . SUNSHINE_UPLOAD;
+		$param['path']    = $param['basedir'] . $custom_directory;
+		$param['url']     = $param['baseurl'] . $custom_directory;
 	}
 	return $param;
 }
@@ -417,11 +417,52 @@ function sunshine_image_placeholder_html( $args = array() ) {
 add_action( 'pre_option_wp_attachment_pages_enabled', '__return_true' );
 
 function sunshine_random_string( $length = 10 ) {
-	$characters = '0123456789abcdefghijklmnopqrstuvwxyz';
+	$characters        = '0123456789abcdefghijklmnopqrstuvwxyz';
 	$characters_length = strlen( $characters );
-	$random_string = '';
+	$random_string     = '';
 	for ( $i = 0; $i < $length; $i++ ) {
 		$random_string .= $characters[ rand( 0, $characters_length - 1 ) ];
 	}
 	return $random_string;
 }
+
+// Make .htaccess file which protects all the download files.
+function sunshine_create_htaccess() {
+
+	$upload_dir = wp_upload_dir();
+	$file       = $upload_dir['basedir'] . '/sunshine/.htaccess';
+
+	// Check if the URL we are protecting is still accurate, delete if not. May have moved domains from staging to live.
+	$url          = get_bloginfo( 'url' );
+	$url          = str_replace( array( 'http://', 'https://', 'www.' ), '', $url );
+	$existing_url = get_option( 'sunshine_download_htaccess_url' );
+	if ( $url != $existing_url ) {
+		@unlink( $file );
+	}
+
+	$key = uniqid();
+
+	if ( ! file_exists( $file ) ) {
+		$escaped_url = preg_replace( '/\./', '\.', $url );
+		$data        = "RewriteEngine on
+
+# Allow specific download_key for jpg, png, gif images
+RewriteCond %{QUERY_STRING} (^|&)download_key=$key($|&)
+RewriteRule \.(jpg|png|gif)$ - [L]
+
+# Block hotlinking from external referrers, allowing only scenic-otter-249362.instawp.xyz
+RewriteCond %{HTTP_REFERER} !^https?://(www\.)?$url [NC]
+RewriteRule \.(jpg|png|gif)$ - [F,L]
+
+# Prevent access to full sized image unless the large size does not exist because uploaded image file was too small
+RewriteCond %{REQUEST_FILENAME} !-\d+x\d+\.jpg$ [OR]
+RewriteCond %{REQUEST_FILENAME} -s
+RewriteRule \.(jpg)$ - [L]";
+		file_put_contents( $file, $data );
+		update_option( 'sunshine_download_htaccess_url', $url, false );
+		update_option( 'sunshine_download_htaccess_key', $key, false );
+	}
+
+}
+
+add_action( 'sunshine_daily', 'sunshine_create_htaccess' );

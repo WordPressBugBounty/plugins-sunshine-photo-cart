@@ -7,17 +7,17 @@ class SPC_Email_Order_Status extends SPC_Email {
 		$this->class             = get_class( $this );
 		$this->name              = __( 'Order Status Update', 'sunshine-photo-cart' );
 		$this->description       = __( 'Email sent to customer when order status is updated', 'sunshine-photo-cart' );
-		$this->subject           = sprintf( __( 'Update on %s from %s', 'sunshine-photo-cart' ), '[order_name]', '[sitename]' );
+		$this->subject           = sprintf( __( 'Update on %1$s from %2$s', 'sunshine-photo-cart' ), '[order_name]', '[sitename]' );
 		$this->custom_recipients = false;
 
 		$this->add_search_replace(
 			array(
-				'order_id'   => '',
+				'order_id'     => '',
 				'order_number' => '',
-				'order_name' => '',
-				'first_name' => '',
-				'last_name'  => '',
-				'status'     => '',
+				'order_name'   => '',
+				'first_name'   => '',
+				'last_name'    => '',
+				'status'       => '',
 			)
 		);
 
@@ -41,12 +41,12 @@ class SPC_Email_Order_Status extends SPC_Email {
 			$this->add_args( $args );
 
 			$search_replace = array(
-				'order_id'   => $order->get_id(),
+				'order_id'     => $order->get_id(),
 				'order_number' => $order->get_order_number(),
-				'order_name' => $order->get_name(),
-				'first_name' => $order->get_customer_first_name(),
-				'last_name'  => $order->get_customer_last_name(),
-				'status'     => $order->get_status_name(),
+				'order_name'   => $order->get_name(),
+				'first_name'   => $order->get_customer_first_name(),
+				'last_name'    => $order->get_customer_last_name(),
+				'status'       => $order->get_status_name(),
 			);
 			$this->add_search_replace( $search_replace );
 
@@ -54,7 +54,7 @@ class SPC_Email_Order_Status extends SPC_Email {
 			$result = $this->send();
 
 		}
-		
+
 	}
 
 }

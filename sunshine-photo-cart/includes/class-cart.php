@@ -3,18 +3,18 @@
 class SPC_Cart {
 
 	// Cart variables
-	protected $cart        = array();
-	protected $cart_items  = array();
-	protected $subtotal    = 0.00;
-	protected $subtotal_tax    = 0.00;
-	protected $shipping    = 0.00;
-	protected $shipping_tax    = 0.00;
-	protected $discounts   = array();
-	protected $discount_names   = array();
-	protected $discount    = 0.00;
-	//protected $taxable     = 0.00;
+	protected $cart           = array();
+	protected $cart_items     = array();
+	protected $subtotal       = 0.00;
+	protected $subtotal_tax   = 0.00;
+	protected $shipping       = 0.00;
+	protected $shipping_tax   = 0.00;
+	protected $discounts      = array();
+	protected $discount_names = array();
+	protected $discount       = 0.00;
+	// protected $taxable     = 0.00;
 	protected $tax_rate    = array();
-	public $tax         = 0.00;
+	public $tax            = 0.00;
 	protected $fees        = array();
 	protected $use_credits = false;
 	protected $credits     = 0;
@@ -89,7 +89,7 @@ class SPC_Cart {
 			$allowed_shipping_methods = sunshine_get_allowed_shipping_methods();
 			if ( ! empty( $allowed_shipping_methods ) ) {
 				// Check if this shipping method is still
-				if ( array_key_exists( 'shipping_method', $this->data ) && is_array( $allowed_shipping_methods ) &&  array_key_exists( $this->data['shipping_method'], $allowed_shipping_methods ) ) {
+				if ( array_key_exists( 'shipping_method', $this->data ) && is_array( $allowed_shipping_methods ) && array_key_exists( $this->data['shipping_method'], $allowed_shipping_methods ) ) {
 					$this->set_shipping_method( $this->data['shipping_method'] );
 				} elseif ( $this->delivery_method == 'ship' && count( $allowed_shipping_methods ) == 1 ) {
 					$this->set_shipping_method( array_key_first( $allowed_shipping_methods ) );
@@ -197,7 +197,7 @@ class SPC_Cart {
 			}
 		}
 
-		$final_contents = apply_filters( 'sunshine_cart_items', $final_contents, $this );
+		$final_contents   = apply_filters( 'sunshine_cart_items', $final_contents, $this );
 		$this->cart_items = $final_contents;
 
 		return (array) $final_contents;
@@ -251,13 +251,13 @@ class SPC_Cart {
 			// 'image_name' => ( !empty( $image ) ) ? $image->get_name() : '',
 			'price_level' => $price_level,
 			'qty'         => ( $qty <= 0 ) ? 1 : $qty,
-			'price' => $product->get_price( $price_level ),
+			'price'       => $product->get_price( $price_level ),
 			// 'needs_shipping' => $product->needs_shipping(),
 			// 'shipping' => $product->get_shipping(),
 			'discount'    => 0,
 			'comments'    => $comments,
-			'meta' => ( ! empty( $meta ) ) ? $meta : array(),
-			'hash' => md5( time() . $product_id . $qty ),
+			'meta'        => ( ! empty( $meta ) ) ? $meta : array(),
+			'hash'        => md5( time() . $product_id . $qty ),
 		);
 
 		// $item = wp_parse_args( $options, $options_default );
@@ -429,7 +429,7 @@ class SPC_Cart {
 				if ( $discount && $discount->exists() && $discount->is_valid() ) {
 					if ( $discount->is_solo() ) {
 						// If solo discount, unset all others, set this one, and then stop looping.
-						$this->discounts = array();
+						$this->discounts   = array();
 						$this->discounts[] = $discount;
 						break;
 					}
@@ -470,9 +470,9 @@ class SPC_Cart {
 
 		if ( ! empty( $this->discounts ) ) {
 			foreach ( $this->discounts as $discount ) {
-				//if ( $discount->is_allowed() ) {
+				// if ( $discount->is_allowed() ) {
 					$this->discount += $discount->get_total();
-				//}
+				// }
 			}
 		}
 
@@ -485,7 +485,7 @@ class SPC_Cart {
 		$discount = sunshine_get_discount_by_code( $code );
 		if ( $discount && $discount->is_valid() && ! $this->has_discount_code( $code ) ) {
 			$this->discounts[] = $discount;
-			$discounts = SPC()->session->get( 'discounts' );
+			$discounts         = SPC()->session->get( 'discounts' );
 			if ( ! is_array( $discounts ) ) {
 				$discounts = array();
 			}
@@ -527,7 +527,7 @@ class SPC_Cart {
 	}
 
 	public function has_discount_codes() {
-		if ( !empty( $this->discounts ) ) {
+		if ( ! empty( $this->discounts ) ) {
 			return true;
 		}
 		return false;
@@ -582,7 +582,7 @@ class SPC_Cart {
 	}
 
 	public function get_subtotal_formatted() {
-		$price = $this->get_subtotal();
+		$price           = $this->get_subtotal();
 		$price_formatted = sunshine_get_price_to_display( $price, $this->subtotal_tax );
 		return $price_formatted;
 	}
@@ -638,8 +638,8 @@ class SPC_Cart {
 		$customer_postcode = $this->get_checkout_data_item( $prefix . 'postcode' );
 
 		if ( empty( $customer_country ) && empty( $customer_state ) && empty( $customer_postcode ) && 'store' == SPC()->get_option( 'tax_default_location' ) ) {
-			$customer_country = SPC()->get_option( 'country' );
-			$customer_state = SPC()->get_option( 'state' );
+			$customer_country  = SPC()->get_option( 'country' );
+			$customer_state    = SPC()->get_option( 'state' );
 			$customer_postcode = SPC()->get_option( 'postcode' );
 		}
 
@@ -700,7 +700,7 @@ class SPC_Cart {
 
 	public function set_tax() {
 
-		$this->tax = 0;
+		$this->tax      = 0;
 		$this->tax_rate = $this->get_tax_rate();
 
 		if ( ! $this->tax_rate ) {
@@ -708,12 +708,12 @@ class SPC_Cart {
 		}
 
 		// Figure out taxable amount
-		$contents = $this->get_cart_items();
-		$taxable_total = 0;
+		$contents           = $this->get_cart_items();
+		$taxable_total      = 0;
 		$this->subtotal_tax = 0;
 		foreach ( $contents as $item ) {
 			if ( $item->is_taxable() ) {
-				$taxable_total += $item->get_total();
+				$taxable_total      += $item->get_total();
 				$this->subtotal_tax += $item->get_tax() * $item->get_qty();
 			}
 		}
@@ -721,7 +721,7 @@ class SPC_Cart {
 		// Is selected shipping taxable?
 		$this->shipping_tax = 0;
 		if ( $this->shipping_method && $this->shipping_method->is_taxable() ) {
-			$taxable_total += $this->shipping_method->get_price();
+			$taxable_total     += $this->shipping_method->get_price();
 			$this->shipping_tax = $this->shipping_method->get_tax();
 		}
 
@@ -736,8 +736,8 @@ class SPC_Cart {
 		$taxable_total = apply_filters( 'sunshine_cart_taxable_total', $taxable_total, $this->tax_rate );
 
 		if ( $taxable_total ) {
-			//$this->tax = $taxable_total * $this->tax_rate['rate'];
-			//$this->tax = number_format( floor( $this->tax * 100 ) / 100, 2 );
+			// $this->tax = $taxable_total * $this->tax_rate['rate'];
+			// $this->tax = number_format( floor( $this->tax * 100 ) / 100, 2 );
 			$this->tax = $this->subtotal_tax + $this->shipping_tax;
 		}
 
@@ -772,9 +772,9 @@ class SPC_Cart {
 		if ( ! $this->use_credits() ) {
 			return 0;
 		}
-		$total_credits = SPC()->customer->get_credits();
+		$total_credits               = SPC()->customer->get_credits();
 		$order_total_without_credits = $this->get_total( array( 'credits' ) );
-		$credits_applied = $total_credits;
+		$credits_applied             = $total_credits;
 		if ( $total_credits > $order_total_without_credits ) {
 			$credits_applied = $order_total_without_credits;
 		}
@@ -939,7 +939,7 @@ class SPC_Cart {
 		if ( empty( $this->shipping_method ) ) {
 			return;
 		}
-		$price = $this->get_shipping();
+		$price           = $this->get_shipping();
 		$price_formatted = sunshine_get_price_to_display( $price, $this->shipping_tax );
 		return $price_formatted;
 	}
@@ -947,7 +947,7 @@ class SPC_Cart {
 	public function add_fee( $id, $amount, $name ) {
 		$this->fees[ $id ] = array(
 			'amount' => floatval( $amount ),
-			'name' => $name,
+			'name'   => $name,
 		);
 	}
 
@@ -960,7 +960,7 @@ class SPC_Cart {
 	}
 
 	public function get_fees_total() {
-		if ( !empty( $this->fees ) ) {
+		if ( ! empty( $this->fees ) ) {
 			$total_fees = 0;
 			foreach ( $this->fees as $fee ) {
 				$total_fees += $fee['amount'];
@@ -989,12 +989,12 @@ class SPC_Cart {
 		}
 
 		if ( ! in_array( 'tax', $exclude ) ) {
-			$tax = (float) $this->get_tax();
+			$tax    = (float) $this->get_tax();
 			$total += $tax;
 		}
 
 		if ( ! in_array( 'fees', $exclude ) ) {
-			$fees = (float) $this->get_fees_total();
+			$fees   = (float) $this->get_fees_total();
 			$total += $fees;
 		}
 
@@ -1035,7 +1035,7 @@ class SPC_Cart {
 				}
 			}
 			$this->cart[ $key ]['qty'] = intval( $qty );
-			$this->cart[ $key ] = apply_filters( 'sunshine_add_to_cart_item', $this->cart[ $key ] );
+			$this->cart[ $key ]        = apply_filters( 'sunshine_add_to_cart_item', $this->cart[ $key ] );
 			$this->update_cart();
 		}
 	}
@@ -1118,7 +1118,7 @@ class SPC_Cart {
 
 	public function set_checkout_fields() {
 
-		$general_fields = SPC()->get_option( 'general_fields' );
+		$general_fields          = SPC()->get_option( 'general_fields' );
 		$required_general_fields = SPC()->get_option( 'required_general_fields' );
 		if ( empty( $required_general_fields ) ) {
 			$required_general_fields = array();
@@ -1126,7 +1126,7 @@ class SPC_Cart {
 
 		// Get allowed shipping methods from the start so delivery method section works.
 		$allowed_shipping_methods = sunshine_get_allowed_shipping_methods();
-		$shipping_methods        = array();
+		$shipping_methods         = array();
 		if ( $allowed_shipping_methods ) {
 			foreach ( $allowed_shipping_methods as $instance_id => $allowed_shipping_method ) {
 				$this_shipping_method = sunshine_get_shipping_method_by_instance( $instance_id );
@@ -1155,7 +1155,7 @@ class SPC_Cart {
 					'required'     => true,
 					'default'      => ( $this->get_checkout_data_item( 'first_name' ) ) ? $this->get_checkout_data_item( 'first_name' ) : SPC()->customer->get_first_name(),
 					'autocomplete' => 'given-name',
-					'size' => 'half',
+					'size'         => 'half',
 				),
 				array(
 					'id'           => 'last_name',
@@ -1164,7 +1164,7 @@ class SPC_Cart {
 					'required'     => true,
 					'default'      => ( $this->get_checkout_data_item( 'last_name' ) ) ? $this->get_checkout_data_item( 'last_name' ) : SPC()->customer->get_last_name(),
 					'autocomplete' => 'family-name',
-					'size' => 'half',
+					'size'         => 'half',
 				),
 				array(
 					'id'           => 'email',
@@ -1184,14 +1184,14 @@ class SPC_Cart {
 				),
 				*/
 				array(
-					'id'         => 'password',
-					'type'       => 'password',
-					'name'       => __( 'Password', 'sunshine-photo-cart' ),
-					'required'   => ( ! is_user_logged_in() && $needs_account ) ? true : false,
-					'description'   => ( ! $needs_account ) ? __( 'Optionally set a password', 'sunshine-photo-cart' ) : '',
-					'visible' => ( ! is_user_logged_in() && $needs_account ),
+					'id'           => 'password',
+					'type'         => 'password',
+					'name'         => __( 'Password', 'sunshine-photo-cart' ),
+					'required'     => ( ! is_user_logged_in() && $needs_account ) ? true : false,
+					'description'  => ( ! $needs_account ) ? __( 'Optionally set a password', 'sunshine-photo-cart' ) : '',
+					'visible'      => ( ! is_user_logged_in() ) ? true : false,
 					'autocomplete' => 'new-password',
-					'default' => null
+					'default'      => null,
 				),
 				array(
 					'id'           => 'phone',
@@ -1203,12 +1203,12 @@ class SPC_Cart {
 					'visible'      => ( ( is_array( $general_fields ) && in_array( 'phone', $general_fields ) ) || ( is_array( $required_general_fields ) && in_array( 'phone', $required_general_fields ) ) ),
 				),
 				array(
-					'id'      => 'vat',
-					'type'    => 'text',
-					'name'    => ( SPC()->get_option( 'vat_label' ) ) ? SPC()->get_option( 'vat_label' ) : __( 'EU VAT Number', 'sunshine-photo-cart' ),
+					'id'       => 'vat',
+					'type'     => 'text',
+					'name'     => ( SPC()->get_option( 'vat_label' ) ) ? SPC()->get_option( 'vat_label' ) : __( 'EU VAT Number', 'sunshine-photo-cart' ),
 					'required' => ( in_array( 'vat', $required_general_fields ) ),
-					'default' => $this->get_checkout_data_item( 'vat' ),
-					'visible'      => ( ( is_array( $general_fields ) && in_array( 'vat', $general_fields ) ) || ( is_array( $required_general_fields ) && in_array( 'vat', $required_general_fields ) ) ),
+					'default'  => $this->get_checkout_data_item( 'vat' ),
+					'visible'  => ( ( is_array( $general_fields ) && in_array( 'vat', $general_fields ) ) || ( is_array( $required_general_fields ) && in_array( 'vat', $required_general_fields ) ) ),
 				),
 			),
 		);
@@ -1236,7 +1236,7 @@ class SPC_Cart {
 		$delivery_fields = array();
 		if ( ! empty( $delivery_methods ) && is_array( $delivery_methods ) ) {
 			if ( count( $delivery_methods ) == 1 && ! array_key_exists( 'pickup', $delivery_methods ) ) {
-				$delivery_method_id = array_key_first( $delivery_methods );
+				$delivery_method_id                     = array_key_first( $delivery_methods );
 				$this->hidden_fields['delivery_method'] = $delivery_methods[ $delivery_method_id ]['id'];
 			} else {
 				$delivery_methods_options = array();
@@ -1275,7 +1275,7 @@ class SPC_Cart {
 				$default_country = $this->get_checkout_data_item( 'shipping_country' );
 			}
 
-			$shipping_fields = SPC()->countries->get_address_fields( $default_country, 'shipping_' );
+			$shipping_fields               = SPC()->countries->get_address_fields( $default_country, 'shipping_' );
 			$shipping_fields[1]['default'] = ( is_user_logged_in() ) ? SPC()->customer->get_first_name() : $this->get_checkout_data_item( 'first_name' );
 			$shipping_fields[2]['default'] = ( is_user_logged_in() ) ? SPC()->customer->get_last_name() : $this->get_checkout_data_item( 'last_name' );
 
@@ -1315,11 +1315,11 @@ class SPC_Cart {
 					'name'   => __( 'Shipping Method', 'sunshine-photo-cart' ),
 					'fields' => array(
 						array(
-							'id'      => 'shipping_method',
-							'type'    => 'radio',
+							'id'       => 'shipping_method',
+							'type'     => 'radio',
 							// 'name' => __( 'Shipping Method', 'sunshine-photo-cart' ),
-							'options' => $shipping_methods,
-							'default' => $default_shipping,
+							'options'  => $shipping_methods,
+							'default'  => $default_shipping,
 							'required' => true,
 						),
 					),
@@ -1328,10 +1328,9 @@ class SPC_Cart {
 					$fields['shipping_method']['summary'] = $this->shipping_method->get_name();
 				}
 			}
-
 		} elseif ( SPC()->get_option( 'require_address' ) ) {
 
-			$default_country = SPC()->customer->get_shipping_country();
+			$default_country   = SPC()->customer->get_shipping_country();
 			$fields['address'] = array(
 				'active' => false,
 				'name'   => __( 'Address', 'sunshine-photo-cart' ),
@@ -1356,15 +1355,15 @@ class SPC_Cart {
 
 		} else {
 			if ( ! empty( $fields['delivery']['fields'][0]['options']['shipping'] ) ) {
-				//unset( $fields['delivery']['fields'][0]['options']['shipping'] );
+				// unset( $fields['delivery']['fields'][0]['options']['shipping'] );
 			}
 		}
 
 		$order_total       = $this->get_total();
 		$different_billing = $this->get_checkout_data_item( 'different_billing' );
 
-		$payment_methods         = sunshine_get_allowed_payment_methods();
-		$payment_methods_options = $needs_billing = array();
+		$payment_methods             = sunshine_get_allowed_payment_methods();
+		$payment_methods_options     = $needs_billing = array();
 		$payment_methods_field_extra = '';
 		if ( ! empty( $payment_methods ) && is_array( $payment_methods ) ) {
 			foreach ( $payment_methods as $id => $payment_method_class ) {
@@ -1372,9 +1371,9 @@ class SPC_Cart {
 					'label'       => $payment_method_class->get_name(),
 					'description' => $payment_method_class->get_description(),
 				);
-				$this_payment_method_fields = $payment_method_class->get_fields();
+				$this_payment_method_fields     = $payment_method_class->get_fields();
 				if ( $this_payment_method_fields ) {
-					//$payment_methods_field_extra .= '<div class="sunshine--checkout--payment-method--extra" id="sunshine--checkout--payment-method--extra--' . esc_attr( $id ) . '">' . $this_payment_method_fields . '</div>';
+					// $payment_methods_field_extra .= '<div class="sunshine--checkout--payment-method--extra" id="sunshine--checkout--payment-method--extra--' . esc_attr( $id ) . '">' . $this_payment_method_fields . '</div>';
 					$payment_methods_options[ $id ]['description'] .= '<div class="sunshine--checkout--payment-method--extra" id="sunshine--checkout--payment-method--extra--' . esc_attr( $id ) . '">' . $this_payment_method_fields . '</div>';
 				}
 				if ( $payment_method_class->needs_billing_address() ) {
@@ -1386,11 +1385,11 @@ class SPC_Cart {
 		$payment_methods_fields = array();
 
 		$payment_methods_fields[] = array(
-			'id' => 'customer_notes',
-			'type' => 'textarea',
-			'name' => __( 'Notes', 'sunshine-photo-cart' ),
-			'default' => $this->get_checkout_data_item( 'customer_notes' ),
-			'visible'      => ( ( is_array( $general_fields ) && in_array( 'notes', $general_fields ) ) || ( is_array( $required_general_fields ) && in_array( 'notes', $required_general_fields ) ) ),
+			'id'       => 'customer_notes',
+			'type'     => 'textarea',
+			'name'     => __( 'Notes', 'sunshine-photo-cart' ),
+			'default'  => $this->get_checkout_data_item( 'customer_notes' ),
+			'visible'  => ( ( is_array( $general_fields ) && in_array( 'notes', $general_fields ) ) || ( is_array( $required_general_fields ) && in_array( 'notes', $required_general_fields ) ) ),
 			'required' => ( in_array( 'notes', $required_general_fields ) ),
 		);
 
@@ -1407,7 +1406,7 @@ class SPC_Cart {
 
 		if ( ! empty( $payment_methods_field_extra ) ) {
 			$payment_methods_fields[] = array(
-				'id' => 'payment_method_extra',
+				'id'   => 'payment_method_extra',
 				'type' => 'html',
 				'html' => $payment_methods_field_extra,
 			);
@@ -1452,7 +1451,7 @@ class SPC_Cart {
 			}
 
 			$billing_address_fields = SPC()->countries->get_address_fields( $default_country, 'billing_' );
-			$payment_method = SPC()->cart->get_checkout_data_item( 'payment_method' );
+			$payment_method         = SPC()->cart->get_checkout_data_item( 'payment_method' );
 			foreach ( $billing_address_fields as &$billing_address_field ) {
 
 				if ( $this->needs_shipping() ) {
@@ -1467,14 +1466,14 @@ class SPC_Cart {
 				} else {
 					$billing_address_field['conditions'] = array(
 						array(
-							'field'         => 'payment_method',
-							'compare'       => '==',
-							'value'         => $needs_billing, // TODO: Figure out how to show these fields based on payment method
-							'action'        => 'show',
+							'field'   => 'payment_method',
+							'compare' => '==',
+							'value'   => $needs_billing, // TODO: Figure out how to show these fields based on payment method
+							'action'  => 'show',
 						),
 					);
 				}
-				$fields['payment']['fields'][]       = $billing_address_field;
+				$fields['payment']['fields'][] = $billing_address_field;
 			}
 		}
 
@@ -1498,17 +1497,17 @@ class SPC_Cart {
 				$fields['payment']['name'] = '';
 			}
 		}
-		$submit_label = apply_filters( 'sunshine_checkout_submit_label', $submit_label );
+		$submit_label                  = apply_filters( 'sunshine_checkout_submit_label', $submit_label );
 		$fields['payment']['fields'][] = array(
-			'id'    => 'sunshine--checkout--submit',
-			'type'  => 'submit',
-			'name'  => $submit_label,
+			'id'   => 'sunshine--checkout--submit',
+			'type' => 'submit',
+			'name' => $submit_label,
 		);
 		if ( SPC()->get_option( 'page_terms' ) ) {
 			$fields['payment']['fields'][] = array(
-				'id'    => 'terms',
-				'type'  => 'html',
-				'html' => sprintf( __( 'By submitting this order, you agree to our <a href="%1$s" target="_blank">%2$s</a>', 'sunshine-photo-cart' ), get_permalink( SPC()->get_option( 'page_terms' ) ), get_the_title( SPC()->get_option( 'page_terms' ) ) )
+				'id'   => 'terms',
+				'type' => 'html',
+				'html' => sprintf( __( 'By submitting this order, you agree to our <a href="%1$s" target="_blank">%2$s</a>', 'sunshine-photo-cart' ), get_permalink( SPC()->get_option( 'page_terms' ) ), get_the_title( SPC()->get_option( 'page_terms' ) ) ),
 			);
 		}
 
@@ -1580,7 +1579,7 @@ class SPC_Cart {
 
 	public function get_checkout_field_html( $id, $field ) {
 
-		if ( isset( $field['visible'] ) && !$field['visible'] ) {
+		if ( isset( $field['visible'] ) && ! $field['visible'] ) {
 			return;
 		}
 
@@ -1700,18 +1699,18 @@ class SPC_Cart {
 		// Set section to completed via session.
 		end( $this->fields );
 		$checkout_sections_completed = SPC()->session->get( 'checkout_sections_completed' );
+		if ( ! $checkout_sections_completed ) {
+			$checkout_sections_completed = array();
+		}
 
 		if ( $this->active_section != key( $this->fields ) && ! sunshine_checkout_section_completed( $this->active_section ) ) {
-			if ( ! $checkout_sections_completed ) {
-				$checkout_sections_completed = array();
-			}
 			$checkout_sections_completed[] = $this->active_section;
 			SPC()->session->set( 'checkout_sections_completed', $checkout_sections_completed );
 
 		}
 
-		$next_section = '';
-		$sections = array_keys( $this->fields ); // Get all section keys.
+		$next_section       = '';
+		$sections           = array_keys( $this->fields ); // Get all section keys.
 		$remaining_sections = array_diff( $sections, $checkout_sections_completed );
 		if ( ! empty( $remaining_sections ) ) {
 			$next_section = array_shift( $remaining_sections );
@@ -1761,7 +1760,7 @@ class SPC_Cart {
 	}
 
 	public function set_checkout_data_item( $key, $value = '' ) {
-		$data = $this->get_checkout_data();
+		$data                         = $this->get_checkout_data();
 		$data[ sanitize_key( $key ) ] = sanitize_text_field( $value );
 		SPC()->session->set( 'checkout_data', $data );
 	}
@@ -1782,7 +1781,7 @@ class SPC_Cart {
 		// If user is logged in, let's look for their customer info as a fallback.
 		if ( is_user_logged_in() ) {
 			$value = false;
-			switch( $key ) {
+			switch ( $key ) {
 				case 'first_name':
 					$value = SPC()->customer->get_first_name();
 					break;
@@ -1836,7 +1835,7 @@ class SPC_Cart {
 		if ( ! empty( $data['different_billing'] ) && 'no' === $data['different_billing'] ) {
 			foreach ( $data as $key => $value ) {
 				if ( strpos( $key, 'shipping_' ) !== false ) {
-					$billing_key = str_replace( 'shipping_', 'billing_', $key );
+					$billing_key          = str_replace( 'shipping_', 'billing_', $key );
 					$data[ $billing_key ] = $value;
 				}
 			}
@@ -1886,9 +1885,9 @@ class SPC_Cart {
 
 		$order->set_mode( apply_filters( 'sunshine_checkout_create_order_mode', 'live', $order ) );
 
-		$order->save();
+		$order_result = $order->save();
 
-		if ( $order->exists() ) {
+		if ( $order_result ) {
 
 			foreach ( $data as $key => $value ) {
 				$order->update_meta_value( $key, $value );
@@ -1899,10 +1898,10 @@ class SPC_Cart {
 				SPC()->customer->decrease_credits( $order->get_credits() );
 			}
 
-			//SPC()->customer->add_action( 'order', array( 'order_id' => $order->get_id() ) );
+			// SPC()->customer->add_action( 'order', array( 'order_id' => $order->get_id() ) );
 			SPC()->customer->recalculate_stats();
 
-			//do_action( 'sunshine_checkout_process_payment', $this );
+			// do_action( 'sunshine_checkout_process_payment', $this );
 			if ( $this->get_checkout_data_item( 'payment_method' ) ) {
 				do_action( 'sunshine_checkout_process_payment_' . $this->get_checkout_data_item( 'payment_method' ), $order );
 			} elseif ( $order->get_total() > 0 ) {
@@ -1918,6 +1917,7 @@ class SPC_Cart {
 
 			if ( apply_filters( 'sunshine_checkout_allow_order_notify', true, $order ) ) {
 				do_action( 'sunshine_order_notify', $order );
+				$order->add_log( __( 'Order notification sent', 'sunshine-photo-cart' ) );
 			}
 
 			if ( apply_filters( 'sunshine_order_clear_cart', true ) ) {
@@ -1926,8 +1926,6 @@ class SPC_Cart {
 				SPC()->session->set( 'checkout_sections_completed', '' );
 				SPC()->cart->empty_cart();
 			}
-
-			do_action( 'sunshine_checkout_create_order', $order, $data );
 
 			return $order;
 		}
@@ -1950,11 +1948,11 @@ class SPC_Cart {
 				wp_send_json_error();
 			}
 
-			$args = array(
+			$args    = array(
 				'user_login' => $data['email'],
 				'user_email' => $data['email'],
 				'user_pass'  => $data['password'],
-				'first_name'  => $data['first_name'],
+				'first_name' => $data['first_name'],
 				'last_name'  => $data['last_name'],
 				'role'       => sunshine_get_customer_role(),
 			);
@@ -1975,9 +1973,9 @@ class SPC_Cart {
 				wp_send_json_error();
 			}
 
-			$customer = new SPC_Customer( $user_id );
+			$customer       = new SPC_Customer( $user_id );
 			SPC()->customer = $customer;
-			//SPC()->customer->add_action( 'signup' );
+			// SPC()->customer->add_action( 'signup' );
 
 			do_action( 'sunshine_after_signup', $customer, $data['email'] );
 

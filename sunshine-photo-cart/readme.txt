@@ -5,8 +5,8 @@ Contributors: wpsunshine, sccr410
 Tags: client photo gallery, sell photos, client galleries, client proofing, photo proofing
 Requires at least: 5.5
 Requires PHP: 7.4
-Tested up to: 6.6.2
-Stable tag: 3.3
+Tested up to: 6.7
+Stable tag: 3.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,11 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 11. Admin: Create a gallery and add images
 
 == Changelog ==
+
+= 3.4 =
+* Add: Enhanced image protection via htaccess rules + file naming conventions
+* Fix: Square order email sent before order updated to "new" status
+* Add: "notify" notice type styling
 
 = 3.3 =
 * New! Ability to set pricing on a per-image basis

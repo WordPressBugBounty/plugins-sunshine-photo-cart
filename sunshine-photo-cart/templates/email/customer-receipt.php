@@ -13,6 +13,7 @@ if ( ! empty( $message ) ) {
 <div id="order-actions">
 	<a href="<?php echo $order->get_permalink(); ?>" class="button"><?php _e( 'View order', 'sunshine-photo-cart' ); ?></a>
 	<a href="<?php echo $order->get_invoice_permalink(); ?>" class="button"><?php _e( 'View invoice', 'sunshine-photo-cart' ); ?></a>
+	<?php do_action( 'sunshine_email_order_receipt_actions', $order ); ?>
 </div>
 
 <div id="order-cart">

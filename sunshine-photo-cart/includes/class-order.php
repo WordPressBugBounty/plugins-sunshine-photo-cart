@@ -117,7 +117,7 @@ class SPC_Order extends Sunshine_Data {
 				return false;
 			}
 			$current_status = $this->get_status();
-			$this->status = $new_status;
+			$this->status   = $new_status;
 			do_action( 'sunshine_order_status_change', $new_status, $this );
 			do_action( 'sunshine_order_status_change_' . $new_status, $this );
 			if ( ! empty( $current_status ) && $current_status != $new_status ) {
@@ -151,8 +151,9 @@ class SPC_Order extends Sunshine_Data {
 	}
 
 	public function add_log( $message, $user_id = 0 ) {
+
 		if ( ! $this->get_id() ) {
-			return 0;
+			return;
 		}
 
 		if ( $user_id ) {
@@ -189,7 +190,7 @@ class SPC_Order extends Sunshine_Data {
 
 		do_action( 'sunshine_order_log_added', $comment_id, $this );
 
-		SPC()->log( 'Order log added to ' . $this->get_name() . ': ' . $message );
+		SPC()->log( 'Order log item added to ' . $this->get_name() . ': ' . $message );
 
 		return $comment_id;
 	}
@@ -268,7 +269,6 @@ class SPC_Order extends Sunshine_Data {
 			return $this->get_billing_first_name();
 		}
 
-
 		return false;
 	}
 
@@ -312,7 +312,7 @@ class SPC_Order extends Sunshine_Data {
 			$url .= trailingslashit( SPC()->get_option( 'account_view_order_endpoint', 'order-details' ) );
 			$url .= $this->get_id();
 			if ( $key ) {
-				$url  = add_query_arg( 'order_key', $this->get_meta_value( 'order_key' ), $url );
+				$url = add_query_arg( 'order_key', $this->get_meta_value( 'order_key' ), $url );
 			}
 		} else {
 			// Otherwise get the receipt/received permalink.
@@ -444,9 +444,9 @@ class SPC_Order extends Sunshine_Data {
 
 	public function price_formatted( $price, $tax = 0 ) {
 
-		//$price_has_tax = $this->get_meta_value( 'price_has_tax' );
+		// $price_has_tax = $this->get_meta_value( 'price_has_tax' );
 		$display_price = $this->get_meta_value( 'display_price' );
-		$suffix = SPC()->get_option( 'price_suffix' );
+		$suffix        = SPC()->get_option( 'price_suffix' );
 
 		if ( 'with_tax' === $display_price ) {
 			$price += $tax;
@@ -500,7 +500,7 @@ class SPC_Order extends Sunshine_Data {
 	}
 
 	public function get_total_minus_refunds() {
-		$total = floatval( $this->get_meta_value( 'total' ) );
+		$total   = floatval( $this->get_meta_value( 'total' ) );
 		$refunds = $this->get_refunds();
 		if ( ! empty( $refunds ) ) {
 			foreach ( $refunds as $refund ) {
@@ -512,7 +512,7 @@ class SPC_Order extends Sunshine_Data {
 
 	public function get_refund_total() {
 		$refund_total = 0;
-		$refunds = $this->get_refunds();
+		$refunds      = $this->get_refunds();
 		if ( ! empty( $refunds ) ) {
 			foreach ( $refunds as $refund ) {
 				$refund_total += floatval( $refund['amount'] );
@@ -560,7 +560,7 @@ class SPC_Order extends Sunshine_Data {
 		foreach ( $values as $discount ) {
 			if ( is_a( $discount, 'SPC_Discount' ) ) {
 				$discounts[] = $discount->get_code();
-			} elseif( is_string( $discount ) ) {
+			} elseif ( is_string( $discount ) ) {
 				$discounts[] = $discount;
 			}
 		}
@@ -759,7 +759,7 @@ class SPC_Order extends Sunshine_Data {
 	public function add_fee( $id, $amount, $name ) {
 		$this->meta['fees'][ $id ] = array(
 			'amount' => floatval( $amount ),
-			'name' => $name,
+			'name'   => $name,
 		);
 	}
 
@@ -814,7 +814,7 @@ class SPC_Order extends Sunshine_Data {
 		$this->update_meta_value( 'refunds', $refunds );
 
 		$this->add_log( sprintf( __( 'Refund has been processed for %s', 'sunshine-photo-cart' ), sunshine_price( $amount ) ) );
-		SPC()->log( sprintf( __( 'Refund on %s has been processed for %s', 'sunshine-photo-cart' ), $this->get_name(), sunshine_price( $amount ) ) );
+		SPC()->log( sprintf( __( 'Refund on %1$s has been processed for %2$s', 'sunshine-photo-cart' ), $this->get_name(), sunshine_price( $amount ) ) );
 
 		// Update this customer's order stats.
 		$customer = $this->get_customer();
@@ -824,11 +824,11 @@ class SPC_Order extends Sunshine_Data {
 	}
 
 	public function get_profit() {
-		$items = $this->get_items();
+		$items  = $this->get_items();
 		$profit = 0;
 		if ( ! empty( $items ) ) {
 			foreach ( $items as $item ) {
-				$cost = $item->get_meta_value( 'cost' );
+				$cost  = $item->get_meta_value( 'cost' );
 				$price = $item->get_price();
 				if ( $cost && $price ) {
 					$profit += ( floatval( $price ) - floatval( $cost ) ) * $item->get_qty();
@@ -843,6 +843,7 @@ class SPC_Order extends Sunshine_Data {
 
 	public function notify( $admin = true ) {
 		do_action( 'sunshine_order_notify', $this, $admin );
+		$this->add_log( __( 'Order notification sent', 'sunshine-photo-cart' ) );
 	}
 
 	public function create() {
@@ -948,11 +949,11 @@ class SPC_Order extends Sunshine_Data {
 
 			if ( ! empty( $item['image_id'] ) ) {
 				$image = $cart_item->get_image();
-				//$item['gallery_id']   = $cart_item->get_gallery_id();
-				//$item['price_level']   = $image->gallery->get_price_level();
-				//$item['meta']['gallery_name'] = $cart_item->get_gallery_name();
-				$item['meta']['filename']     = $image->get_file_name();
-				$item['meta']['image_name']   = $image->get_name();
+				// $item['gallery_id']   = $cart_item->get_gallery_id();
+				// $item['price_level']   = $image->gallery->get_price_level();
+				// $item['meta']['gallery_name'] = $cart_item->get_gallery_name();
+				$item['meta']['filename']   = $image->get_file_name();
+				$item['meta']['image_name'] = $image->get_name();
 			}
 
 			if ( ! empty( $cart_item->get_gallery() ) ) {
@@ -966,10 +967,10 @@ class SPC_Order extends Sunshine_Data {
 			$item['price'] = 0;
 
 			if ( ! empty( $item['product_id'] ) ) {
-				$product = sunshine_get_product( intval( $item['product_id'] ), intval( $item['price_level'] ) );
-				$item['type'] = $product->get_type();
-				$item['price'] = $cart_item->get_price();
-				$item['meta']['product_name'] = $product->get_name();
+				$product                          = sunshine_get_product( intval( $item['product_id'] ), intval( $item['price_level'] ) );
+				$item['type']                     = $product->get_type();
+				$item['price']                    = $cart_item->get_price();
+				$item['meta']['product_name']     = $product->get_name();
 				$item['meta']['product_cat_name'] = $product->get_category_name();
 			}
 
@@ -979,23 +980,23 @@ class SPC_Order extends Sunshine_Data {
 					if ( $option_id == 'images' && ! empty( $item['options']['images'] ) ) {
 						$options['images'] = array();
 						foreach ( $item['options']['images'] as $image_id ) {
-							$image = sunshine_get_image( $image_id );
+							$image               = sunshine_get_image( $image_id );
 							$options['images'][] = array(
-								'image_id' => $image_id,
-								'name' => $image->get_name(),
-								'filename' => $image->get_file_name(),
+								'image_id'     => $image_id,
+								'name'         => $image->get_name(),
+								'filename'     => $image->get_file_name(),
 								'gallery_name' => $image->get_gallery_name(),
 							);
 						}
 						continue;
 					}
-					$option = new SPC_Product_Option( $option_id );
-					$option_price = $product->get_option_item_price( $option_id, $option_item_id, $item['price_level'] );
+					$option                = new SPC_Product_Option( $option_id );
+					$option_price          = $product->get_option_item_price( $option_id, $option_item_id, $item['price_level'] );
 					$options[ $option_id ] = array(
-						//'id'    => $option_item_id,
+						// 'id'    => $option_item_id,
 						'price' => $option_price,
 					);
-					//$item['price'] += $option_price;
+					// $item['price'] += $option_price;
 					if ( $option->get_type() == 'checkbox' ) {
 						$options[ $option_id ]['name'] = $option->get_name();
 					} else {
@@ -1008,29 +1009,29 @@ class SPC_Order extends Sunshine_Data {
 
 			$item = apply_filters( 'sunshine_cart_item_before_order', $item );
 
-			//$item['total'] = $item['price'] * $item['qty'];
+			// $item['total'] = $item['price'] * $item['qty'];
 
 			// Insert into order item database table.
 			$insert_result = $wpdb->insert(
 				$wpdb->prefix . 'sunshine_order_items',
 				array(
-					'order_id' => $this->get_id(),
-					'type' => ( !empty( $item['type'] ) ) ? $item['type'] : '',
-					'image_id' => ( !empty( $item['image_id'] ) ) ? intval( $item['image_id'] ) : '',
-					'qty' => ( !empty( $item['qty'] ) ) ? intval( $item['qty'] ) : '',
-					'product_id' => ( !empty( $item['product_id'] ) ) ? intval( $item['product_id'] ) : '',
-					'gallery_id' => ( !empty( $item['gallery_id'] ) ) ? intval( $item['gallery_id'] ) : '',
-					'price_level' => ( !empty( $item['price_level'] ) ) ? intval( $item['price_level'] ) : '',
-					'price' => ( !empty( $item['price'] ) ) ? floatval( $item['price'] ) : '',
-					'tax' => $cart_item->get_tax(),
-					'discount' => ( !empty( $item['discount'] ) ) ? floatval( $item['discount'] ) : '',
+					'order_id'    => $this->get_id(),
+					'type'        => ( ! empty( $item['type'] ) ) ? $item['type'] : '',
+					'image_id'    => ( ! empty( $item['image_id'] ) ) ? intval( $item['image_id'] ) : '',
+					'qty'         => ( ! empty( $item['qty'] ) ) ? intval( $item['qty'] ) : '',
+					'product_id'  => ( ! empty( $item['product_id'] ) ) ? intval( $item['product_id'] ) : '',
+					'gallery_id'  => ( ! empty( $item['gallery_id'] ) ) ? intval( $item['gallery_id'] ) : '',
+					'price_level' => ( ! empty( $item['price_level'] ) ) ? intval( $item['price_level'] ) : '',
+					'price'       => ( ! empty( $item['price'] ) ) ? floatval( $item['price'] ) : '',
+					'tax'         => $cart_item->get_tax(),
+					'discount'    => ( ! empty( $item['discount'] ) ) ? floatval( $item['discount'] ) : '',
 				)
 			);
 
 			// Insert any of the item meta data.
 			if ( $insert_result ) {
 				$order_item_id = $wpdb->insert_id;
-				if ( $order_item_id && !empty( $item['meta'] ) ) {
+				if ( $order_item_id && ! empty( $item['meta'] ) ) {
 					foreach ( $item['meta'] as $key => $value ) {
 						if ( empty( $value ) ) {
 							continue;
@@ -1039,14 +1040,13 @@ class SPC_Order extends Sunshine_Data {
 							$wpdb->prefix . 'sunshine_order_itemmeta',
 							array(
 								'order_item_id' => $order_item_id,
-								'meta_key' => $key,
-								'meta_value' => maybe_serialize( $value ),
+								'meta_key'      => $key,
+								'meta_value'    => maybe_serialize( $value ),
 							)
 						);
 					}
 				}
 			}
-
 		}
 
 		// Set order status
@@ -1079,7 +1079,7 @@ class SPC_Order extends Sunshine_Data {
 	function get_price_to_display( $price, $tax = 0, $force_suffix = false ) {
 		$price_has_tax = $this->get_meta_value( 'price_has_tax' );
 		$display_price = $this->get_meta_value( 'display_price' );
-		$suffix = SPC()->get_option( 'price_suffix' );
+		$suffix        = SPC()->get_option( 'price_suffix' );
 
 		if ( 'with_tax' === $display_price && $price_has_tax == 'yes' ) {
 			$price += $tax;

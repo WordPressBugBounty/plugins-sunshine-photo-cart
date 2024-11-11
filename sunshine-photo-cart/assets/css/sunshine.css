@@ -488,6 +488,7 @@ body.sunshine--checkout--standalone td { border: none; }
 #sunshine-notices > .sunshine-notice a { color: #FFF; font-weight: bold; }
 #sunshine-notices > .sunshine-notice.error { background: #FF0000; }
 #sunshine-notices > .sunshine-notice.warning { background: orange; font-weight: bold; }
+#sunshine-notices > .sunshine-notice.notify { background: #ADD8E6; color: var(--sunshine--dark); }
 
 /* Main menu */
 #sunshine .sunshine--main-menu { margin: 30px auto; text-align: center; padding: 10px 20px; background: rgba(255,255,255,.9); border-radius: 3px; border: 1px solid rgba(0,0,0,.1); }

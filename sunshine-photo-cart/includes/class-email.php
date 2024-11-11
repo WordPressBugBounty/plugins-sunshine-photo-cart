@@ -322,6 +322,9 @@ class SPC_Email {
 		// Search/replace.
 		if ( ! empty( $this->search_replace ) ) {
 			foreach ( $this->search_replace as $key => $value ) {
+				if ( is_array( $value ) ) {
+					continue; // Skip arrays, they cannot be replacements.
+				}
 				$search[]  = '[' . $key . ']';
 				$replace[] = $value;
 			}

@@ -29,7 +29,7 @@ class Sunshine_Admin_Meta_Boxes_Gallery extends Sunshine_Admin_Meta_Boxes {
 		}
 
 		$options['sunshine-gallery-options'] = array(
-			'0' => array(
+			'0'    => array(
 				'id'     => 'images',
 				'name'   => __( 'Images', 'sunshine-photo-cart' ) . ' (<span class="sunshine-gallery-image-count">0</span>)',
 				'icon'   => SUNSHINE_PHOTO_CART_PATH . 'assets/images/icons/galleries.svg',
@@ -60,7 +60,7 @@ class Sunshine_Admin_Meta_Boxes_Gallery extends Sunshine_Admin_Meta_Boxes {
 						'id'         => 'password',
 						'name'       => __( 'Password/Access Code', 'sunshine-photo-cart' ),
 						'type'       => 'text',
-						'after' => '<button type="button" id="sunshine-gallery-password-generate" class="button">' . __( 'Generate password', 'sunshine-photo-cart' ) . '</button>',
+						'after'      => '<button type="button" id="sunshine-gallery-password-generate" class="button">' . __( 'Generate password', 'sunshine-photo-cart' ) . '</button>',
 						'conditions' => array(
 							array(
 								'field'   => 'status',
@@ -100,14 +100,14 @@ class Sunshine_Admin_Meta_Boxes_Gallery extends Sunshine_Admin_Meta_Boxes {
 						),
 					),
 					array(
-						'id'         => 'access_type',
-						'name'       => __( 'Access Type', 'sunshine-photo-cart' ),
-						'type'       => 'radio',
-						'options'    => array(
-							''      => __( 'Default', 'sunshine-photo-cart' ),
+						'id'      => 'access_type',
+						'name'    => __( 'Access Type', 'sunshine-photo-cart' ),
+						'type'    => 'radio',
+						'options' => array(
+							''        => __( 'Default', 'sunshine-photo-cart' ),
 							'account' => __( 'Registered and logged in', 'sunshine-photo-cart' ),
-							'email' => __( 'Provide email address', 'sunshine-photo-cart' ),
-							'url'   => __( 'Direct URL', 'sunshine-photo-cart' ),
+							'email'   => __( 'Provide email address', 'sunshine-photo-cart' ),
+							'url'     => __( 'Direct URL', 'sunshine-photo-cart' ),
 						),
 						/*
 						'conditions' => array(
@@ -289,7 +289,15 @@ function ajax_load_edit_image_modal() {
 
 		if ( $attachment ) {
 			// Capture the output of get_media_item()
-			$modal_content = get_media_item( $attachment_id, array( 'delete' => false, 'send' => false, 'show_title' => false, 'toggle' => false ) );
+			$modal_content = get_media_item(
+				$attachment_id,
+				array(
+					'delete'     => false,
+					'send'       => false,
+					'show_title' => false,
+					'toggle'     => false,
+				)
+			);
 			wp_send_json_success( $modal_content );
 		}
 	}
@@ -299,13 +307,12 @@ add_action( 'wp_ajax_load_edit_image_modal', 'ajax_load_edit_image_modal' );
 
 // Handle the custom AJAX request to save the attachment fields
 function save_attachment_fields_via_ajax() {
-	sunshine_log( $_POST, 'save attachment fields' );
 	// Verify required data
 	if ( isset( $_POST['form_data'] ) && isset( $_POST['attachment_id'] ) ) {
 		parse_str( $_POST['form_data'], $fields ); // Parse serialized form data
-		$attachment_id = intval( $_POST['attachment_id'] );
+		$attachment_id  = intval( $_POST['attachment_id'] );
 		$fields_to_save = $fields['attachments'][ $attachment_id ];
-		$attachment = get_post( $attachment_id, 'ARRAY_A' );
+		$attachment     = get_post( $attachment_id, 'ARRAY_A' );
 		if ( $attachment ) {
 			$attachment = apply_filters( 'attachment_fields_to_save', $attachment, $fields_to_save );
 			wp_send_json_success();
@@ -346,7 +353,7 @@ function sunshine_meta_gallery_images_display() {
 				$import_label = __( 'Import', 'sunshine-photo-cart' );
 				if ( $selected_dir ) {
 					// Count number of items in this directory and compare to how many are in the folder now.
-					$folder_count = sunshine_image_folder_count( sunshine_get_import_directory() . '/' . $selected_dir );
+					$folder_count  = sunshine_image_folder_count( sunshine_get_import_directory() . '/' . $selected_dir );
 					$current_count = $gallery->get_image_count();
 					if ( $folder_count > $current_count ) {
 						$import_label = __( 'Update from folder', 'sunshine-photo-cart' );
@@ -938,7 +945,7 @@ function sunshine_admin_gallery_image_thumbnail( $image, $echo = true ) {
 	$html .= '<a href="#" class="sunshine-image-featured dashicons dashicons-star-filled" data-image-id="' . esc_attr( $image->get_id() ) . '"></a> ';
 	$html .= '</span>';
 	$html .= '<span class="sunshine-image-name">' . esc_html( $image->get_name( 'filename' ) ) . '</span>';
-	$html = apply_filters( 'sunshine_admin_gallery_image_item', $html, $image );
+	$html  = apply_filters( 'sunshine_admin_gallery_image_item', $html, $image );
 	$html .= '</li>';
 
 	if ( $echo ) {
@@ -1011,10 +1018,10 @@ function sunshine_gallery_admin_ajax_upload() {
 	$result         = array();
 	$result['file'] = sanitize_file_name( $file['name'] );
 
-	$file_info = wp_check_filetype( basename( $_FILES['sunshine_gallery_image']['name'] ) );
+	$file_info               = wp_check_filetype( basename( $_FILES['sunshine_gallery_image']['name'] ) );
 	$allowed_file_extensions = sunshine_allowed_file_extensions();
 	if ( empty( $file_info['ext'] ) || ! in_array( strtolower( $file_info['ext'] ), $allowed_file_extensions ) ) {
-		$result['error']  = __( 'Invalid file type', 'sunshine-photo-cart' );
+		$result['error'] = __( 'Invalid file type', 'sunshine-photo-cart' );
 		wp_send_json_error( $result );
 		exit;
 	}
@@ -1044,6 +1051,17 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 	$file_type = wp_check_filetype( $file_path );
 	$file_name = basename( $file_path );
 
+	// Generate a single random string to append to the file name and all sizes
+	$random_string = wp_generate_password( 24, false );
+	$info          = pathinfo( $file_name );
+	$new_file_name = $info['filename'] . '-' . $random_string . '.' . $info['extension'];
+	$new_file_path = str_replace( $file_name, $new_file_name, $file_path );
+
+	// Rename the original file on the server
+	if ( rename( $file_path, $new_file_path ) ) {
+		$file_path = $new_file_path;
+	}
+
 	// Adds file as attachment to WordPress
 	$attachment_id = wp_insert_attachment(
 		array(
@@ -1065,11 +1083,32 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 		$gallery   = sunshine_get_gallery( $gallery_id );
 		$image_ids = $gallery->add_image_id( $attachment_id );
 
-		$sizes = get_intermediate_image_sizes();
-
 		$attachment_image_meta = wp_generate_attachment_metadata( $attachment_id, $file_path );
-		$image_meta            = $attachment_image_meta['image_meta'];
-		$update_args           = array();
+
+		// Don't do this when offloading is enabled.
+		if ( ! function_exists( 'as3cf_get_attachment_url' ) ) {
+
+			// Modify the filenames in metadata for each intermediate size
+			if ( ! empty( $attachment_image_meta['sizes'] ) ) {
+				foreach ( $attachment_image_meta['sizes'] as $size => &$size_data ) {
+					// Use the same random string for all intermediate sizes
+					$size_info          = pathinfo( $size_data['file'] );
+					$size_random_string = wp_generate_password( 24, false );
+					$size_data['file']  = str_replace( $random_string, $size_random_string, $size_data['file'] );
+
+					// Rename the intermediate file on the server
+					$upload_dir         = wp_upload_dir();
+					$original_size_path = trailingslashit( $upload_dir['path'] ) . $size_info['basename'];
+					$new_size_path      = trailingslashit( $upload_dir['path'] ) . $size_data['file'];
+					if ( file_exists( $original_size_path ) ) {
+						rename( $original_size_path, $new_size_path );
+					}
+				}
+			}
+		}
+
+		$image_meta  = $attachment_image_meta['image_meta'];
+		$update_args = array();
 		if ( '' != trim( $image_meta['title'] ) ) {
 			$update_args['post_title'] = trim( $image_meta['title'] );
 		}
@@ -1114,8 +1153,8 @@ function sunshine_gallery_image_sort() {
 
 	check_ajax_referer( 'sunshine_gallery_image_sort', 'security' );
 
-	$images = sanitize_text_field( $_POST['images'] );
-	$images = str_replace( 'image-', '', $images );
+	$images           = sanitize_text_field( $_POST['images'] );
+	$images           = str_replace( 'image-', '', $images );
 	$sorted_image_ids = explode( ',', $images );
 
 	$gallery = sunshine_get_gallery( intval( $_POST['gallery_id'] ) );
@@ -1221,14 +1260,14 @@ function sunshine_make_cover_size_image( $post_id, $post = '' ) {
 		return;
 	}
 
-	$gallery = sunshine_get_gallery( $post_id );
+	$gallery           = sunshine_get_gallery( $post_id );
 	$featured_image_id = $gallery->get_featured_image_id();
 	if ( empty( $featured_image_id ) ) {
 		return;
 	}
 
 	$full_image_path = get_attached_file( $featured_image_id );
-	$metadata = wp_get_attachment_metadata( $featured_image_id );
+	$metadata        = wp_get_attachment_metadata( $featured_image_id );
 
 	// Check if image already exists, don't remake if it does.
 	if ( ! empty( $metadata['sizes']['sunshine-cover']['file'] ) ) {
@@ -1243,7 +1282,7 @@ function sunshine_make_cover_size_image( $post_id, $post = '' ) {
 	}
 
 	// Make the new cover image and save to metadata.
-	$image_data = image_make_intermediate_size( $full_image_path, 1800, 1800, false );
+	$image_data                          = image_make_intermediate_size( $full_image_path, 1800, 1800, false );
 	$metadata['sizes']['sunshine-cover'] = $image_data;
 	wp_update_attachment_metadata( $featured_image_id, $metadata );
 
@@ -1275,7 +1314,7 @@ function sunshine_gallery_save_post( $post_id, $post = '' ) {
 	}
 
 	$full_image_path = get_attached_file( $featured_image_id );
-	$metadata = wp_get_attachment_metadata( $featured_image_id );
+	$metadata        = wp_get_attachment_metadata( $featured_image_id );
 
 	// Check if image already exists, don't remake if it does.
 	if ( ! empty( $metadata['sizes']['sunshine-cover']['file'] ) ) {
@@ -1290,7 +1329,7 @@ function sunshine_gallery_save_post( $post_id, $post = '' ) {
 	}
 
 	// Make the new cover image and save to metadata.
-	$image_data = image_make_intermediate_size( $full_image_path, 1800, 1800, false );
+	$image_data                          = image_make_intermediate_size( $full_image_path, 1800, 1800, false );
 	$metadata['sizes']['sunshine-cover'] = $image_data;
 	wp_update_attachment_metadata( $featured_image_id, $metadata );
 
@@ -1426,17 +1465,17 @@ function sunshine_unique_image_filenames( $metadata, $attachment_id ) {
 
 	if ( SPC()->get_option( 'unique_filenames' ) && ( ! isset( $_POST['action'] ) || $_POST['action'] != 'sunshine_regenerate_image' ) ) {
 
-		$file = get_attached_file( $attachment_id );
-		$pathinfo = pathinfo( $file );
-		$dirname = $pathinfo['dirname'];
-		$ext = $pathinfo['extension'];
-		$uploads = wp_upload_dir();
+		$file      = get_attached_file( $attachment_id );
+		$pathinfo  = pathinfo( $file );
+		$dirname   = $pathinfo['dirname'];
+		$ext       = $pathinfo['extension'];
+		$uploads   = wp_upload_dir();
 		$base_name = basename( $file, '.' . $ext );
 
 		// Append unique string to the original file name
 		$original_new_filename = $base_name . '-' . uniqid( time() . '_', true ) . '.' . $ext;
 		$original_new_filename = wp_unique_filename( $dirname, $original_new_filename );
-		$original_new_path = $dirname . '/' . $original_new_filename;
+		$original_new_path     = $dirname . '/' . $original_new_filename;
 		if ( @rename( $file, $original_new_path ) ) {
 			update_attached_file( $attachment_id, $original_new_path );
 			$metadata['file'] = trailingslashit( $uploads['subdir'] ) . $original_new_filename;
@@ -1445,11 +1484,11 @@ function sunshine_unique_image_filenames( $metadata, $attachment_id ) {
 		}
 
 		// Append unique string to the resized image file names
-		if ( !empty( $metadata['sizes'] ) && is_array( $metadata['sizes'] ) ) {
+		if ( ! empty( $metadata['sizes'] ) && is_array( $metadata['sizes'] ) ) {
 			foreach ( $metadata['sizes'] as $size => $size_data ) {
 				$resized_base_name = basename( $size_data['file'], '.' . $ext );
-				$new_filename = $resized_base_name . '-' . uniqid( time() . '_', true ) . '.' . $ext;
-				$new_filename = wp_unique_filename( $dirname, $new_filename );
+				$new_filename      = $resized_base_name . '-' . uniqid( time() . '_', true ) . '.' . $ext;
+				$new_filename      = wp_unique_filename( $dirname, $new_filename );
 
 				// Rename the resized image
 				$old_path = $dirname . '/' . $size_data['file'];
@@ -1457,33 +1496,34 @@ function sunshine_unique_image_filenames( $metadata, $attachment_id ) {
 
 				if ( @rename( $old_path, $new_path ) ) {
 					// Update the metadata with the new file name
-					$metadata['sizes'][$size]['file'] = $new_filename;
+					$metadata['sizes'][ $size ]['file'] = $new_filename;
 				} else {
 					SPC()->log( "Error: Unable to rename file from {$old_path} to {$new_path}" );
 				}
 			}
 		}
-
 	}
 
-    return $metadata;
+	return $metadata;
 }
 
 add_action( 'wp', 'sunshine_admin_gallery_check' );
 function sunshine_admin_gallery_check() {
-    global $pagenow;
+	global $pagenow;
 
-    if ( empty( $_GET['s'] ) && $pagenow == 'edit.php' && isset( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-gallery' ) {
-        $query = new WP_Query( array(
-            'post_type' => 'sunshine-gallery',
-            'post_status' => array( 'any', 'trash' ),
-        ) );
-        if ( $query->found_posts == 0 ) {
+	if ( empty( $_GET['s'] ) && $pagenow == 'edit.php' && isset( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-gallery' ) {
+		$query = new WP_Query(
+			array(
+				'post_type'   => 'sunshine-gallery',
+				'post_status' => array( 'any', 'trash' ),
+			)
+		);
+		if ( $query->found_posts == 0 ) {
 			echo '<style>.wrap { display: none; }</style>';
 			add_thickbox();
-            add_action( 'admin_notices', 'sunshine_admin_no_galleries' );
-        }
-    }
+			add_action( 'admin_notices', 'sunshine_admin_no_galleries' );
+		}
+	}
 }
 
 add_filter( 'enter_title_here', 'sunshine_gallery_enter_title_here', 10, 2 );
@@ -1502,7 +1542,7 @@ add_filter( 'display_post_states', 'sunshine_gallery_post_states', 10, 2 );
 function sunshine_gallery_post_states( $post_states, $post ) {
 
 	$gallery = sunshine_get_gallery( $post );
-	$status = $gallery->get_status();
+	$status  = $gallery->get_status();
 
 	if ( 'password' == $status ) {
 		$post_states['sunshine_gallery_password'] = __( 'Password Protected', 'sunshine-photo-cart' );
@@ -1514,29 +1554,29 @@ function sunshine_gallery_post_states( $post_states, $post ) {
 
 }
 
-//add_filter( 'as3cf_pre_upload_attachment', 'sunshine_s3_offload_pre_upload_attachment', 10, 3 );
+// add_filter( 'as3cf_pre_upload_attachment', 'sunshine_s3_offload_pre_upload_attachment', 10, 3 );
 function sunshine_s3_offload_pre_upload_attachment( $abort, $post_id, $metadata ) {
 
-    // Get the post object for the attachment
-    $post = get_post( $post_id );
+	// Get the post object for the attachment
+	$post = get_post( $post_id );
 
-    // Check if the post object is retrieved successfully
-    if ( ! $post ) {
-        return $abort;
-    }
+	// Check if the post object is retrieved successfully
+	if ( ! $post ) {
+		return $abort;
+	}
 
-    // Get the current time and post time as DateTime objects
-    $currentTime = new DateTime('now', new DateTimeZone('UTC'));
-    $postTime = new DateTime( $post->post_date_gmt );
+	// Get the current time and post time as DateTime objects
+	$currentTime = new DateTime( 'now', new DateTimeZone( 'UTC' ) );
+	$postTime    = new DateTime( $post->post_date_gmt );
 
-    // Calculate the difference in time
-    $interval = $currentTime->diff( $postTime );
+	// Calculate the difference in time
+	$interval = $currentTime->diff( $postTime );
 
-    // Check if the difference is less than 6 hours
-    if ( $interval->h < 6 && $interval->days == 0 ) {
-        return true; // The upload date is less than 6 hours old
-    }
+	// Check if the difference is less than 6 hours
+	if ( $interval->h < 6 && $interval->days == 0 ) {
+		return true; // The upload date is less than 6 hours old
+	}
 
-    // If not, return the original value of $abort
-    return $abort;
+	// If not, return the original value of $abort
+	return $abort;
 }

@@ -160,10 +160,12 @@ abstract class Sunshine_Data {
 	public function save() {
 
 		if ( $this->get_id() > 0 ) {
-			$this->update( $this );
+			$result = $this->update( $this );
 		} else {
-			$this->create( $this );
+			$result = $this->create( $this );
 		}
+
+		return $result;
 
 	}
 
@@ -175,6 +177,7 @@ abstract class Sunshine_Data {
 				foreach ( $this->meta as $key => $value ) {
 					update_term_meta( $this->id, $key, $value );
 				}
+				return true;
 			}
 		} else {
 			do_action( 'sunshine_pre_update_' . $this->post_type, $this );
