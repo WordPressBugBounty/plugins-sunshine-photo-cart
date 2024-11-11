@@ -36,15 +36,15 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 			'id'      => $this->id . '_mode',
 			'type'    => 'radio',
 			'options' => array(
-				'live'    => __( 'Live', 'sunshine-photo-cart' ),
+				'live' => __( 'Live', 'sunshine-photo-cart' ),
 				'test' => __( 'Sandbox', 'sunshine-photo-cart' ),
 			),
 			'default' => 'live',
 		);
 		$options[] = array(
-			'name'    => __( 'Email', 'sunshine-photo-cart' ),
-			'id'      => $this->id . '_email_live',
-			'type'    => 'text',
+			'name'       => __( 'Email', 'sunshine-photo-cart' ),
+			'id'         => $this->id . '_email_live',
+			'type'       => 'text',
 			'conditions' => array(
 				array(
 					'field'   => $this->id . '_mode',
@@ -55,9 +55,9 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 			),
 		);
 		$options[] = array(
-			'name'    => __( 'Email', 'sunshine-photo-cart' ),
-			'id'      => $this->id . '_email_test',
-			'type'    => 'text',
+			'name'       => __( 'Email', 'sunshine-photo-cart' ),
+			'id'         => $this->id . '_email_test',
+			'type'       => 'text',
 			'conditions' => array(
 				array(
 					'field'   => $this->id . '_mode',
@@ -91,7 +91,7 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 	}
 
 	public function process_payment( $order ) {
-		$paypal_url = ( $this->get_mode() != 'live' ) ? 'https://www.sandbox.paypal.com/cgi-bin/webscr' : 'https://www.paypal.com/cgi-bin/webscr';
+		$paypal_url            = ( $this->get_mode() != 'live' ) ? 'https://www.sandbox.paypal.com/cgi-bin/webscr' : 'https://www.paypal.com/cgi-bin/webscr';
 		$paypal_args           = array();
 		$paypal_args['custom'] = $order->get_id();
 		?>
@@ -111,9 +111,9 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 		<?php
 		$i = 1;
 		foreach ( $order->get_items() as $item ) {
-			$name_key     = 'item_name_' . $i;
-			$quantity_key = 'quantity_' . $i;
-			$amount_key   = 'amount_' . $i;
+			$name_key                     = 'item_name_' . $i;
+			$quantity_key                 = 'quantity_' . $i;
+			$amount_key                   = 'amount_' . $i;
 			$paypal_args[ $name_key ]     = $item->get_name_raw();
 			$paypal_args[ $quantity_key ] = $item->get_qty();
 			$paypal_args[ $amount_key ]   = $item->get_price();
@@ -135,10 +135,10 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 		$paypal_args['discount_amount_cart'] = round( $discount_total, 2 );
 
 		// Business Info
-		$paypal_args['business'] = $this->get_email();
-		$paypal_args['cmd']      = '_cart';
-		$paypal_args['upload']   = '1';
-		$paypal_args['charset']  = 'utf-8';
+		$paypal_args['business']      = $this->get_email();
+		$paypal_args['cmd']           = '_cart';
+		$paypal_args['upload']        = '1';
+		$paypal_args['charset']       = 'utf-8';
 		$paypal_args['currency_code'] = SPC()->get_option( 'currency' );
 		$paypal_args['return']        = add_query_arg( array( 'paypal_complete' => '1' ), $order->get_permalink() );
 		$paypal_args['cancel_return'] = wp_nonce_url( add_query_arg( 'order_id', $order->get_id(), sunshine_get_page_url( 'checkout' ) ), 'paypal_cancel', 'paypal_cancel' );
@@ -300,10 +300,6 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 			$order_id = intval( $_POST['custom'] );
 			$order    = sunshine_get_order( $order_id );
 			if ( ! $order->exists() ) {
-				exit;
-			}
-
-			if ( $order->get ) {
 				exit;
 			}
 

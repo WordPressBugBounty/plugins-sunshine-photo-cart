@@ -1915,6 +1915,12 @@ class SPC_Cart {
 				return false;
 			}
 
+			// Set order status.
+			$order_status = apply_filters( 'sunshine_create_order_status', '', $order );
+			if ( ! empty( $order_status ) ) {
+				$order->set_status( $order_status, 'Checkout is setting status to ' . $order_status );
+			}
+
 			if ( apply_filters( 'sunshine_checkout_allow_order_notify', true, $order ) ) {
 				do_action( 'sunshine_order_notify', $order );
 				$order->add_log( __( 'Order notification sent', 'sunshine-photo-cart' ) );

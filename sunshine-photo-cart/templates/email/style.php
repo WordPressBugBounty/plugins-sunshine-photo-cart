@@ -7,11 +7,11 @@ strong { color: #333; }
 
 body { background-color: #FFF !important; text-align: left; }
 #wrapper {
-    margin: 0 auto;
-    max-width: 600px;
-    padding: 40px 1%;
-    -webkit-text-size-adjust: none !important;
-    width: 98%;
+	margin: 0 auto;
+	max-width: 600px;
+	padding: 40px 1%;
+	-webkit-text-size-adjust: none !important;
+	width: 98%;
 }
 
 .button { display: inline-block; vertical-align: middle; border-radius: 3px; background: #333; color: #FFF; padding: 10px 25px; }
@@ -39,7 +39,8 @@ table {
 /* Order Receipt */
 #order-status { background: #EFEFEF; font-size: 15px; padding: 5px 15px; border-radius: 3px; }
 
-#order-details { border-top: 1px solid #EFEFEF; border-bottom: 1px solid #EFEFEF; padding: 20px 0; margin: 20px 0; }
+#order-details,
+#sunshine--order--instructions { border-top: 1px solid #EFEFEF; border-bottom: 1px solid #EFEFEF; padding: 20px 0; margin: 20px 0; }
 
 #order-actions { margin: 30px 0; }
 

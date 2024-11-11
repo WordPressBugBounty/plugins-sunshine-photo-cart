@@ -41,7 +41,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		add_action( 'wp_ajax_nopriv_sunshine_square_init_order', array( $this, 'init_order' ) );
 		add_action( 'wp_ajax_sunshine_square_init_order', array( $this, 'init_order' ) );
 
-		add_action( 'sunshine_checkout_process_payment_square', array( $this, 'create_order' ) );
+		add_action( 'sunshine_checkout_process_payment_square', array( $this, 'process_payment' ) );
 
 		// add_action( 'template_redirect', array( $this, 'square_return_listener' ), 999 );
 		// add_action( 'template_redirect', array( $this, 'webhooks' ) );
@@ -693,14 +693,13 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 	}
 
-	public function create_order( $order ) {
+	public function process_payment( $order ) {
 
 		$this->setup();
 
 		$payment_id = sanitize_text_field( $_POST['square_payment_id'] );
 
 		$order->add_meta_value( 'square_payment_id', $payment_id );
-		$order->set_status( 'new' );
 
 		$response = $this->api_request( 'v2/payments/' . $payment_id, '', 'GET' );
 		if ( is_wp_error( $response ) ) {
@@ -722,6 +721,13 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 			$order->add_meta_value( 'square_app_fee', $payment['app_fee_money']['amount'] / 100 );
 		}
 
+	}
+
+	public function create_order_status( $status, $order ) {
+		if ( $order->get_payment_method() == $this->id ) {
+			return 'new'; // Straight to new.
+		}
+		return $status;
 	}
 
 	public function get_transaction_id( $order ) {

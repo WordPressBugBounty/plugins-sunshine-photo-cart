@@ -405,7 +405,7 @@ function sunshine_base_install() {
 		update_option( 'sunshine_' . $key, $value, false );
 	}
 
-	sunshine_create_htaccess();
+	sunshine_create_htaccess( true );
 
 	flush_rewrite_rules();
 

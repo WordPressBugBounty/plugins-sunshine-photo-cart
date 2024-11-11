@@ -139,6 +139,8 @@ class SPC_Update {
 
 		sunshine_set_roles();
 
+		sunshine_create_htaccess( true );
+
 		sunshine_tracking_send();
 
 	}

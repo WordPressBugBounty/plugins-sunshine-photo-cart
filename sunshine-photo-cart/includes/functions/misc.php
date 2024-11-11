@@ -427,7 +427,7 @@ function sunshine_random_string( $length = 10 ) {
 }
 
 // Make .htaccess file which protects all the download files.
-function sunshine_create_htaccess() {
+function sunshine_create_htaccess( $force = false ) {
 
 	$upload_dir = wp_upload_dir();
 	$file       = $upload_dir['basedir'] . '/sunshine/.htaccess';
@@ -436,31 +436,28 @@ function sunshine_create_htaccess() {
 	$url          = get_bloginfo( 'url' );
 	$url          = str_replace( array( 'http://', 'https://', 'www.' ), '', $url );
 	$existing_url = get_option( 'sunshine_download_htaccess_url' );
-	if ( $url != $existing_url ) {
+	if ( $url != $existing_url || $force ) {
 		@unlink( $file );
 	}
 
-	$key = uniqid();
-
 	if ( ! file_exists( $file ) ) {
+		SPC()->log( 'New htaccess file created' );
 		$escaped_url = preg_replace( '/\./', '\.', $url );
 		$data        = "RewriteEngine on
 
-# Allow specific download_key for jpg, png, gif images
-RewriteCond %{QUERY_STRING} (^|&)download_key=$key($|&)
+# Allow intermediate-sized images without restrictions
+RewriteCond %{REQUEST_URI} ^/.*-\d+x\d+\.(jpg|png|gif)$ [NC]
 RewriteRule \.(jpg|png|gif)$ - [L]
 
-# Block hotlinking from external referrers, allowing only scenic-otter-249362.instawp.xyz
-RewriteCond %{HTTP_REFERER} !^https?://(www\.)?$url [NC]
+# Block hotlinking from external referrers for full-size images
+RewriteCond %{HTTP_REFERER} !^https?://(www\.)?$escaped_url [NC]
 RewriteRule \.(jpg|png|gif)$ - [F,L]
 
-# Prevent access to full sized image unless the large size does not exist because uploaded image file was too small
-RewriteCond %{REQUEST_FILENAME} !-\d+x\d+\.jpg$ [OR]
+# Allow access to full-sized images only if they exist
 RewriteCond %{REQUEST_FILENAME} -s
 RewriteRule \.(jpg)$ - [L]";
 		file_put_contents( $file, $data );
 		update_option( 'sunshine_download_htaccess_url', $url, false );
-		update_option( 'sunshine_download_htaccess_key', $key, false );
 	}
 
 }

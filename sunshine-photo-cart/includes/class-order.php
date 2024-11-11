@@ -1050,11 +1050,7 @@ class SPC_Order extends Sunshine_Data {
 		}
 
 		// Set order status
-		$order_status = 'pending';
-		$order_status = apply_filters( 'sunshine_create_order_status', $order_status, $this );
-		if ( ! empty( $order_status ) ) {
-			$this->set_status( $order_status );
-		}
+		$this->set_status( 'pending' );
 
 		// Do discount use counts
 		if ( $this->get_discounts() ) {

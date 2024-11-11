@@ -37,7 +37,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		add_action( 'wp_ajax_sunshine_stripe_init_order', array( $this, 'init_order' ) );
 		add_action( 'wp', array( $this, 'payment_return' ), 20 );
 
-		add_action( 'sunshine_checkout_process_payment_stripe', array( $this, 'create_order' ) );
+		add_action( 'sunshine_checkout_process_payment_stripe', array( $this, 'process_payment' ) );
 
 		// add_action( 'template_redirect', array( $this, 'payment_return_listener' ), 999 );
 		add_action( 'template_redirect', array( $this, 'webhooks' ) );
@@ -313,13 +313,6 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 			)
 		);
 
-	}
-
-	public function create_order_status( $status, $order ) {
-		if ( $order->get_payment_method() == $this->id ) {
-			return 'new'; // Straight to new
-		}
-		return $status;
 	}
 
 	public function setup_payment_intent() {
@@ -646,6 +639,13 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 	}
 
+	public function create_order_status( $status, $order ) {
+		if ( $order->get_payment_method() == $this->id ) {
+			return 'new'; // Straight to new.
+		}
+		return $status;
+	}
+
 	public function order_notify( $notify, $order ) {
 		if ( $order->get_payment_method() == $this->id ) {
 			return false;
@@ -850,7 +850,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 	}
 
-	public function create_order( $order ) {
+	public function process_payment( $order ) {
 
 		$payment_intent_id = SPC()->session->get( 'stripe_payment_intent_id' );
 
@@ -984,7 +984,6 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		echo '</table>';
 
 	}
-
 
 	function order_actions( $actions, $post_id ) {
 		$order = new SPC_Order( $post_id );

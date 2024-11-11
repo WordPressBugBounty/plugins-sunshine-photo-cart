@@ -22,7 +22,7 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 		$this->needs_billing_address = false;
 
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-		//add_filter( 'sunshine_checkout_payment_method_extra', array( $this, 'buttons' ), 10, 2 );
+		// add_filter( 'sunshine_checkout_payment_method_extra', array( $this, 'buttons' ), 10, 2 );
 
 		add_action( 'wp_ajax_sunshine_checkout_paypal_create_order', array( $this, 'create_order' ) );
 		add_action( 'wp_ajax_nopriv_sunshine_checkout_paypal_create_order', array( $this, 'create_order' ) );
@@ -61,10 +61,10 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 			'default' => 'live',
 		);
 		$options[] = array(
-			'name'       => __( 'Live Client ID', 'sunshine-photo-cart' ),
-			'id'         => $this->id . '_client_id',
-			'type'       => 'text',
-			'conditions' => array(
+			'name'             => __( 'Live Client ID', 'sunshine-photo-cart' ),
+			'id'               => $this->id . '_client_id',
+			'type'             => 'text',
+			'conditions'       => array(
 				array(
 					'field'   => $this->id . '_mode',
 					'compare' => '==',
@@ -75,10 +75,10 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 			'hide_system_info' => true,
 		);
 		$options[] = array(
-			'name'       => __( 'Live Secret', 'sunshine-photo-cart' ),
-			'id'         => $this->id . '_secret',
-			'type'       => 'text',
-			'conditions' => array(
+			'name'             => __( 'Live Secret', 'sunshine-photo-cart' ),
+			'id'               => $this->id . '_secret',
+			'type'             => 'text',
+			'conditions'       => array(
 				array(
 					'field'   => $this->id . '_mode',
 					'compare' => '==',
@@ -89,10 +89,10 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 			'hide_system_info' => true,
 		);
 		$options[] = array(
-			'name'       => __( 'Sandbox Client ID', 'sunshine-photo-cart' ),
-			'id'         => $this->id . '_client_id_sandbox',
-			'type'       => 'text',
-			'conditions' => array(
+			'name'             => __( 'Sandbox Client ID', 'sunshine-photo-cart' ),
+			'id'               => $this->id . '_client_id_sandbox',
+			'type'             => 'text',
+			'conditions'       => array(
 				array(
 					'field'   => $this->id . '_mode',
 					'compare' => '==',
@@ -100,14 +100,14 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 					'action'  => 'show',
 				),
 			),
-			'callback' => array( $this, 'reset_token' ),
+			'callback'         => array( $this, 'reset_token' ),
 			'hide_system_info' => true,
 		);
 		$options[] = array(
-			'name'       => __( 'Sandbox Live Secret', 'sunshine-photo-cart' ),
-			'id'         => $this->id . '_secret_sandbox',
-			'type'       => 'text',
-			'conditions' => array(
+			'name'             => __( 'Sandbox Live Secret', 'sunshine-photo-cart' ),
+			'id'               => $this->id . '_secret_sandbox',
+			'type'             => 'text',
+			'conditions'       => array(
 				array(
 					'field'   => $this->id . '_mode',
 					'compare' => '==',
@@ -347,7 +347,7 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 						  return result.json();
 					  }).then(function ( result ) {
 							return result.data.order_id; // the data is the order object returned from the api call, its not the BrainTree.Response object
-   					  });
+						 });
 					},
 					// Call your server to finalize the transaction
 					onApprove: function(result, actions) {
@@ -395,17 +395,20 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 				return false;
 			}
 
-			$response = wp_remote_post( $api_url . '/v1/oauth2/token', array(
-				'headers' => array(
-					'Content-Type'  => 'application/x-www-form-urlencoded',
-					'Authorization' => sprintf( 'Basic %s', base64_encode( sprintf( '%s:%s', $this->get_client_id(), $this->get_secret() ) ) ),
-					'timeout'       => 15
-				),
-				'body'    => array(
-					'grant_type' => 'client_credentials'
-				),
-				'user-agent' => 'Sunshine Photo Cart/' . SUNSHINE_PHOTO_CART_VERSION . '; ' . get_bloginfo( 'name' ),
-			) );
+			$response = wp_remote_post(
+				$api_url . '/v1/oauth2/token',
+				array(
+					'headers'    => array(
+						'Content-Type'  => 'application/x-www-form-urlencoded',
+						'Authorization' => sprintf( 'Basic %s', base64_encode( sprintf( '%s:%s', $this->get_client_id(), $this->get_secret() ) ) ),
+						'timeout'       => 15,
+					),
+					'body'       => array(
+						'grant_type' => 'client_credentials',
+					),
+					'user-agent' => 'Sunshine Photo Cart/' . SUNSHINE_PHOTO_CART_VERSION . '; ' . get_bloginfo( 'name' ),
+				)
+			);
 
 			$body = json_decode( wp_remote_retrieve_body( $response ) );
 
@@ -437,10 +440,13 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 
 		$api_url = $this->api_url . $endpoint;
 
-		$headers = wp_parse_args( $headers, array(
-			'Content-Type'                  => 'application/json',
-			'Authorization'                 => sprintf( 'Bearer %s', $this->token ),
-		) );
+		$headers = wp_parse_args(
+			$headers,
+			array(
+				'Content-Type'  => 'application/json',
+				'Authorization' => sprintf( 'Bearer %s', $this->token ),
+			)
+		);
 
 		$request_args = array(
 			'method'     => $method,
@@ -534,15 +540,15 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 
 		$order_args = apply_filters( 'sunshine_paypal_order_args', $order_args );
 
-		//sunshine_log( $order_args );
+		// sunshine_log( $order_args );
 
 		$order = $this->make_request( 'checkout/orders', $order_args );
 		if ( ! empty( $order->id ) ) {
 			wp_send_json_success( array( 'order_id' => $order->id ) );
 		}
 
-		//sunshine_log( $order );
-		//SPC()->notices->add( __( 'Error connecting to PayPal', 'sunshine-photo-cart' ), 'error' );
+		// sunshine_log( $order );
+		// SPC()->notices->add( __( 'Error connecting to PayPal', 'sunshine-photo-cart' ), 'error' );
 
 		SPC()->log( 'Error creating order for PayPal: ' . print_r( $order, 1 ) );
 		wp_send_json_error();
@@ -562,7 +568,7 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 		$this->setup();
 
 		$endpoint = 'checkout/orders/' . $paypal_order_id . '/capture';
-		$capture = $this->make_request( $endpoint, '', '', 'POST' );
+		$capture  = $this->make_request( $endpoint, '', '', 'POST' );
 		if ( empty( $capture->status ) || $capture->status != 'COMPLETED' ) {
 			SPC()->cart->add_error( __( 'Failed to capture PayPal payment', 'sunshine-photo-cart' ) );
 			return;
@@ -684,7 +690,7 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 				$refund_amount = sanitize_text_field( $_POST['paypal_refund_amount'] );
 			}
 
-			$body = array(
+			$body    = array(
 				'amount' =>
 					array(
 						'value'         => $refund_amount,
