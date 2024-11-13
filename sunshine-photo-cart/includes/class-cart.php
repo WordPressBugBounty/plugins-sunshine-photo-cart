@@ -417,6 +417,8 @@ class SPC_Cart {
 			return;
 		}
 
+		do_action( 'sunshine_set_discounts' );
+
 		$discounts = SPC()->session->get( 'discounts' );
 		if ( ! empty( $discounts ) ) {
 			foreach ( $discounts as $key => $discount_code ) {
@@ -444,8 +446,6 @@ class SPC_Cart {
 				}
 			}
 		}
-
-		do_action( 'sunshine_set_discounts' );
 
 		$this->calculate_discount();
 
@@ -484,12 +484,12 @@ class SPC_Cart {
 	public function add_discount( $code ) {
 		$discount = sunshine_get_discount_by_code( $code );
 		if ( $discount && $discount->is_valid() && ! $this->has_discount_code( $code ) ) {
-			$this->discounts[] = $discount;
-			$discounts         = SPC()->session->get( 'discounts' );
+			$this->discounts[ $discount->get_id() ] = $discount;
+			$discounts                              = SPC()->session->get( 'discounts' );
 			if ( ! is_array( $discounts ) ) {
 				$discounts = array();
 			}
-			$discounts[] = $discount->get_code();
+			$discounts[ $discount->get_id() ] = $discount->get_code();
 			SPC()->session->set( 'discounts', $discounts );
 			SPC()->log( 'Discount added: ' . $discount->get_code() );
 			return $discount;

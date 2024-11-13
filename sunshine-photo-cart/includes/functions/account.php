@@ -42,14 +42,14 @@ function sunshine_get_customers( $custom_args = array() ) {
 		$roles[] = 'administrator';
 	}
 
-	$args = array(
-		'role__in' => $roles
+	$args       = array(
+		'role__in' => $roles,
 	);
-	$args = wp_parse_args( $custom_args, $args );
+	$args       = wp_parse_args( $custom_args, $args );
 	$user_query = new WP_User_Query( $args );
-	$users = $user_query->get_results();
+	$users      = $user_query->get_results();
 
-	if ( !empty( $users ) ) {
+	if ( ! empty( $users ) ) {
 		$customers = array();
 		foreach ( $users as $user ) {
 			$customers[ $user->ID ] = new SPC_Customer( $user->ID );
@@ -143,7 +143,7 @@ function sunshine_modal_login() {
 	}
 
 	SPC()->customer = new SPC_Customer( $login->ID );
-	//SPC()->customer->add_action( 'login' );
+	// SPC()->customer->add_action( 'login' );
 	$cart = SPC()->session->get( 'cart' );
 	if ( $cart ) {
 		SPC()->customer->set_cart( $cart );
@@ -169,7 +169,7 @@ add_action( 'wp_ajax_sunshine_modal_login', 'sunshine_modal_login' );
 add_action( 'wp_logout', 'sunshine_logout' );
 function sunshine_logout( $user_id ) {
 	$customer = new SPC_Customer( $user_id );
-	$cart = $customer->get_cart();
+	$cart     = $customer->get_cart();
 	if ( $cart ) {
 		SPC()->session->set( 'cart', $cart );
 	}
@@ -200,21 +200,23 @@ function sunshine_modal_signup() {
 		wp_send_json_error( __( 'User account already exists with that email address', 'sunshine-photo-cart' ) );
 	}
 
+	$password_notice = false;
 	if ( empty( $_POST['sunshine_signup_password'] ) ) {
-		$password = wp_generate_password();
+		$password        = wp_generate_password();
+		$password_notice = true;
 	} else {
 		$password = sanitize_text_field( $_POST['sunshine_signup_password'] );
 	}
 
 	$first_name = ( ! empty( $_POST['sunshine_signup_first_name'] ) ) ? sanitize_text_field( $_POST['sunshine_signup_first_name'] ) : '';
-	$last_name = ( ! empty( $_POST['sunshine_signup_last_name'] ) ) ? sanitize_text_field( $_POST['sunshine_signup_last_name'] ) : '';
+	$last_name  = ( ! empty( $_POST['sunshine_signup_last_name'] ) ) ? sanitize_text_field( $_POST['sunshine_signup_last_name'] ) : '';
 
-	$args = array(
+	$args    = array(
 		'user_login' => $email,
 		'user_email' => $email,
 		'user_pass'  => $password,
 		'role'       => sunshine_get_customer_role(),
-		'first_name'  => $first_name,
+		'first_name' => $first_name,
 		'last_name'  => $last_name,
 	);
 	$user_id = wp_insert_user( $args );
@@ -232,9 +234,9 @@ function sunshine_modal_signup() {
 		wp_send_json_error( $login->get_error_message() );
 	}
 
-	$customer = new SPC_Customer( $login->ID );
+	$customer       = new SPC_Customer( $login->ID );
 	SPC()->customer = $customer;
-	//SPC()->customer->add_action( 'signup' );
+	// SPC()->customer->add_action( 'signup' );
 
 	SPC()->notices->add(
 		sprintf(
@@ -244,7 +246,7 @@ function sunshine_modal_signup() {
 		)
 	);
 
-	do_action( 'sunshine_after_signup', $customer, $email );
+	do_action( 'sunshine_after_signup', $customer, $email, $password_notice );
 
 	wp_send_json_success();
 
@@ -310,9 +312,9 @@ function sunshine_password_reset_process() {
 		exit;
 	}
 
-	$key = sanitize_text_field( $_POST['key'] );
-	$login = sanitize_text_field( $_POST['login'] );
-	$password = sanitize_text_field( $_POST['sunshine_new_password'] );
+	$key              = sanitize_text_field( $_POST['key'] );
+	$login            = sanitize_text_field( $_POST['login'] );
+	$password         = sanitize_text_field( $_POST['sunshine_new_password'] );
 	$password_confirm = sanitize_text_field( $_POST['sunshine_new_password_confirm'] );
 
 	if ( ! check_password_reset_key( $key, $login ) ) {
@@ -359,7 +361,7 @@ function sunshine_get_account_menu_items() {
 			'label' => __( 'Orders', 'sunshine-photo-cart' ),
 			'order' => 20,
 		),
-		'galleries'    => array(
+		'galleries' => array(
 			'url'   => sunshine_get_account_endpoint_url( 'galleries' ),
 			'label' => __( 'Galleries', 'sunshine-photo-cart' ),
 			'order' => 30,
@@ -383,9 +385,12 @@ function sunshine_get_account_menu_items() {
 
 	$items = apply_filters( 'sunshine_account_menu_items', $items );
 
-	usort($items, function($a, $b) {
-		return $a['order'] <=> $b['order'];
-	});
+	usort(
+		$items,
+		function( $a, $b ) {
+			return $a['order'] <=> $b['order'];
+		}
+	);
 
 	return $items;
 
@@ -418,16 +423,19 @@ function sunshine_get_account_endpoint_url( $endpoint ) {
  * @return string URL of endpoint
  */
 function sunshine_get_account_endpoints() {
-	return apply_filters( 'sunshine_account_endpoints', array(
-		'orders'         => SPC()->get_option( 'account_orders_endpoint', 'my-orders' ),
-		'view-order'     => SPC()->get_option( 'account_view_order_endpoint', 'order-details' ),
-		'addresses'      => SPC()->get_option( 'account_addresses_endpoint', 'my-addresses' ),
-		'profile'        => SPC()->get_option( 'account_edit_endpoint', 'my-profile' ),
-		'galleries'      => SPC()->get_option( 'account_galleries_endpoint', 'my-galleries' ),
-		'reset-password' => SPC()->get_option( 'account_reset_password_endpoint', 'reset-password' ),
-		'login'          => SPC()->get_option( 'account_login_endpoint', 'login' ),
-		'logout'         => SPC()->get_option( 'account_logout_endpoint', 'logout' ),
-	) );
+	return apply_filters(
+		'sunshine_account_endpoints',
+		array(
+			'orders'         => SPC()->get_option( 'account_orders_endpoint', 'my-orders' ),
+			'view-order'     => SPC()->get_option( 'account_view_order_endpoint', 'order-details' ),
+			'addresses'      => SPC()->get_option( 'account_addresses_endpoint', 'my-addresses' ),
+			'profile'        => SPC()->get_option( 'account_edit_endpoint', 'my-profile' ),
+			'galleries'      => SPC()->get_option( 'account_galleries_endpoint', 'my-galleries' ),
+			'reset-password' => SPC()->get_option( 'account_reset_password_endpoint', 'reset-password' ),
+			'login'          => SPC()->get_option( 'account_login_endpoint', 'login' ),
+			'logout'         => SPC()->get_option( 'account_logout_endpoint', 'logout' ),
+		)
+	);
 }
 
 add_action( 'wp', 'sunshine_login_process' );
@@ -463,7 +471,7 @@ function sunshine_login_process() {
 		$result['redirect'] = sunshine_get_account_endpoint_url( 'dashboard' );
 	}
 
-	$user = get_user_by( 'email', sanitize_email( $_POST['sunshine_login_email'] ) );
+	$user     = get_user_by( 'email', sanitize_email( $_POST['sunshine_login_email'] ) );
 	$customer = new SPC_Customer( $user->ID );
 
 	$result = apply_filters( 'sunshine_after_login_result', $result, $customer );
@@ -474,47 +482,47 @@ function sunshine_login_process() {
 }
 
 function sunshine_get_profile_fields() {
-	$fields = array();
+	$fields   = array();
 	$fields[] = array(
-		'id' => 'first_name',
-		'type' => 'text',
-		'name' => __( 'First Name', 'sunshine-photo-cart' ),
-		'default' => SPC()->customer->get_first_name(),
+		'id'           => 'first_name',
+		'type'         => 'text',
+		'name'         => __( 'First Name', 'sunshine-photo-cart' ),
+		'default'      => SPC()->customer->get_first_name(),
 		'autocomplete' => 'given-name',
-		'size' => 'half',
+		'size'         => 'half',
 	);
 	$fields[] = array(
-		'id' => 'last_name',
-		'type' => 'text',
-		'name' => __( 'Last Name', 'sunshine-photo-cart' ),
-		'default' => SPC()->customer->get_last_name(),
+		'id'           => 'last_name',
+		'type'         => 'text',
+		'name'         => __( 'Last Name', 'sunshine-photo-cart' ),
+		'default'      => SPC()->customer->get_last_name(),
 		'autocomplete' => 'family-name',
-		'size' => 'half',
+		'size'         => 'half',
 	);
 	$fields[] = array(
-		'id' => 'email',
-		'type' => 'email',
-		'name' => __( 'Email', 'sunshine-photo-cart' ),
+		'id'      => 'email',
+		'type'    => 'email',
+		'name'    => __( 'Email', 'sunshine-photo-cart' ),
 		'default' => SPC()->customer->get_email(),
 	);
 	$fields[] = array(
-		'id' => 'current_password',
-		'type' => 'password',
-		'name' => __( 'Current Password', 'sunshine-photo-cart' ),
+		'id'          => 'current_password',
+		'type'        => 'password',
+		'name'        => __( 'Current Password', 'sunshine-photo-cart' ),
 		'description' => __( 'Leave empty to keep current password', 'sunshine-photo-cart' ),
 	);
 	$fields[] = array(
-		'id' => 'new_password',
-		'type' => 'password',
-		'name' => __( 'New Password', 'sunshine-photo-cart' ),
+		'id'          => 'new_password',
+		'type'        => 'password',
+		'name'        => __( 'New Password', 'sunshine-photo-cart' ),
 		'description' => __( 'Leave empty to keep current password', 'sunshine-photo-cart' ),
 	);
 	$fields[] = array(
-		'id' => 'new_password_confirm',
+		'id'   => 'new_password_confirm',
 		'type' => 'password',
 		'name' => __( 'Confirm New Password', 'sunshine-photo-cart' ),
 	);
-	$fields = apply_filters( 'sunshine_profile_fields', $fields );
+	$fields   = apply_filters( 'sunshine_profile_fields', $fields );
 	return $fields;
 }
 
@@ -534,25 +542,29 @@ function sunshine_save_profile() {
 		} else {
 			$new_password = sanitize_text_field( $_POST['new_password'] );
 			wp_set_password( $new_password, get_current_user_id() );
-			wp_signon(array(
-				'user_login' => SPC()->customer->get_email(),
-				'user_password' => $new_password,
-			));
+			wp_signon(
+				array(
+					'user_login'    => SPC()->customer->get_email(),
+					'user_password' => $new_password,
+				)
+			);
 			SPC()->notices->add( __( 'Password updated', 'sunshine-photo-cart' ) );
 		}
 	}
 
 	$first_name = ( ! empty( $_POST['first_name'] ) ) ? sanitize_text_field( $_POST['first_name'] ) : '';
-	$last_name = ( ! empty( $_POST['last_name'] ) ) ? sanitize_text_field( $_POST['last_name'] ) : '';
-	$email = ( ! empty( $_POST['email'] ) ) ? sanitize_email( $_POST['email'] ) : '';
+	$last_name  = ( ! empty( $_POST['last_name'] ) ) ? sanitize_text_field( $_POST['last_name'] ) : '';
+	$email      = ( ! empty( $_POST['email'] ) ) ? sanitize_email( $_POST['email'] ) : '';
 
-	$result = wp_update_user(array(
-		'ID' => get_current_user_id(),
-		'user_email' => $email,
-		'user_login' => $email,
-		'first_name' => $first_name,
-		'last_name' => $last_name
-	));
+	$result = wp_update_user(
+		array(
+			'ID'         => get_current_user_id(),
+			'user_email' => $email,
+			'user_login' => $email,
+			'first_name' => $first_name,
+			'last_name'  => $last_name,
+		)
+	);
 	if ( $result ) {
 		SPC()->notices->add( __( 'Profile updated', 'sunshine-photo-cart' ) );
 	}
@@ -571,7 +583,7 @@ function sunshine_save_addresses() {
 	}
 
 	$default_country = SPC()->customer->get_shipping_country();
-	$fields = SPC()->countries->get_address_fields( $default_country, 'shipping_' );
+	$fields          = SPC()->countries->get_address_fields( $default_country, 'shipping_' );
 
 	if ( ! empty( $fields ) ) {
 		foreach ( $fields as $field ) {

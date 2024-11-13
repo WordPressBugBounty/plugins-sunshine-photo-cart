@@ -6,7 +6,7 @@ Tags: client photo gallery, sell photos, client galleries, client proofing, phot
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 6.7
-Stable tag: 3.4.1
+Stable tag: 3.4.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,12 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 11. Admin: Create a gallery and add images
 
 == Changelog ==
+
+= 3.4.2 =
+* Update: New user sign up without password, new account email includes link to set password
+* Fix: Stripe creating many pending payments
+* Fix: Stripe not charging proper amount when credit is applied
+* Fix: Change "sunshine_set_discounts" timing so rule application can happen after any are auto added
 
 = 3.4.1 =
 * Fix: htaccess rules to allow loading thumbnail in emails

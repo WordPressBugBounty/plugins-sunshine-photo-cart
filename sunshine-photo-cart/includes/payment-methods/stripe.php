@@ -359,7 +359,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		}
 
 		// Set up payment intent
-		if ( empty( SPC()->session->get( 'stripe_payment_intent_idx' ) ) ) {
+		if ( empty( SPC()->session->get( 'stripe_payment_intent_id' ) ) ) {
 
 			$args = array(
 				'amount'                    => $this->total,

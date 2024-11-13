@@ -10,8 +10,6 @@ class SPC_Emails {
 	public function init() {
 
 		$methods_to_load = array(
-			'SPC_Email_Signup',
-			'SPC_Email_Reset_Password',
 			'SPC_Email_Customer_Receipt',
 			'SPC_Email_Admin_Receipt',
 			'SPC_Email_Order_Status',
@@ -20,7 +18,9 @@ class SPC_Emails {
 			'SPC_Email_Custom_Favorites',
 			'SPC_Email_Summary',
 			'SPC_Email_Image_Comment',
+			'SPC_Email_Signup',
 			'SPC_Email_Admin_Signup',
+			'SPC_Email_Reset_Password',
 		);
 
 		$methods_to_load = apply_filters( 'sunshine_emails', $methods_to_load );

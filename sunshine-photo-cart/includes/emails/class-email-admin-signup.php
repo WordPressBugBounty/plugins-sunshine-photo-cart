@@ -5,8 +5,8 @@ class SPC_Email_Admin_Signup extends SPC_Email {
 
 		$this->id                = 'admin-signup';
 		$this->class             = get_class( $this );
-		$this->name              = __( 'Signup (Admin)', 'sunshine-photo-cart' );
-		$this->description       = __( 'Signup notification with customer information', 'sunshine-photo-cart' );
+		$this->name              = __( 'Sign Up (Admin)', 'sunshine-photo-cart' );
+		$this->description       = __( 'Sign up notification with customer information', 'sunshine-photo-cart' );
 		$this->subject           = sprintf( __( 'Customer signup at %s', 'sunshine-photo-cart' ), '[sitename]' );
 		$this->custom_recipients = true;
 
