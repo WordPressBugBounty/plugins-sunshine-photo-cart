@@ -12,7 +12,7 @@ class SPC_Payment_Method_Free extends SPC_Payment_Method {
 
 	public function create_order_status( $status, $order ) {
 		if ( $order->get_payment_method() == $this->id ) {
-			return 'new'; // Straight to new, no payment needed
+			return 'new'; // Straight to new, no payment needed.
 		}
 		return $status;
 	}

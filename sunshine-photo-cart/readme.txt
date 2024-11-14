@@ -6,7 +6,7 @@ Tags: client photo gallery, sell photos, client galleries, client proofing, phot
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 6.7
-Stable tag: 3.4.2
+Stable tag: 3.4.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,10 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 11. Admin: Create a gallery and add images
 
 == Changelog ==
+
+= 3.4.3 =
+* Fix: Orders paid with credits not moved to "new" status
+* Fix: Bug hiding password field at checkout
 
 = 3.4.2 =
 * Update: New user sign up without password, new account email includes link to set password

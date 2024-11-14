@@ -478,6 +478,8 @@ class SPC_Cart {
 
 		$this->discount = apply_filters( 'sunshine_cart_discount', $this->discount, $items );
 
+		$this->discount = min( $this->discount, $this->get_subtotal() ); // Don't let discount total be more than order subtotal.
+
 		return $this->discount;
 	}
 
@@ -1492,7 +1494,7 @@ class SPC_Cart {
 			$submit_label = sprintf( __( 'Submit Order & Pay %s', 'sunshine-photo-cart' ), '<span class="sunshine-total">' . SPC()->cart->get_total_formatted() . '</span>' );
 		} else {
 			$submit_label = __( 'Submit Order for Free', 'sunshine-photo-cart' );
-			$this->set_checkout_data_item( 'payment_method', '' );
+			$this->set_checkout_data_item( 'payment_method', 'free' );
 			if ( $this->credits == 0 ) {
 				$fields['payment']['name'] = '';
 			}
@@ -1916,7 +1918,8 @@ class SPC_Cart {
 			}
 
 			// Set order status.
-			$order_status = apply_filters( 'sunshine_create_order_status', '', $order );
+			$order_status = '';
+			$order_status = apply_filters( 'sunshine_create_order_status', $order_status, $order );
 			if ( ! empty( $order_status ) ) {
 				$order->set_status( $order_status, 'Checkout is setting status to ' . $order_status );
 			}
