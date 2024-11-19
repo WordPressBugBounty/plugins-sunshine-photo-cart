@@ -48,6 +48,10 @@ class SPC_Update {
 
 	function update_check() {
 
+		if ( ! current_user_can( 'sunshine_manage_options' ) ) {
+			return;
+		}
+
 		$update_3    = SPC()->get_option( 'update_3' );
 		$old_options = get_option( 'sunshine_options' );
 		if ( $old_options && ! $update_3 && ( ! isset( $_GET['page'] ) || $_GET['page'] != 'sunshine-update' ) ) {

@@ -61,9 +61,9 @@ function sunshine_watermark_image( $attachment_id, $metadata = array(), $passed_
 			}
 
 			if ( $resize_watermark ) {
-				$new_watermark_width = round( $new_watermark_width );
+				$new_watermark_width  = round( $new_watermark_width );
 				$new_watermark_height = round( $new_watermark_height );
-				$new_watermark = imagecreatetruecolor( $new_watermark_width, $new_watermark_height );
+				$new_watermark        = imagecreatetruecolor( $new_watermark_width, $new_watermark_height );
 				imagealphablending( $new_watermark, false );
 				imagesavealpha( $new_watermark, true );
 				imagecopyresampled( $new_watermark, $watermark, 0, 0, 0, 0, $new_watermark_width, $new_watermark_height, $watermark_width, $watermark_height );

@@ -6,7 +6,7 @@ Tags: client photo gallery, sell photos, client galleries, client proofing, phot
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 6.7
-Stable tag: 3.4.3
+Stable tag: 3.4.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,12 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 11. Admin: Create a gallery and add images
 
 == Changelog ==
+
+= 3.4.4 =
+* Fix: Double Before Content with Classic theme
+* Fix: Classic CSS menu/header styling for mobile devices
+* Fix: Sunshine Manager capabilities to edit gallery images
+* Fix: Issues with watermarks not being applied after recent new enhanced image security features
 
 = 3.4.3 =
 * Fix: Orders paid with credits not moved to "new" status

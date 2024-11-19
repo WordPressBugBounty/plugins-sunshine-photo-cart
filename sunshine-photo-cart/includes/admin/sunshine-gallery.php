@@ -1127,13 +1127,15 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 		add_post_meta( $attachment_id, 'created_timestamp', $created_timestamp );
 		add_post_meta( $attachment_id, 'sunshine_file_name', $file_name );
 
-		do_action( 'sunshine_after_image_process', $attachment_id, $file_path );
 		$attachment_meta_data = wp_update_attachment_metadata( $attachment_id, $attachment_image_meta );
+
+		do_action( 'sunshine_after_image_process', $attachment_id, $file_path );
 
 		if ( 'json' === $result ) {
 			$return['image_id']   = $attachment_id;
 			$return['file_name']  = $file_name;
 			$return['image_html'] = sunshine_admin_gallery_image_thumbnail( $attachment_id, false );
+			sunshine_log( $attachment_meta_data );
 			wp_send_json_success( $return );
 		} else {
 			return $attachment_id;

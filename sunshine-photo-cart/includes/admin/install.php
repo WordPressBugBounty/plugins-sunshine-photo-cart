@@ -483,11 +483,15 @@ function sunshine_set_roles() {
 
 		'sunshine_manage_options',
 		'read',
+
+		'upload_files',
 	);
 	foreach ( $admin_rules as $rule ) {
 		$admin->add_cap( $rule );
 		$manager->add_cap( $rule );
 	}
+
+	$manager->add_cap( 'sunshine_media_only' );
 
 }
 
