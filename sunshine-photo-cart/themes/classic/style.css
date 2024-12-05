@@ -40,8 +40,8 @@ body > .sunshine--main-menu { position: fixed; z-index: 99997; left: 0; bottom: 
 
 	#sunshine { padding: 75px 5%; }
 
-	#sunshine--search,
-	#sunshine--password { display: none; }
+	#sunshine--header #sunshine--search,
+	#sunshine--header #sunshine--password { display: none; }
 
 }
 

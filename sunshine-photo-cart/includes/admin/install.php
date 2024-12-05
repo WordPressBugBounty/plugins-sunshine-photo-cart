@@ -418,7 +418,7 @@ function sunshine_set_roles() {
 	$manager = get_role( 'sunshine_manager' );
 	$admin   = get_role( 'administrator' );
 
-	$admin_rules = array(
+	$capabilities = array(
 
 		'edit_sunshine_gallery',
 		'read_sunshine_gallery',
@@ -482,13 +482,19 @@ function sunshine_set_roles() {
 		'edit_published_sunshine_discounts',
 
 		'sunshine_manage_options',
+
+		'sunshine_customers',
+		'sunshine_reports',
+		'sunshine_tools',
+		'sunshine_addons',
+
 		'read',
 
 		'upload_files',
 	);
-	foreach ( $admin_rules as $rule ) {
-		$admin->add_cap( $rule );
-		$manager->add_cap( $rule );
+	foreach ( $capabilities as $cap ) {
+		$admin->add_cap( $cap );
+		$manager->add_cap( $cap );
 	}
 
 	$manager->add_cap( 'sunshine_media_only' );

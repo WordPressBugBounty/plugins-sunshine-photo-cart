@@ -2,29 +2,29 @@
 class SPC_Discount extends Sunshine_Data {
 
 	protected $post_type = 'sunshine-discount';
-	protected $meta = array(
-		'code'     => '',
-		'auto'  => '',
-		'discount_type' => '',
-		'discount_amount'  => '',
-		'apply_to_shipping' => '',
-		'free_shipping'  => '',
-		'start_date'  => '',
-		'end_date'  => '',
+	protected $meta      = array(
+		'code'                  => '',
+		'auto'                  => '',
+		'discount_type'         => '',
+		'discount_amount'       => '',
+		'apply_to_shipping'     => '',
+		'free_shipping'         => '',
+		'start_date'            => '',
+		'end_date'              => '',
 		'max_product_quantity'  => '',
-		'solo'  => '',
-		'allowed_products'  => '',
-		'disallowed_products'  => '',
-		'allowed_categories'  => '',
-		'disallowed_categories'  => '',
-		'allowed_galleries'  => '',
+		'solo'                  => '',
+		'allowed_products'      => '',
+		'disallowed_products'   => '',
+		'allowed_categories'    => '',
+		'disallowed_categories' => '',
+		'allowed_galleries'     => '',
 		'disallowed_galleries'  => '',
-		'min_amount'  => '',
-		'max_uses'  => '',
-		'max_uses_per_person'  => '',
-		'use_count' => '',
-		'used_by' => '',
-		'required_products' => '',
+		'min_amount'            => '',
+		'max_uses'              => '',
+		'max_uses_per_person'   => '',
+		'use_count'             => '',
+		'used_by'               => '',
+		'required_products'     => '',
 	);
 
 	public function __construct( $object = '', $price_level = '' ) {
@@ -37,10 +37,10 @@ class SPC_Discount extends Sunshine_Data {
 			if ( $object->post_type != $this->post_type || $object->post_status != 'publish' ) {
 				return false; }
 		} elseif ( ! empty( $object ) ) {
-			$args = array(
-				'post_type' => $this->post_type,
-				'meta_key' => 'code',
-				'meta_value' => $object
+			$args      = array(
+				'post_type'  => $this->post_type,
+				'meta_key'   => 'code',
+				'meta_value' => $object,
 			);
 			$discounts = get_posts( $args );
 			if ( ! empty( $discounts ) ) {
@@ -214,13 +214,13 @@ class SPC_Discount extends Sunshine_Data {
 		$cart = SPC()->cart->get_cart_items();
 		if ( ! empty( $cart ) ) {
 
-			$required_products = $this->get_required_products();
-			$allowed_products = $this->get_allowed_products();
-			$disallowed_products = $this->get_disallowed_products();
-			$allowed_categories = $this->get_allowed_categories();
+			$required_products     = $this->get_required_products();
+			$allowed_products      = $this->get_allowed_products();
+			$disallowed_products   = $this->get_disallowed_products();
+			$allowed_categories    = $this->get_allowed_categories();
 			$disallowed_categories = $this->get_disallowed_categories();
-			$allowed_galleries = $this->get_allowed_galleries();
-			$disallowed_galleries = $this->get_disallowed_galleries();
+			$allowed_galleries     = $this->get_allowed_galleries();
+			$disallowed_galleries  = $this->get_disallowed_galleries();
 
 			$discount_allowed = array();
 
@@ -273,7 +273,6 @@ class SPC_Discount extends Sunshine_Data {
 			if ( in_array( 1, $discount_allowed ) ) {
 				return true;
 			}
-
 		}
 
 		return false;
@@ -301,22 +300,22 @@ class SPC_Discount extends Sunshine_Data {
 		$type = $this->get_type();
 		$cart = SPC()->cart->get_cart_items();
 
-		$allowed_products = $this->get_allowed_products();
-		$disallowed_products = $this->get_disallowed_products();
-		$allowed_categories = $this->get_allowed_categories();
+		$allowed_products      = $this->get_allowed_products();
+		$disallowed_products   = $this->get_disallowed_products();
+		$allowed_categories    = $this->get_allowed_categories();
 		$disallowed_categories = $this->get_disallowed_categories();
-		$allowed_galleries = $this->get_allowed_galleries();
-		$disallowed_galleries = $this->get_disallowed_galleries();
+		$allowed_galleries     = $this->get_allowed_galleries();
+		$disallowed_galleries  = $this->get_disallowed_galleries();
 
 		$max_product_quantity = $this->max_product_quantity();
 
 		$discountable_total = 0;
-		$product_total = array();
+		$product_total      = array();
 
 		foreach ( $cart as $item ) {
 
 			// Skip the cart item if it does not meet the rules for it.
-			
+
 			if ( ! empty( $allowed_products ) && ! in_array( $item->get_product_id(), $allowed_products ) ) {
 				continue;
 			}
@@ -345,23 +344,22 @@ class SPC_Discount extends Sunshine_Data {
 
 			if ( empty( $product_total[ $item->get_product_id() ] ) ) {
 				$product_total[ $item->get_product_id() ] = 0;
-				$product_qty[ $item->get_product_id() ] = 0;
+				$product_qty[ $item->get_product_id() ]   = 0;
 			}
 			$product_total[ $item->get_product_id() ] += $item->get_subtotal();
-			$product_qty[ $item->get_product_id() ] += $item->get_qty();
-			$product_price[ $item->get_product_id() ] = $item->get_subtotal();
+			$product_qty[ $item->get_product_id() ]   += $item->get_qty();
+			$product_price[ $item->get_product_id() ]  = $item->get_subtotal();
 
 			if ( SPC()->get_option( 'discount_after_tax' ) ) {
-				$discountable_total += $item->get_tax_total();
+				$discountable_total                       += $item->get_tax_total();
 				$product_total[ $item->get_product_id() ] += $item->get_tax_total();
 			}
-
 		}
 
 		if ( $max_product_quantity > 0 && ! empty( $product_qty ) ) {
 			foreach ( $product_qty as $product_id => $qty ) {
 				if ( $qty > $max_product_quantity ) {
-					$product_qty[ $product_id ] = $max_product_quantity;
+					$product_qty[ $product_id ]   = $max_product_quantity;
 					$product_total[ $product_id ] = $product_price[ $product_id ] * $max_product_quantity;
 				}
 			}
@@ -390,13 +388,13 @@ class SPC_Discount extends Sunshine_Data {
 
 		} elseif ( $type == 'percent-product' ) {
 
-			$percent = $this->get_amount();
+			$percent                    = $this->get_amount();
 			$discountable_product_total = array_sum( $product_total );
 			return round( $discountable_product_total * ( $percent / 100 ), 2 );
 
 		} elseif ( $type == 'amount-product' ) {
 
-			$amount = $this->get_amount();
+			$amount                   = $this->get_amount();
 			$discountable_product_qty = array_sum( $product_qty );
 			return round( $discountable_product_qty * $amount, 2 );
 

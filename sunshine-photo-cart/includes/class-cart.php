@@ -478,8 +478,6 @@ class SPC_Cart {
 
 		$this->discount = apply_filters( 'sunshine_cart_discount', $this->discount, $items );
 
-		$this->discount = min( $this->discount, $this->get_subtotal() ); // Don't let discount total be more than order subtotal.
-
 		return $this->discount;
 	}
 
@@ -874,7 +872,7 @@ class SPC_Cart {
 		if ( is_user_logged_in() ) {
 			// Already logged in, don't need to create an account.
 			$needs_account = true;
-		} elseif ( ! SPC()->get_option( 'allow_guest_checkout' ) ) {
+		} elseif ( ! SPC()->get_option( 'allow_guest_checkout' ) && ! SPC()->get_option( 'disable_signup' ) ) {
 			$needs_account = true;
 		} elseif ( ! SPC()->cart->is_empty() ) {
 			foreach ( SPC()->cart->get_cart_items() as $item ) {
@@ -1009,7 +1007,8 @@ class SPC_Cart {
 			$total = 0;
 		}
 
-		$this->total = (float) apply_filters( 'sunshine_get_cart_total', $total, $this );
+		$this->total = apply_filters( 'sunshine_get_cart_total', $total, $this );
+		$this->total = floatval( number_format( $this->total, 2, '.', '' ) );
 
 		return $this->total;
 	}
@@ -1189,9 +1188,9 @@ class SPC_Cart {
 					'id'           => 'password',
 					'type'         => 'password',
 					'name'         => __( 'Password', 'sunshine-photo-cart' ),
-					'required'     => ( ! is_user_logged_in() && $needs_account ) ? true : false,
+					'required'     => ( ! is_user_logged_in() && $needs_account && ! SPC()->get_option( 'disable_signup' ) ) ? true : false,
 					'description'  => ( ! $needs_account ) ? __( 'Optionally set a password', 'sunshine-photo-cart' ) : '',
-					'visible'      => ( ! is_user_logged_in() ) ? true : false,
+					'visible'      => ( ! is_user_logged_in() && ! SPC()->get_option( 'disable_signup' ) ) ? true : false,
 					'autocomplete' => 'new-password',
 					'default'      => null,
 				),
@@ -1935,6 +1934,8 @@ class SPC_Cart {
 				SPC()->session->set( 'checkout_sections_completed', '' );
 				SPC()->cart->empty_cart();
 			}
+
+			do_action( 'sunshine_create_order', $order );
 
 			return $order;
 		}

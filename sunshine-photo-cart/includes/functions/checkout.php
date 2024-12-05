@@ -89,7 +89,7 @@ function sunshine_checkout_scripts() {
 						} else {
 							var baseURL = window.location.protocol + "//" + window.location.host + window.location.pathname;
 							var newURL = baseURL + "?section=" + section;
-							//window.location.href = newURL;
+							window.location.href = newURL;
 						}
 					},
 					error: function(MLHttpRequest, textStatus, errorThrown) {

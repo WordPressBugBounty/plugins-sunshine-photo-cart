@@ -694,10 +694,10 @@ class Sunshine_Admin {
 		$sunshine_admin_submenu = array();
 
 		// $sunshine_admin_submenu[110] = array( __( 'Add-Ons','sunshine-photo-cart' ), __( 'Add-Ons','sunshine-photo-cart' ), 'sunshine_manage_options', 'sunshine_addons', 'sunshine_addons' );
-		$sunshine_admin_submenu[110] = array( __( 'Customers', 'sunshine-photo-cart' ), __( 'Customers', 'sunshine-photo-cart' ), 'sunshine_manage_options', 'sunshine-customers', 'sunshine_customers_page' );
-		$sunshine_admin_submenu[120] = array( __( 'Reports', 'sunshine-photo-cart' ), __( 'Reports', 'sunshine-photo-cart' ), 'sunshine_manage_options', 'sunshine-reports', 'sunshine_reports_page' );
-		$sunshine_admin_submenu[130] = array( __( 'Tools', 'sunshine-photo-cart' ), __( 'Tools', 'sunshine-photo-cart' ), 'sunshine_manage_options', 'sunshine-tools', 'sunshine_tools_page' );
-		$sunshine_admin_submenu[996] = array( __( 'Add-ons', 'sunshine-photo-cart' ), __( 'Add-ons', 'sunshine-photo-cart' ), 'sunshine_manage_options', 'sunshine-addons', 'sunshine_addons_page' );
+		$sunshine_admin_submenu[110] = array( __( 'Customers', 'sunshine-photo-cart' ), __( 'Customers', 'sunshine-photo-cart' ), 'sunshine_customers', 'sunshine-customers', 'sunshine_customers_page' );
+		$sunshine_admin_submenu[120] = array( __( 'Reports', 'sunshine-photo-cart' ), __( 'Reports', 'sunshine-photo-cart' ), 'sunshine_reports', 'sunshine-reports', 'sunshine_reports_page' );
+		$sunshine_admin_submenu[130] = array( __( 'Tools', 'sunshine-photo-cart' ), __( 'Tools', 'sunshine-photo-cart' ), 'sunshine_tools', 'sunshine-tools', 'sunshine_tools_page' );
+		$sunshine_admin_submenu[996] = array( __( 'Add-ons', 'sunshine-photo-cart' ), __( 'Add-ons', 'sunshine-photo-cart' ), 'sunshine_addons', 'sunshine-addons', 'sunshine_addons_page' );
 		// $sunshine_admin_submenu[997] = array( __( 'System Info', 'sunshine-photo-cart' ), __( 'System Info', 'sunshine-photo-cart' ), 'sunshine_manage_options', 'sunshine-system-info', 'sunshine_system_info_page' );
 
 		if ( $this->needs_setup || ( isset( $_GET['page'] ) && $_GET['page'] == 'sunshine-install' ) ) {
