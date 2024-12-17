@@ -6,7 +6,7 @@ Tags: client photo gallery, sell photos, client galleries, client proofing, phot
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 6.7.1
-Stable tag: 3.4.6
+Stable tag: 3.4.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,10 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 11. Admin: Create a gallery and add images
 
 == Changelog ==
+
+= 3.4.7 =
+* Fix: Prevent duplicates in customer/user search in meta user fields
+* Fix: Regenerate images follows watermark setting for individual image at upload, fallback to default if not set
 
 = 3.4.6 =
 * Add: Ability to disable watermarks during drag/drop image upload process

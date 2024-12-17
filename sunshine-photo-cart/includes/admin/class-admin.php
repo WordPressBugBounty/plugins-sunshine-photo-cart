@@ -761,12 +761,19 @@ class Sunshine_Admin {
 
 			// Retrieve the existing meta value for the 'sunshine_disable_purchase' field
 			$disable_purchase = get_post_meta( $post->ID, 'sunshine_disable_purchase', true );
+			$watermark        = get_post_meta( $post->ID, 'sunshine_watermark', true );
 
 			// Add the checkbox field
 			$form_fields['sunshine_disable_purchase'] = array(
 				'label' => __( 'Disable Purchasing', 'textdomain' ),
 				'input' => 'html',
 				'html'  => "<input type='checkbox' name='attachments[{$post->ID}][sunshine_disable_purchase]' value='1' " . checked( $disable_purchase, 1, false ) . ' />',
+			);
+
+			$form_fields['sunshine_disable_purchase'] = array(
+				'label' => __( 'Watermark', 'textdomain' ),
+				'input' => 'html',
+				'html'  => "<input type='checkbox' name='attachments[{$post->ID}][sunshine_watermark]' value='1' " . checked( $watermark, 1, false ) . ' />',
 			);
 
 		}
@@ -794,6 +801,12 @@ class Sunshine_Admin {
 			update_post_meta( $post['ID'], 'sunshine_price_level', intval( $attachment['sunshine_price_level'] ) );
 		} else {
 			delete_post_meta( $post['ID'], 'sunshine_price_level' );
+		}
+
+		if ( isset( $attachment['sunshine_watermark'] ) ) {
+			update_post_meta( $post['ID'], 'sunshine_watermark', 1 );
+		} else {
+			update_post_meta( $post['ID'], 'sunshine_watermark', 0 );
 		}
 
 		return $post;

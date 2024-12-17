@@ -166,33 +166,39 @@ class SPC_Tool_Regenerate extends SPC_Tool {
 
 			// Make the new local version of the file the source file path.
 			$file_path = $upload_dir . '/sunshine/' . $image->get_gallery_id() . '/' . basename( $file_path );
-			$save = file_put_contents( $file_path, $orig_image );
+			$save      = file_put_contents( $file_path, $orig_image );
 
 		} else {
 
 			$directory = dirname( $file_path );
 			$file_info = pathinfo( $file_path );
-			$filename = $file_info['filename']; // This will be 'lee-10'
+			$filename  = $file_info['filename']; // This will be 'lee-10'
 			$extension = $file_info['extension']; // This will be 'jpg'
 
 			// Find extra images and delete them.
-			$pattern = $directory . '/' . $filename . '-*x*.' . $extension;
+			$pattern      = $directory . '/' . $filename . '-*x*.' . $extension;
 			$extra_images = glob( $pattern );
-			foreach( $extra_images as $extra_image ) {
+			foreach ( $extra_images as $extra_image ) {
 				wp_delete_file( $extra_image );
 			}
-
 		}
 
 		// Regenerate everything.
 		$new_metadata = wp_generate_attachment_metadata( $image_id, $file_path );
-		$image_meta = $new_metadata['image_meta'];
+		$image_meta   = $new_metadata['image_meta'];
 		if ( ! empty( $image_meta['created_timestamp'] ) ) {
 			$created_timestamp = $image_meta['created_timestamp'];
 			update_post_meta( $image_id, 'created_timestamp', $created_timestamp );
 		}
 
-		do_action( 'sunshine_after_image_process', $image_id );
+		$watermark = get_post_meta( $image_id, 'sunshine_watermark', true );
+		if ( $watermark === '' ) {
+			$watermark = 1; // If no watermark setting is there, assume we want it to be watermarked and current settings will dictate if that happens.
+		}
+
+		sunshine_log( 'Watermark on regen for ' . $image_id . ': ' . $watermark );
+
+		do_action( 'sunshine_after_image_process', $image_id, $file_path, $watermark );
 		wp_update_attachment_metadata( $image_id, $new_metadata );
 
 		wp_send_json(

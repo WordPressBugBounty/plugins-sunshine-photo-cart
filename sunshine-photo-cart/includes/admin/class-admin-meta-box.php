@@ -35,7 +35,7 @@ class Sunshine_Admin_Meta_Boxes {
 
 	public function init() {
 
-		$screen    = get_current_screen();
+		$screen = get_current_screen();
 		if ( $screen->base != 'post' || $this->post_type != $screen->post_type ) {
 			return;
 		}
@@ -320,7 +320,7 @@ class Sunshine_Admin_Meta_Boxes {
 			'options'     => array(),
 			'before'      => '',
 			'after'       => '',
-			'required'       => false,
+			'required'    => false,
 		);
 		$field    = wp_parse_args( $field, $defaults );
 
@@ -371,7 +371,7 @@ class Sunshine_Admin_Meta_Boxes {
 						$html .= '</div>';
 
 					} else {
-						$value = ( ! empty( $meta_value[ $price_levels[0]->get_id() ] ) ) ? $meta_value[ $price_levels[0]->get_id() ] : '';
+						$value       = ( ! empty( $meta_value[ $price_levels[0]->get_id() ] ) ) ? $meta_value[ $price_levels[0]->get_id() ] : '';
 						$price_field = '<input id="' . esc_attr( $field['id'] ) . '" type="text" size="8" name="' . esc_attr( $meta_key ) . '[' . $price_levels[0]->get_id() . ']" placeholder="' . esc_attr( $field['placeholder'] ) . '" value="' . esc_attr( $value ) . '" />' . "\n";
 						if ( $position == 'left' ) {
 							$price_field = sunshine_currency_symbol( $currency ) . $price_field;
@@ -488,11 +488,11 @@ class Sunshine_Admin_Meta_Boxes {
 
 			case 'users':
 				$html .= '<select ' . ( ( $field['required'] ) ? 'required="required"' : '' ) . ' name="' . esc_attr( $meta_key ) . '[]" id="' . esc_attr( $field['id'] ) . '" multiple="multiple">';
-				$data = array();
+				$data  = array();
 				if ( ! empty( $meta_value ) ) {
 					foreach ( $meta_value as $user_id ) {
 						$customer = sunshine_get_customer( $user_id );
-						$html .= '<option value="' . esc_attr( $user_id ) . '" selected="selected">' . $customer->get_name() . ' (' . $customer->get_email() . ')</option>';
+						$html    .= '<option value="' . esc_attr( $user_id ) . '" selected="selected">' . $customer->get_name() . ' (' . $customer->get_email() . ')</option>';
 					}
 				}
 				$html .= '</select> ';
@@ -526,18 +526,18 @@ class Sunshine_Admin_Meta_Boxes {
 				break;
 
 			case 'galleries':
-				$name = $meta_key;
+				$name     = $meta_key;
 				$multiple = '';
 				if ( $field['multiple'] ) {
-					$name = $meta_key . '[]';
+					$name     = $meta_key . '[]';
 					$multiple = 'multiple="multiple"';
 				}
 				$html .= '<select ' . ( ( $field['required'] ) ? 'required="required"' : '' ) . ' name="' . esc_attr( $name ) . '" id="' . esc_attr( $field['id'] ) . '" ' . $multiple . '>';
-				$data = array();
+				$data  = array();
 				if ( ! empty( $meta_value ) ) {
 					foreach ( $meta_value as $gallery_id ) {
 						$gallery = sunshine_get_gallery( $gallery_id );
-						$html .= '<option value="' . esc_attr( $gallery_id ) . '" selected="selected">' . $gallery->get_name() . '</option>';
+						$html   .= '<option value="' . esc_attr( $gallery_id ) . '" selected="selected">' . $gallery->get_name() . '</option>';
 					}
 				}
 				$html .= '</select> ';
@@ -571,18 +571,18 @@ class Sunshine_Admin_Meta_Boxes {
 				break;
 
 			case 'products':
-				$name = $meta_key;
+				$name     = $meta_key;
 				$multiple = '';
 				if ( $field['multiple'] ) {
-					$name = $meta_key . '[]';
+					$name     = $meta_key . '[]';
 					$multiple = 'multiple="multiple"';
 				}
 				$html .= '<select ' . ( ( $field['required'] ) ? 'required="required"' : '' ) . ' name="' . esc_attr( $name ) . '" id="' . esc_attr( $field['id'] ) . '" ' . $multiple . '>';
-				$data = array();
+				$data  = array();
 				if ( ! empty( $meta_value ) ) {
 					foreach ( $meta_value as $post_id ) {
 						$this_post = sunshine_get_product( $post_id );
-						$html .= '<option value="' . esc_attr( $post_id ) . '" selected="selected">' . $this_post->get_name() . '</option>';
+						$html     .= '<option value="' . esc_attr( $post_id ) . '" selected="selected">' . $this_post->get_name() . '</option>';
 					}
 				}
 				$html .= '</select> ';
@@ -666,25 +666,25 @@ class Sunshine_Admin_Meta_Boxes {
 				break;
 
 			case 'dimensions':
-				$w = ( ! empty( $meta_value['w'] ) ) ? intval( $meta_value['w'] ) : '';
-				$h = ( ! empty( $meta_value['h'] ) ) ? intval( $meta_value['h'] ) : '';
+				$w     = ( ! empty( $meta_value['w'] ) ) ? intval( $meta_value['w'] ) : '';
+				$h     = ( ! empty( $meta_value['h'] ) ) ? intval( $meta_value['h'] ) : '';
 				$html .= '<input type="number" min="0" name="' . esc_attr( $field['id'] ) . '[w]" step="1" style="width: 100px;" value="' . esc_attr( $w ) . '" />px &times; <input type="number" name="' . esc_attr( $field['id'] ) . '[h]" min="0" step="1" style="width: 100px;" value="' . esc_attr( $h ) . '" />px';
 				break;
 
 			case 'duration':
-				$time = ( ! empty( $meta_value['time'] ) ) ? intval( $meta_value['time'] ) : '';
-				$interval = ( ! empty( $meta_value['interval'] ) ) ? $meta_value['interval'] : '';
-				$html .= '<input type="number" min="0" name="' . esc_attr( $field['id'] ) . '[time]" step="1" style="width: 60px;" value="' . esc_attr( $time ) . '" />';
-				$html .= '<select name="' . esc_attr( $field['id'] ) . '[interval]">';
+				$time          = ( ! empty( $meta_value['time'] ) ) ? intval( $meta_value['time'] ) : '';
+				$interval      = ( ! empty( $meta_value['interval'] ) ) ? $meta_value['interval'] : '';
+				$html         .= '<input type="number" min="0" name="' . esc_attr( $field['id'] ) . '[time]" step="1" style="width: 60px;" value="' . esc_attr( $time ) . '" />';
+				$html         .= '<select name="' . esc_attr( $field['id'] ) . '[interval]">';
 					$intervals = array(
 						'month' => __( 'Month(s)', 'sunshine-photo-cart' ),
-						'day' => __( 'Day(s)', 'sunshine-photo-cart' ),
-						'hour' => __( 'Hour(s)', 'sunshine-photo-cart' ),
+						'day'   => __( 'Day(s)', 'sunshine-photo-cart' ),
+						'hour'  => __( 'Hour(s)', 'sunshine-photo-cart' ),
 					);
 					foreach ( $intervals as $key => $label ) {
 						$html .= '<option value="' . esc_attr( $key ) . '" ' . selected( $key, $interval, false ) . '>' . esc_html( $label ) . '</option>';
 					}
-				$html .= '</select>';
+					$html .= '</select>';
 				break;
 
 			case 'html':
@@ -693,7 +693,7 @@ class Sunshine_Admin_Meta_Boxes {
 
 			default:
 				do_action( 'sunshine_meta_' . $field['type'] . '_display', $field, $meta_value );
-				//$html = apply_filters( 'sunshine_meta_' . $field['type'] . '_display', $html, $field, $meta_value );
+				// $html = apply_filters( 'sunshine_meta_' . $field['type'] . '_display', $html, $field, $meta_value );
 				break;
 
 		}
@@ -773,7 +773,7 @@ class Sunshine_Admin_Meta_Boxes {
 							$comparison_string = 'value ' . esc_js( $condition['compare'] ) . ' "' . esc_js( $condition['value'] ) . '"';
 						}
 						if ( is_array( $condition['value'] ) ) {
-						?>
+							?>
 							var possible_values = [ '<?php echo join( "', '", $condition['value'] ); ?>' ];
 							if ( possible_values.includes( value ) ) {
 								$( '<?php echo esc_js( $action_target ); ?>' ).<?php echo $true_action; ?>();
@@ -976,51 +976,38 @@ class Sunshine_Admin_Meta_Boxes {
 
 		$search = sanitize_text_field( $_GET['search'] );
 
-	    $args = array(
-	        'search' => "*{$search}*",
-	        'search_columns' => array(
-	            'user_login',
-	            'user_nicename',
-	            'user_email',
-	            'user_url',
-	        ),
-	        'number' => -1,
-	    );
-	    $users = sunshine_get_customers( $args );
-
-		$meta_search_customers = sunshine_get_customers(array(
-			'role__in' => array( sunshine_get_customer_role(), 'administrator' ),
+		$args  = array(
+			'search'     => "*{$search}*",
+			'number'     => -1,
 			'meta_query' => array(
 				'relation' => 'OR',
 				array(
 					'key'     => 'first_name',
 					'value'   => $search,
-					'compare' => 'LIKE'
+					'compare' => 'LIKE',
 				),
 				array(
 					'key'     => 'last_name',
 					'value'   => $search,
-					'compare' => 'LIKE'
+					'compare' => 'LIKE',
 				),
-			)
-		));
-		if ( ! empty( $meta_search_customers ) ) {
-			$users = array_merge( $users, $meta_search_customers );
-		}
+			),
+		);
+		$users = sunshine_get_customers( $args );
 
-	    $data = array();
+		$data = array();
 
 		if ( ! empty( $users ) ) {
 			foreach ( $users as $user ) {
-		        $data[] = array(
-		            'id' => $user->get_id(),
-		            'text' => $user->get_name() . ' (' . $user->get_email() . ')'
-		        );
-		    }
+				$data[] = array(
+					'id'   => $user->get_id(),
+					'text' => $user->get_name() . ' (' . $user->get_email() . ')',
+				);
+			}
 		}
 
-	    echo json_encode( $data );
-	    die();
+		echo json_encode( $data );
+		die();
 
 	}
 
@@ -1032,8 +1019,8 @@ class Sunshine_Admin_Meta_Boxes {
 
 		$search = sanitize_text_field( $_REQUEST['search'] );
 
-		$args = array(
-			's' => $search,
+		$args      = array(
+			's'      => $search,
 			'number' => -1,
 		);
 		$galleries = sunshine_get_galleries( $args, 'all' );
@@ -1043,7 +1030,7 @@ class Sunshine_Admin_Meta_Boxes {
 		if ( ! empty( $galleries ) ) {
 			foreach ( $galleries as $gallery ) {
 				$data[] = array(
-					'id' => $gallery->get_id(),
+					'id'   => $gallery->get_id(),
 					'text' => $gallery->get_name(),
 				);
 			}
@@ -1062,8 +1049,8 @@ class Sunshine_Admin_Meta_Boxes {
 
 		$search = sanitize_text_field( $_REQUEST['search'] );
 
-		$args = array(
-			's' => $search,
+		$args     = array(
+			's'      => $search,
 			'number' => -1,
 		);
 		$products = sunshine_get_products( '', '', '', $args, true );
@@ -1073,7 +1060,7 @@ class Sunshine_Admin_Meta_Boxes {
 		if ( ! empty( $products ) ) {
 			foreach ( $products as $product ) {
 				$data[] = array(
-					'id' => $product->get_id(),
+					'id'   => $product->get_id(),
 					'text' => $product->get_name(),
 				);
 			}

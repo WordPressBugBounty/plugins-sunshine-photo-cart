@@ -212,6 +212,7 @@ class SPC_Gallery extends Sunshine_Data {
 		$image_ids = apply_filters( 'sunshine_gallery_image_ids', $image_ids, $this );
 		if ( ! empty( $image_ids ) ) {
 			$image_ids = array_unique( $image_ids );
+			$image_ids = array_values( $image_ids );
 		}
 		return $image_ids;
 	}
@@ -238,7 +239,7 @@ class SPC_Gallery extends Sunshine_Data {
 	}
 
 	public function has_images() {
-		return ( $this->get_image_count() > 0 ) ? true :  false;
+		return ( $this->get_image_count() > 0 ) ? true : false;
 	}
 
 	public function get_images( $custom_args = array(), $get_ids = false ) {
@@ -253,9 +254,9 @@ class SPC_Gallery extends Sunshine_Data {
 		$args = array(
 			'post_type'      => 'attachment',
 			'posts_per_page' => sunshine_gallery_images_per_page(),
-			//'post_mime_type' => 'image',
+			// 'post_mime_type' => 'image',
 			'post__in'       => $image_ids,
-			'no_found_rows' => true,
+			'no_found_rows'  => true,
 			// 'post_parent' => $this->get_id()
 		);
 
@@ -454,7 +455,7 @@ class SPC_Gallery extends Sunshine_Data {
 		if ( ! is_email( $email ) ) {
 			return;
 		}
-		$emails   = $this->get_emails();
+		$emails = $this->get_emails();
 		if ( empty( $emails ) ) {
 			$emails = array();
 		}

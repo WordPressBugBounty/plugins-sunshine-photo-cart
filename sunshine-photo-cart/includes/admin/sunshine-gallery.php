@@ -769,7 +769,7 @@ function sunshine_meta_gallery_images_display() {
 				'security'   => wp_create_nonce( 'sunshine_gallery_upload' ),
 				'action'     => 'sunshine_gallery_upload',            // the ajax action name
 				'gallery_id' => $post->ID,
-				'watermark'  => true,
+				'watermark'  => ( SPC()->get_option( 'watermark_image' ) ) ? 1 : 0,
 			),
 		);
 		?>
@@ -782,9 +782,9 @@ function sunshine_meta_gallery_images_display() {
 		//uploader.settings.multipart_params.watermark = false;
 		$( 'input[name="watermark"]' ).change(function () {
 			if (!$(this).prop('checked')) {
-				uploader.settings.multipart_params.watermark = false;
+				uploader.settings.multipart_params.watermark = 0;
 			} else {
-				uploader.settings.multipart_params.watermark = true;
+				uploader.settings.multipart_params.watermark = 1;
 			}
 		});
 
@@ -1062,7 +1062,7 @@ function sunshine_gallery_admin_ajax_upload() {
 
 	// Only add images to the gallery as attachment, otherwise we just upload the file into the folder.
 	if ( strpos( $file_upload['type'], 'image' ) !== false ) {
-		sunshine_insert_gallery_image( $file_upload['file'], $post_parent_id, 'json', $_POST['watermark'] );
+		sunshine_insert_gallery_image( $file_upload['file'], $post_parent_id, 'json', intval( $_POST['watermark'] ) );
 	}
 
 }
@@ -1147,10 +1147,14 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 		}
 		add_post_meta( $attachment_id, 'created_timestamp', $created_timestamp );
 		add_post_meta( $attachment_id, 'sunshine_file_name', $file_name );
+		sunshine_log( 'Watermark: ' . $watermark );
+		$apply_watermark = ( ! empty( $watermark ) ) ? 1 : 0;
+		sunshine_log( 'Apply Watermark: ' . $apply_watermark );
+		add_post_meta( $attachment_id, 'sunshine_watermark', $apply_watermark );
 
 		$attachment_meta_data = wp_update_attachment_metadata( $attachment_id, $attachment_image_meta );
 
-		do_action( 'sunshine_after_image_process', $attachment_id, $file_path, $watermark );
+		do_action( 'sunshine_after_image_process', $attachment_id, $file_path, $apply_watermark );
 
 		if ( 'json' === $result ) {
 			$return['image_id']   = $attachment_id;
