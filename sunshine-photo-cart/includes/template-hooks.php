@@ -360,7 +360,7 @@ function sunshine_display_account() {
 	}
 	if ( is_user_logged_in() ) {
 		sunshine_get_template( 'account/account', array( 'endpoint' => $this_endpoint ) );
-	} elseif ( SPC()->get_option( 'account_login_endpoint' ) === $this_endpoint || SPC()->get_option( 'disable_signup' ) ) {
+	} elseif ( SPC()->get_option( 'account_login_endpoint' ) === $this_endpoint ) {
 		sunshine_get_template( 'account/login' );
 	} elseif ( SPC()->get_option( 'account_reset_password_endpoint' ) === $this_endpoint && isset( $_GET['key'] ) && isset( $_GET['login'] ) ) {
 		$key     = sanitize_text_field( $_GET['key'] );

@@ -2,7 +2,7 @@
 function sunshine_watermark_image( $attachment_id, $metadata = array(), $passed_image_size = '' ) {
 	$attachment = get_post( $attachment_id );
 
-	if ( SPC()->get_option( 'watermark_image' ) && wp_attachment_is( 'image', $attachment_id ) ) {
+	if ( wp_attachment_is( 'image', $attachment_id ) ) {
 
 		$watermark_image     = get_attached_file( SPC()->get_option( 'watermark_image' ) );
 		$watermark_file_type = wp_check_filetype( $watermark_image );
@@ -125,7 +125,10 @@ function sunshine_watermark_image( $attachment_id, $metadata = array(), $passed_
 }
 
 // Add the watermark
-add_action( 'sunshine_after_image_process', 'sunshine_watermark_media_upload' );
-function sunshine_watermark_media_upload( $attachment_id ) {
+add_action( 'sunshine_after_image_process', 'sunshine_watermark_media_upload', 10, 3 );
+function sunshine_watermark_media_upload( $attachment_id, $file_path, $watermark = '' ) {
+	if ( ! SPC()->get_option( 'watermark_image' ) || $watermark === false || $watermark === 'false' ) {
+		return;
+	}
 	sunshine_watermark_image( $attachment_id );
 }

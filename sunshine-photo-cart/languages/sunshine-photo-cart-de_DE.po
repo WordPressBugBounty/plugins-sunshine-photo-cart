@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Sunshine Photo Cart\n"
 "POT-Creation-Date: 2024-11-21 10:52-0700\n"
-"PO-Revision-Date: 2024-11-21 10:59-0700\n"
+"PO-Revision-Date: 2024-12-12 11:01-0700\n"
 "Last-Translator: Derek Ashauer <derek@sunshinephotocart.com>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -311,16 +311,14 @@ msgid "Signup"
 msgstr "Registrieren"
 
 #: sunshine-analytics/customer-tracking.php:495
-#, fuzzy, php-format
-#| msgid "Search for \"%s\" in %s: %s results"
+#, php-format
 msgid "Search for \"%1$s\" in %2$s: %3$s results"
-msgstr "Suche nach \"%s\" in %s: %s Ergebnisse"
+msgstr "Suche nach \"%1$s\" in %2$s: %3$s Ergebnisse"
 
 #: sunshine-analytics/customer-tracking.php:497
-#, fuzzy, php-format
-#| msgid "Search for \"%s\" in %s: %s results"
+#, php-format
 msgid "Search for \"%1$s\": %2$s results"
-msgstr "Suche nach \"%s\" in %s: %s Ergebnisse"
+msgstr "Suche nach \"%1$s\": %2$s Ergebnisse"
 
 #: sunshine-analytics/customer.php:8
 msgid "Timeline"
@@ -1098,10 +1096,9 @@ msgstr "Die ausgewählte Datei konnte nicht nach %s kopiert werden."
 
 #: sunshine-bulk-galleries/bulk-galleries.php:612
 #: sunshine-bulk-galleries/bulk-galleries.php:613
-#, fuzzy, php-format
-#| msgid "Could not upload image %s: %s"
+#, php-format
 msgid "Could not upload image %1$s: %2$s"
-msgstr "Das Bild %s konnte nicht hochgeladen werden: %s"
+msgstr "Das Bild konnte nicht hochgeladen werden %1$s: %2$s"
 
 #: sunshine-campaign-monitor/admin.php:12
 msgid "Campaign Monitor"
@@ -1692,14 +1689,10 @@ msgid "Get Download"
 msgstr "Download abrufen"
 
 #: sunshine-digital-downloads/templates/special-access.php:1
-#, fuzzy
-#| msgid ""
-#| "You are logged in as an administrator and have access to this gallery "
-#| "without password"
 msgid "You are logged in as an administrator and special download permissions"
 msgstr ""
-"Du bist als Administrator eingeloggt und hast Zugang zu dieser Galerie ohne "
-"Passwort"
+"Sie sind als Administrator angemeldet und haben spezielle Download-"
+"Berechtigungen"
 
 #: sunshine-discounts/admin.php:4 sunshine-discounts/discounts.php:33
 #: sunshine-discounts/discounts.php:45
@@ -1941,32 +1934,25 @@ msgstr "Rabatte in Sunshine Photo Cart erstellen"
 #: sunshine-discounts/tools/delete-discounts.php:6
 #: sunshine-discounts/tools/delete-discounts.php:9
 #: sunshine-discounts/tools/delete-discounts.php:21
-#, fuzzy
-#| msgid "All Discounts"
 msgid "Delete Discounts"
-msgstr "Alle Rabatte"
+msgstr "Rabatte löschen"
 
 #: sunshine-discounts/tools/delete-discounts.php:8
 msgid "Delete discounts older than the selected date"
 msgstr "Rabatte löschen, die älter als das ausgewählte Datum sind"
 
 #: sunshine-discounts/tools/delete-discounts.php:19
-#, fuzzy
-#| msgid "Add comments for this item"
 msgid "Delete discounts before this date"
-msgstr "Kommentare zu diesem Artikel hinzufügen"
+msgstr "Rabatte vor diesem Datum löschen"
 
 #: sunshine-discounts/tools/delete-discounts.php:20
-#, fuzzy
-#| msgid "This is a general template for automated emails"
 msgid "Only delete discounts generated from automated emails"
-msgstr "Allgemeine Vorlage für benutzerdefinierte E-Mails"
+msgstr "Nur Rabatte löschen, die aus automatischen E-Mails stammen"
 
 #: sunshine-discounts/tools/delete-discounts.php:39
-#, fuzzy, php-format
-#| msgid "File could not be deleted"
+#, php-format
 msgid "%s discounts have been deleted"
-msgstr "Datei konnte nicht gelöscht werden"
+msgstr "%s Rabatte wurden gelöscht"
 
 #: sunshine-exports/class-export-customers.php:10
 msgid "Customer ID"
@@ -2770,10 +2756,9 @@ msgid "Item not filled"
 msgstr "Position nicht gefüllt"
 
 #: sunshine-packages/templates/fill-item.php:9
-#, fuzzy, php-format
-#| msgid "Select no images"
+#, php-format
 msgid "Select %s images"
-msgstr "Keine Bilder auswählen"
+msgstr "Wählen Sie %s Bilder"
 
 #: sunshine-packages/templates/fill-item.php:47
 msgid "This product does not need any images selected"
@@ -3136,10 +3121,8 @@ msgid "Keywords"
 msgstr "Schlüsselwörter"
 
 #: sunshine-photo-cart/includes/admin/class-admin.php:749
-#, fuzzy
-#| msgid "All price levels"
 msgid "Use gallery price level"
-msgstr "Alle Preisstufen"
+msgstr "Preisniveau der Galerie verwenden"
 
 #: sunshine-photo-cart/includes/admin/class-admin.php:757
 #: sunshine-photo-cart/includes/admin/sunshine-gallery.php:192
@@ -3149,10 +3132,8 @@ msgid "Price Level"
 msgstr "Preisstufe"
 
 #: sunshine-photo-cart/includes/admin/class-admin.php:767
-#, fuzzy
-#| msgid "Disable Products"
 msgid "Disable Purchasing"
-msgstr "Produkte deaktivieren"
+msgstr "Einkaufen deaktivieren"
 
 #: sunshine-photo-cart/includes/admin/class-admin.php:805
 msgid "Metadata"
@@ -3987,16 +3968,12 @@ msgid "Image Order"
 msgstr "Bildreihenfolge"
 
 #: sunshine-photo-cart/includes/admin/settings-fields.php:406
-#, fuzzy
-#| msgid "Image Upload Date (New to Old)"
 msgid "Order images shot (New to Old)"
-msgstr "Datum des Bild-Uploads (neu bis alt)"
+msgstr "Bilder bestellen (Neu nach Alt)"
 
 #: sunshine-photo-cart/includes/admin/settings-fields.php:407
-#, fuzzy
-#| msgid "Image Upload Date (Old to New)"
 msgid "Order images shot (Old to New)"
-msgstr "Datum des Bild-Uploads (alt bis neu)"
+msgstr "Bilder bestellen (Alt zu Neu)"
 
 #: sunshine-photo-cart/includes/admin/settings-fields.php:408
 msgid "Image Upload Date (New to Old)"
@@ -5667,10 +5644,8 @@ msgstr "Kein Zahlungsmethode"
 
 #: sunshine-photo-cart/includes/class-cart.php:1927
 #: sunshine-photo-cart/includes/class-order.php:846
-#, fuzzy
-#| msgid "Order Files Notification"
 msgid "Order notification sent"
-msgstr "Bestellungsdateien Benachrichtigung"
+msgstr "Bestellungsbenachrichtigung gesendet"
 
 #: sunshine-photo-cart/includes/class-cart.php:1954
 #: sunshine-photo-cart/includes/functions/account.php:200
@@ -14566,10 +14541,9 @@ msgid "Order #%s"
 msgstr "Bestellung #%s"
 
 #: sunshine-photo-cart/includes/class-order.php:817
-#, fuzzy, php-format
-#| msgid "Refund on %s has been processed for %s"
+#, php-format
 msgid "Refund on %1$s has been processed for %2$s"
-msgstr "Die Erstattung für %s wurde für %s bearbeitet"
+msgstr "Die Erstattung für %1$s wurde für %2$s bearbeitet"
 
 #: sunshine-photo-cart/includes/class-payment-method.php:49
 #: sunshine-photo-cart/includes/class-shipping-method.php:147
@@ -14909,10 +14883,9 @@ msgid "Favorites notification sent by customers to site admin"
 msgstr "Favoriten-Benachrichtigung von Kunden an den Website-Administrator"
 
 #: sunshine-photo-cart/includes/emails/class-email-admin-favorites.php:10
-#, fuzzy, php-format
-#| msgid "Favorites submitted by %s on %s"
+#, php-format
 msgid "Favorites submitted by %1$s on %2$s"
-msgstr "Favoriten gesendet von %s auf %s"
+msgstr "Favoriten eingereicht von %1$s am %2$s"
 
 #: sunshine-photo-cart/includes/emails/class-email-admin-receipt.php:8
 msgid "Admin Order Receipt"
@@ -14928,16 +14901,12 @@ msgid "New order: %s from %s"
 msgstr "Neue Bestellung: %s auf %s"
 
 #: sunshine-photo-cart/includes/emails/class-email-admin-signup.php:8
-#, fuzzy
-#| msgid "Signup (Admin)"
 msgid "Sign Up (Admin)"
-msgstr "Registrieren (Admin)"
+msgstr "Anmeldung (Admin)"
 
 #: sunshine-photo-cart/includes/emails/class-email-admin-signup.php:9
-#, fuzzy
-#| msgid "Signup notification with customer information"
 msgid "Sign up notification with customer information"
-msgstr "Registrierungs-Benachrichtigung mit Kundeninformationen"
+msgstr "Anmeldebestätigung mit Kundeninformationen"
 
 #: sunshine-photo-cart/includes/emails/class-email-admin-signup.php:10
 #, php-format
@@ -14995,10 +14964,9 @@ msgstr ""
 "E-Mail an den Kunden, wenn ein Kommentar zur Bestellung hinzugefügt wird"
 
 #: sunshine-photo-cart/includes/emails/class-email-order-comment.php:10
-#, fuzzy, php-format
-#| msgid "A comment has been made on %s from %s"
+#, php-format
 msgid "A comment has been made on %1$s from %2$s"
-msgstr "Es wurde ein Kommentar zu %s von %s hinzugefügt"
+msgstr "Zu %1$s wurde ein Kommentar von %2$s abgegeben"
 
 #: sunshine-photo-cart/includes/emails/class-email-order-status.php:8
 msgid "Order Status Update"
@@ -15009,10 +14977,9 @@ msgid "Email sent to customer when order status is updated"
 msgstr "E-Mail an den Kunden, wenn der Bestellstatus aktualisiert wird"
 
 #: sunshine-photo-cart/includes/emails/class-email-order-status.php:10
-#, fuzzy, php-format
-#| msgid "Receipt for %s from %s"
+#, php-format
 msgid "Update on %1$s from %2$s"
-msgstr "Beleg für %s von %s"
+msgstr "Aktualisierung auf %1$s von %2$s"
 
 #: sunshine-photo-cart/includes/emails/class-email-reset-password.php:9
 msgid "Email sent to customer when resetting password"
@@ -15889,10 +15856,8 @@ msgstr "Die Verbindung zu Square wurde erfolgreich getrennt"
 #: sunshine-photo-cart/includes/payment-methods/square.php:338
 #: sunshine-photo-cart/includes/payment-methods/square.php:345
 #: sunshine-photo-cart/includes/payment-methods/square.php:351
-#, fuzzy
-#| msgid "Could not get locations from Square"
 msgid "Cannot get locations"
-msgstr "Kann keine Standorte von Square abrufen"
+msgstr "Kann keine Standorte erhalten"
 
 #: sunshine-photo-cart/includes/payment-methods/square.php:360
 msgid "Locations refreshed from Square"
@@ -15937,10 +15902,8 @@ msgstr "Sunshine trug %s zur Erstattung von Bearbeitungsgebühren bei"
 
 #: sunshine-photo-cart/includes/payment-methods/square.php:879
 #: sunshine-photo-cart/includes/payment-methods/stripe.php:1117
-#, fuzzy
-#| msgid "Custom email address"
 msgid "Customer sent email about refund"
-msgstr "Benutzerdefinierte E-Mail-Adresse"
+msgstr "Kunde schickt E-Mail über Rückerstattung"
 
 #: sunshine-photo-cart/includes/payment-methods/stripe.php:17
 #: sunshine-photo-cart/includes/payment-methods/stripe.php:967
@@ -16790,10 +16753,9 @@ msgstr "Rabatt pro Artikel"
 
 #: sunshine-quantity-discounts/frontend.php:100
 #: sunshine-quantity-discounts/frontend.php:110
-#, fuzzy, php-format
-#| msgid "%s: %u or more in cart"
+#, php-format
 msgid "%1$s: %2$u or more in cart"
-msgstr "%s: %u oder mehr im Warenkorb"
+msgstr "%1$s: %2$u oder mehr im Warenkorb"
 
 #: sunshine-quantity-discounts/frontend.php:191
 #, php-format
@@ -16802,22 +16764,19 @@ msgstr ""
 "Legen Sie %1$s mehr %2$s in den Warenkorb und sparen Sie %3$s pro Stück"
 
 #: sunshine-quantity-discounts/templates/prices.php:18
-#, fuzzy, php-format
-#| msgid "%u total in your cart for %s each"
+#, php-format
 msgid "%1$u total in your cart for %2$s each"
-msgstr "kaufe %u zum Preis von %s/Stück"
+msgstr "%1$u insgesamt in Ihrem Warenkorb für %2$s pro Stück"
 
 #: sunshine-quantity-discounts/templates/prices.php:20
-#, fuzzy, php-format
-#| msgid "Buy %u for %s each"
+#, php-format
 msgid "Buy %1$u for %2$s each"
-msgstr "%u für %s/Stück kaufen"
+msgstr "Kaufen Sie %1$u für %2$s pro Stück"
 
 #: sunshine-quantity-discounts/templates/prices.php:27
-#, fuzzy, php-format
-#| msgid "You have (%u) %s in cart already"
+#, php-format
 msgid "You have (%1$u) %2$s in cart already"
-msgstr "Du hast bereits (%u) %s im Warenkorb"
+msgstr "Sie haben bereits (%1$u) %2$s im Warenkorb"
 
 #: sunshine-quickpay/class-quickpay.php:46
 msgid "Private Key"
@@ -16866,17 +16825,13 @@ msgid "Sessions"
 msgstr "Sitzungen"
 
 #: sunshine-session-fees/account.php:33
-#, fuzzy
-#| msgid "You have not set up any discounts"
 msgid "You have not booked any sessions"
-msgstr "Es sind keine Rabatte eingerichtet"
+msgstr "Sie haben keine Sitzungen gebucht"
 
 #: sunshine-session-fees/admin/options.php:6
 #: sunshine-session-fees/admin/products.php:44
-#, fuzzy
-#| msgid "Sessions cleared"
 msgid "Session Fees"
-msgstr "Sessions gelöscht"
+msgstr "Gebühren für die Sitzung"
 
 #: sunshine-session-fees/admin/products.php:49
 msgid ""
@@ -16892,23 +16847,16 @@ msgstr ""
 
 #: sunshine-session-fees/admin/schedule.php:4
 #: sunshine-session-fees/admin/schedule.php:12
-#, fuzzy
-#| msgid "Sessions cleared"
 msgid "Session Schedule"
-msgstr "Sessions gelöscht"
+msgstr "Zeitplan der Sitzung"
 
 #: sunshine-session-fees/admin/schedule.php:20
-#, fuzzy
-#| msgid "session"
-#| msgid_plural "sessions"
 msgid "Add session time"
-msgstr "Session"
+msgstr "Sitzungszeit hinzufügen"
 
 #: sunshine-session-fees/admin/schedule.php:28
-#, fuzzy
-#| msgid "Clear Sesssions"
 msgid "Upcoming Sesssions"
-msgstr "Sessions löschen"
+msgstr "Kommende Sitzungen"
 
 #: sunshine-session-fees/admin/schedule.php:34
 #: sunshine-session-fees/admin/schedule.php:63
@@ -16926,94 +16874,69 @@ msgid "minutes"
 msgstr "Minuten"
 
 #: sunshine-session-fees/admin/schedule.php:57
-#, fuzzy
-#| msgid "Clear Sesssions"
 msgid "Past Sesssions"
-msgstr "Sessions löschen"
+msgstr "Vergangene Sessionen"
 
 #: sunshine-session-fees/admin/schedule.php:113
-#, fuzzy
-#| msgid "Sessions cleared"
 msgid "Session added"
-msgstr "Sessions gelöscht"
+msgstr "Sitzung hinzugefügt"
 
 #: sunshine-session-fees/admin/schedule.php:127
-#, fuzzy
-#| msgid "Sessions cleared"
 msgid "Session deleted"
-msgstr "Sessions gelöscht"
+msgstr "Sitzung gelöscht"
 
 #: sunshine-session-fees/class-session-fee-product.php:49
-#, fuzzy
-#| msgid "Sessions cleared"
 msgid "Session Fee"
-msgstr "Sessions gelöscht"
+msgstr "Gebühr für die Sitzung"
 
 #: sunshine-session-fees/common.php:6
-#, fuzzy
-#| msgid "Send Date"
 msgid "Session Dates"
-msgstr "Sendedatum"
+msgstr "Sitzungstermine"
 
 #: sunshine-session-fees/common.php:7
 msgid "Session Date"
 msgstr "Session Datum"
 
 #: sunshine-session-fees/hooks.php:47 sunshine-session-fees/hooks.php:51
-#, fuzzy
-#| msgid "Invalid login attempt"
 msgid "Invalid booking date"
-msgstr "Ungültiger Anmeldeversuch"
+msgstr "Ungültiges Buchungsdatum"
 
 #: sunshine-session-fees/hooks.php:56 sunshine-session-fees/hooks.php:125
 msgid "This date is already booked"
 msgstr "Dieser Termin ist bereits gebucht"
 
 #: sunshine-session-fees/hooks.php:65 sunshine-session-fees/hooks.php:69
-#, fuzzy
-#| msgid "Invalid submission"
 msgid "Invalid session product"
-msgstr "Ungültige Eingabe"
+msgstr "Ungültiges Sitzungsprodukt"
 
 #: sunshine-session-fees/hooks.php:77
-#, fuzzy
-#| msgid "All price levels"
 msgid "Invalid price level"
-msgstr "Alle Preisstufen"
+msgstr "Ungültiges Preisniveau"
 
 #: sunshine-session-fees/hooks.php:84
-#, fuzzy, php-format
-#| msgid "%s added to cart"
+#, php-format
 msgid "%s already in cart"
-msgstr "%s in den Warenkorb gelegt"
+msgstr "%s bereits im Warenkorb"
 
 #: sunshine-session-fees/hooks.php:235
 msgid "Products included in session fee"
 msgstr "In der Sitzungsgebühr enthaltene Produkte"
 
 #: sunshine-session-fees/shortcode.php:51
-#, fuzzy
-#| msgid "Invalid reset password URL"
 msgid "Invalid session fee URL"
-msgstr "Ungültige URL zum Zurücksetzen des Passworts"
+msgstr "Ungültige URL für Sitzungsgebühren"
 
 #: sunshine-session-fees/shortcode.php:97
-#, fuzzy
-#| msgid "Product Info"
 msgid "Product ID not found"
-msgstr "Produktinformationen"
+msgstr "Produkt-ID nicht gefunden"
 
 #: sunshine-session-fees/shortcode.php:111
-#, fuzzy
-#| msgid "There is a new version of %1$s available."
 msgid "No session fees available"
-msgstr "Es ist eine neue Version von %1$s verfügbar."
+msgstr "Keine Sitzungsgebühren verfügbar"
 
 #: sunshine-session-fees/templates/account/sessions.php:1
-#, fuzzy
-#| msgid "Clear Sesssions"
 msgid "Scheduled Sessions"
-msgstr "Sessions löschen"
+msgstr "Geplante Sitzungen"
 
 #: sunshine-session-fees/templates/session-fee.php:26
 #: sunshine-session-fees/templates/session-fees.php:8

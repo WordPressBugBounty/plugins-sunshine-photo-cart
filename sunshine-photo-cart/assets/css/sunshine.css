@@ -528,7 +528,7 @@ body.sunshine--modal--open { position: relative; overflow: hidden; }
 }
 
 #sunshine--modal--content { background: #FFF; color: #000; max-height: 80vh; width: 100%; padding: 40px 70px; border-radius: var(--sunshine--border-radius); overflow-y: scroll; box-sizing: border-box; position: relative; }
-#sunshine--modal--contentx * { color: var(--sunshine--dark); }
+#sunshine--modal--content a { color: var(--sunshine--dark); }
 
 #sunshine--modal.sunshine--loading { height: 400px; }
 #sunshine--modal--error { background: red; color: #FFF; padding: 100px; text-align: center; }

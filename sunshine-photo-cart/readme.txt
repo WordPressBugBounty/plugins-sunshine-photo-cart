@@ -6,7 +6,7 @@ Tags: client photo gallery, sell photos, client galleries, client proofing, phot
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 6.7.1
-Stable tag: 3.4.5
+Stable tag: 3.4.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,11 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 11. Admin: Create a gallery and add images
 
 == Changelog ==
+
+= 3.4.6 =
+* Add: Ability to disable watermarks during drag/drop image upload process
+* Update: Delete custom Sunshine gallery image folders after all it's images have been deleted
+* Fix: Not showing password reset screen when disable signup is enabled
 
 = 3.4.5 =
 * Fix: 100% discounts not applying to tax due to recent change that has been reverted

@@ -6,10 +6,8 @@
 
 class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
-	private $square; // Square instance to do interact with API
 	private $total    = 0;
 	private $currency = 'USD';
-	private $accessToken;  // Use this to store and use the access token throughout the class
 	private $environmentUrl; // 'https://connect.squareup.com' or 'https://connect.squareupsandbox.com' based on mode
 
 	public function init() {

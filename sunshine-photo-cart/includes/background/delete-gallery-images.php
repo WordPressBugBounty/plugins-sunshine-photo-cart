@@ -34,7 +34,31 @@ class SPC_Background_Delete_Gallery_Images extends SPC_Background_Process {
 
 		parent::complete();
 
-		// Show notice to user or perform some other arbitrary task...
+		// Delete the holding folder as well.
+
+		$upload_dir  = wp_upload_dir();
+		$folder_path = $upload_dir['basedir'] . '/sunshine';
+		$dir         = opendir( $folder_path );
+
+		// Loop through each item in the directory
+		while ( ( $sub_folder = readdir( $dir ) ) !== false ) {
+			// Skip '.' and '..' directories
+			if ( $sub_folder !== '.' && $sub_folder !== '..' ) {
+				$sub_folder_path = $folder_path . DIRECTORY_SEPARATOR . $sub_folder;
+
+				// Check if it's a directory
+				if ( is_dir( $sub_folder_path ) && ctype_digit( $sub_folder ) ) {
+					// Check if the subfolder is now empty and delete it
+					if ( count( scandir( $sub_folder_path ) ) === 2 ) { // 2 means only '.' and '..' exist
+						rmdir( $sub_folder_path );
+					}
+				}
+			}
+		}
+
+		// Close the directory
+		closedir( $dir );
+
 	}
 
 }

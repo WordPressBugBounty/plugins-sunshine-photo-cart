@@ -346,7 +346,17 @@ function sunshine_meta_gallery_images_display() {
 			<div class="sunshine-drag-drop-inside">
 				<p class="drag-drop-info">
 					<span class="no-drag-drop"><?php _e( 'Drop files here', 'sunshine-photo-cart' ); ?> or </span><input id="plupload-browse-button" type="button" value="<?php esc_attr_e( 'Select Files from Computer', 'sunshine-photo-cart' ); ?>" class="button" />
-					<br /><span class="recommend-size"><?php echo sprintf( __( 'Recommend image size larger than %s', 'sunshine-photo-cart' ), sunshine_get_large_dimension( 'w' ) . ' &times; ' . sunshine_get_large_dimension( 'h' ) ); ?></span>
+					<br /><span class="recommend-size">
+						<?php echo sprintf( __( 'Images must be larger than %s', 'sunshine-photo-cart' ), sunshine_get_large_dimension( 'w' ) . ' &times; ' . sunshine_get_large_dimension( 'h' ) ); ?>
+					<?php if ( SPC()->get_option( 'watermark_image' ) ) { ?>
+						<br />
+						<label class="sunshine-switch small">
+						  <input type="checkbox" name="watermark" checked />
+						  <span class="sunshine-switch-slider small"></span>
+						</label>
+						<?php esc_html_e( 'Watermark images', 'sunshine-photo-cart' ); ?>
+					<?php } ?>
+					</span>
 				</p>
 				<hr />
 				<?php
@@ -759,6 +769,7 @@ function sunshine_meta_gallery_images_display() {
 				'security'   => wp_create_nonce( 'sunshine_gallery_upload' ),
 				'action'     => 'sunshine_gallery_upload',            // the ajax action name
 				'gallery_id' => $post->ID,
+				'watermark'  => true,
 			),
 		);
 		?>
@@ -766,6 +777,16 @@ function sunshine_meta_gallery_images_display() {
 		// create the uploader and pass the config from above
 		var uploader = new plupload.Uploader(<?php echo json_encode( $plupload_init ); ?>);
 		uploader.init();
+
+		// ON watermark setting change.
+		//uploader.settings.multipart_params.watermark = false;
+		$( 'input[name="watermark"]' ).change(function () {
+			if (!$(this).prop('checked')) {
+				uploader.settings.multipart_params.watermark = false;
+			} else {
+				uploader.settings.multipart_params.watermark = true;
+			}
+		});
 
 		// checks if browser supports drag and drop upload, makes some css adjustments if necessary
 		uploader.bind('Init', function(up){
@@ -1041,12 +1062,12 @@ function sunshine_gallery_admin_ajax_upload() {
 
 	// Only add images to the gallery as attachment, otherwise we just upload the file into the folder.
 	if ( strpos( $file_upload['type'], 'image' ) !== false ) {
-		sunshine_insert_gallery_image( $file_upload['file'], $post_parent_id );
+		sunshine_insert_gallery_image( $file_upload['file'], $post_parent_id, 'json', $_POST['watermark'] );
 	}
 
 }
 
-function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json' ) {
+function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json', $watermark = '' ) {
 
 	$file_type = wp_check_filetype( $file_path );
 	$file_name = basename( $file_path );
@@ -1129,13 +1150,12 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 
 		$attachment_meta_data = wp_update_attachment_metadata( $attachment_id, $attachment_image_meta );
 
-		do_action( 'sunshine_after_image_process', $attachment_id, $file_path );
+		do_action( 'sunshine_after_image_process', $attachment_id, $file_path, $watermark );
 
 		if ( 'json' === $result ) {
 			$return['image_id']   = $attachment_id;
 			$return['file_name']  = $file_name;
 			$return['image_html'] = sunshine_admin_gallery_image_thumbnail( $attachment_id, false );
-			sunshine_log( $attachment_meta_data );
 			wp_send_json_success( $return );
 		} else {
 			return $attachment_id;
