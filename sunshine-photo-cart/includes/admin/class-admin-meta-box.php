@@ -497,8 +497,8 @@ class Sunshine_Admin_Meta_Boxes {
 				}
 				$html .= '</select> ';
 				$html .= '
-					<script type="text/javascript">jQuery(function () {
-
+					<script type="text/javascript">
+					jQuery(function () {
 						jQuery("#' . esc_js( $field['id'] ) . '").select2({
 							width: "350px",
 							placeholder: "' . esc_js( $field['placeholder'] ) . '",
@@ -520,8 +520,8 @@ class Sunshine_Admin_Meta_Boxes {
 					            }
 					        },
 					        minimumInputLength: 3
-							});
 						});
+					});
 					</script>';
 				break;
 
@@ -977,33 +977,48 @@ class Sunshine_Admin_Meta_Boxes {
 		$search = sanitize_text_field( $_GET['search'] );
 
 		$args  = array(
-			'search'     => "*{$search}*",
-			'number'     => -1,
-			'meta_query' => array(
-				'relation' => 'OR',
-				array(
-					'key'     => 'first_name',
-					'value'   => $search,
-					'compare' => 'LIKE',
-				),
-				array(
-					'key'     => 'last_name',
-					'value'   => $search,
-					'compare' => 'LIKE',
-				),
+			'search'         => "*{$search}*",
+			'search_columns' => array(
+				'user_login',
+				'user_nicename',
+				'user_email',
+				'user_url',
 			),
+			'number'         => -1,
 		);
 		$users = sunshine_get_customers( $args );
+
+		$meta_search_customers = sunshine_get_customers(
+			array(
+				'meta_query' => array(
+					'relation' => 'OR',
+					array(
+						'key'     => 'first_name',
+						'value'   => $search,
+						'compare' => 'LIKE',
+					),
+					array(
+						'key'     => 'last_name',
+						'value'   => $search,
+						'compare' => 'LIKE',
+					),
+				),
+			)
+		);
+		if ( ! empty( $meta_search_customers ) ) {
+			$users = array_merge( $users, $meta_search_customers );
+		}
 
 		$data = array();
 
 		if ( ! empty( $users ) ) {
 			foreach ( $users as $user ) {
-				$data[] = array(
+				$data[ $user->get_id() ] = array(
 					'id'   => $user->get_id(),
 					'text' => $user->get_name() . ' (' . $user->get_email() . ')',
 				);
 			}
+			$data = array_values( $data ); // Reset to default array as user id as key seems to break select2.
 		}
 
 		echo json_encode( $data );

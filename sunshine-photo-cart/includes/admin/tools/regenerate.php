@@ -196,8 +196,6 @@ class SPC_Tool_Regenerate extends SPC_Tool {
 			$watermark = 1; // If no watermark setting is there, assume we want it to be watermarked and current settings will dictate if that happens.
 		}
 
-		sunshine_log( 'Watermark on regen for ' . $image_id . ': ' . $watermark );
-
 		do_action( 'sunshine_after_image_process', $image_id, $file_path, $watermark );
 		wp_update_attachment_metadata( $image_id, $new_metadata );
 

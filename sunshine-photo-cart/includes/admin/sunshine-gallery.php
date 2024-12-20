@@ -883,12 +883,15 @@ function sunshine_meta_gallery_images_display() {
 			$( '#sunshine-gallery-images-processing div.status' ).html( 'Uploading <span class="processed">0</span> of <span class="total-files">' + images_to_upload + '</span> files...<span class="current-file"></span>' );
 			$( '#sunshine-gallery-images-processing' ).show();
 
+			var watermark = $( 'input[name="watermark"]' ).prop( 'checked' );
+
 			for ( i = 1; i <= images_to_upload; i++ ) {
 				var data = {
 					'action': 'sunshine_gallery_import',
 					'gallery_id': <?php echo esc_js( $post->ID ); ?>,
 					'dir': $( 'select[name="images_directory"] option:selected' ).val(),
-					'item_number': i
+					'item_number': i,
+					'watermark': ( watermark ) ? 1 : 0
 				};
 				$.postq( 'sunshinegalleryimport', ajaxurl, data, function(response) {
 					if ( response.success === true ) {
@@ -899,7 +902,7 @@ function sunshine_meta_gallery_images_display() {
 							$( '#sunshine-gallery-images ul#files' ).append(
 								$('<li/>', {
 									'id': 'image-' + response.data.image_id,
-									html: response.file_name
+									html: response.data.file_name
 								})
 							);
 						}
@@ -1147,9 +1150,7 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 		}
 		add_post_meta( $attachment_id, 'created_timestamp', $created_timestamp );
 		add_post_meta( $attachment_id, 'sunshine_file_name', $file_name );
-		sunshine_log( 'Watermark: ' . $watermark );
 		$apply_watermark = ( ! empty( $watermark ) ) ? 1 : 0;
-		sunshine_log( 'Apply Watermark: ' . $apply_watermark );
 		add_post_meta( $attachment_id, 'sunshine_watermark', $apply_watermark );
 
 		$attachment_meta_data = wp_update_attachment_metadata( $attachment_id, $attachment_image_meta );
@@ -1419,6 +1420,7 @@ function sunshine_ajax_gallery_import() {
 	$gallery     = sunshine_get_gallery( $gallery_id );
 	$item_number = intval( $_POST['item_number'] );
 	$dir         = sanitize_text_field( $_POST['dir'] );
+	$watermark   = ! empty( $_POST['watermark'] ) ? 1 : 0;
 
 	// Check if the image already exists in the gallery
 	$existing_file_names = array();
@@ -1469,7 +1471,7 @@ function sunshine_ajax_gallery_import() {
 	@ chmod( $new_file_path, $perms );
 	$url = $upload_dir['url'] . '/' . $new_file_name;
 
-	sunshine_insert_gallery_image( $new_file_path, $gallery_id );
+	sunshine_insert_gallery_image( $new_file_path, $gallery_id, 'json', $watermark );
 
 }
 

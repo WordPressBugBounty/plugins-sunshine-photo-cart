@@ -137,6 +137,10 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 
 					add_filter( 'option_page_capability_sunshine_' . $data['id'], array( $this, 'options_capability' ) );
 
+					if ( empty( $data['fields'] ) ) {
+						continue;
+					}
+
 					foreach ( $data['fields'] as $field ) {
 
 						// Validation callback for field
@@ -228,12 +232,12 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 				case 'text':
 				case 'password':
 				case 'email':
-					$html .= '<input id="' . esc_attr( $field['id'] ) . '" type="' . $field['type'] . '" name="' . esc_attr( $option_name ) . '" placeholder="' . esc_attr( $field['placeholder'] ) . '" value="' . esc_attr( $option_value ) . '" ' . ( ( $field['required'] ) ? 'required' : '' ) . ' />' . "\n";
+					$html             .= '<input id="' . esc_attr( $field['id'] ) . '" type="' . $field['type'] . '" name="' . esc_attr( $option_name ) . '" placeholder="' . esc_attr( $field['placeholder'] ) . '" value="' . esc_attr( $option_value ) . '" ' . ( ( $field['required'] ) ? 'required' : '' ) . ' />' . "\n";
 					$this->show_submit = true;
 					break;
 
 				case 'number':
-					$html .= '<input id="' . esc_attr( $field['id'] ) . '" type="' . $field['type'] . '" name="' . esc_attr( $option_name ) . '" placeholder="' . esc_attr( $field['placeholder'] ) . '" min="' . esc_attr( $field['min'] ) . '" max="' . esc_attr( $field['max'] ) . '" step="' . esc_attr( $field['step'] ) . '" value="' . esc_attr( $option_value ) . '" ' . ( ( $field['required'] ) ? 'required' : '' ) . ' />' . "\n";
+					$html             .= '<input id="' . esc_attr( $field['id'] ) . '" type="' . $field['type'] . '" name="' . esc_attr( $option_name ) . '" placeholder="' . esc_attr( $field['placeholder'] ) . '" min="' . esc_attr( $field['min'] ) . '" max="' . esc_attr( $field['max'] ) . '" step="' . esc_attr( $field['step'] ) . '" value="' . esc_attr( $option_value ) . '" ' . ( ( $field['required'] ) ? 'required' : '' ) . ' />' . "\n";
 					$this->show_submit = true;
 					break;
 
@@ -245,11 +249,11 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 					$set_value_function_name = 'sunshine_set_value_for_' . str_replace( '-', '_', sanitize_title_with_dashes( $field['id'] ) );
 					$html                   .= '<input id="' . esc_attr( $field['id'] ) . '" type="' . $field['type'] . '" name="' . esc_attr( $option_name ) . '" min="' . esc_attr( $field['min'] ) . '" max="' . esc_attr( $field['max'] ) . '" step="' . esc_attr( $field['step'] ) . '" value="' . esc_attr( $option_value ) . '" oninput="' . $set_value_function_name . '( value )" /> <output for="' . esc_attr( $field['id'] ) . '" id="' . esc_attr( $field['id'] ) . '-output">' . floatval( $option_value ) . '</output>' . "\n";
 					$html                   .= '<script> function ' . $set_value_function_name . '( range_value ) { document.querySelector( "#' . esc_js( $field['id'] ) . '-output" ).value = range_value; } </script>';
-					$this->show_submit = true;
+					$this->show_submit       = true;
 					break;
 
 				case 'textarea':
-					$html .= '<textarea id="' . esc_attr( $field['id'] ) . '" rows="5" cols="50" name="' . esc_attr( $option_name ) . '" placeholder="' . esc_attr( $field['placeholder'] ) . '">' . wp_kses_post( $option_value ) . '</textarea>' . "\n";
+					$html             .= '<textarea id="' . esc_attr( $field['id'] ) . '" rows="5" cols="50" name="' . esc_attr( $option_name ) . '" placeholder="' . esc_attr( $field['placeholder'] ) . '">' . wp_kses_post( $option_value ) . '</textarea>' . "\n";
 					$this->show_submit = true;
 					break;
 
@@ -259,8 +263,8 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 					break;
 
 				case 'checkbox':
-					$checked = '';
-					$html   .= '<input id="' . esc_attr( $field['id'] ) . '" type="' . esc_attr( $field['type'] ) . '" name="' . esc_attr( $option_name ) . '" value="1" ' . checked( $option_value, 1, false ) . '/>' . "\n";
+					$checked           = '';
+					$html             .= '<input id="' . esc_attr( $field['id'] ) . '" type="' . esc_attr( $field['type'] ) . '" name="' . esc_attr( $option_name ) . '" value="1" ' . checked( $option_value, 1, false ) . '/>' . "\n";
 					$this->show_submit = true;
 					break;
 
@@ -316,7 +320,7 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 						}
 						$html .= '</label><br />';
 					}
-					$html .= '</div>';
+					$html             .= '</div>';
 					$this->show_submit = true;
 					break;
 
@@ -357,7 +361,7 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 						$html .= '<a href="' . esc_url( get_permalink( $selected ) ) . '" target="_blank" class="button">' . __( 'View page', 'sunshine-photo-cart' ) . '</a>';
 					}
 
-					$html .= '<script type="text/javascript">jQuery(function () {
+					$html             .= '<script type="text/javascript">jQuery(function () {
                         jQuery("#' . esc_js( $field['id'] ) . '").select2({ width: "350px", placeholder: "' . esc_js( __( 'Please select a page', 'sunshine-photo-cart' ) ) . '" });
                     });</script>';
 					$this->show_submit = true;
@@ -381,14 +385,14 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 					$multiple = '';
 					if ( $field['multiple'] ) {
 						$option_name = $option_name . '[]';
-						$multiple = 'multiple="multiple"';
+						$multiple    = 'multiple="multiple"';
 					}
 					$html .= '<select ' . ( ( $field['required'] ) ? 'required="required"' : '' ) . ' name="' . esc_attr( $option_name ) . '" id="' . esc_attr( $field['id'] ) . '" ' . $multiple . '>';
-					$data = array();
+					$data  = array();
 					if ( ! empty( $option_value ) ) {
 						foreach ( $option_value as $gallery_id ) {
 							$gallery = sunshine_get_gallery( $gallery_id );
-							$html .= '<option value="' . esc_attr( $gallery_id ) . '" selected="selected">' . esc_html( $gallery->get_name() ) . '</option>';
+							$html   .= '<option value="' . esc_attr( $gallery_id ) . '" selected="selected">' . esc_html( $gallery->get_name() ) . '</option>';
 						}
 					}
 					$html .= '</select> ';
@@ -425,14 +429,14 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 					$multiple = '';
 					if ( $field['multiple'] ) {
 						$option_name = $option_name . '[]';
-						$multiple = 'multiple="multiple"';
+						$multiple    = 'multiple="multiple"';
 					}
 					$html .= '<select ' . ( ( $field['required'] ) ? 'required="required"' : '' ) . ' name="' . esc_attr( $option_name ) . '" id="' . esc_attr( $field['id'] ) . '" ' . $multiple . '>';
-					$data = array();
+					$data  = array();
 					if ( ! empty( $option_value ) ) {
 						foreach ( $option_value as $product_id ) {
 							$product = sunshine_get_product( $product_id );
-							$html .= '<option value="' . esc_attr( $product_id ) . '" selected="selected">' . esc_html( $product->get_name() ) . '</option>';
+							$html   .= '<option value="' . esc_attr( $product_id ) . '" selected="selected">' . esc_html( $product->get_name() ) . '</option>';
 						}
 					}
 					$html .= '</select> ';
@@ -466,23 +470,23 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 					break;
 
 				case 'dimensions':
-					$w = ( ! empty( $option_value['w'] ) ) ? intval( $option_value['w'] ) : '';
-					$h = ( ! empty( $option_value['h'] ) ) ? intval( $option_value['h'] ) : '';
-					$html .= '<input type="number" min="0" name="' . esc_attr( $option_name ) . '[w]" step="1" style="width: 100px;" value="' . esc_attr( $w ) . '" />px &times; <input type="number" name="' . esc_attr( $option_name ) . '[h]" min="0" step="1" style="width: 100px;" value="' . esc_attr( $h ) . '" />px';
+					$w                 = ( ! empty( $option_value['w'] ) ) ? intval( $option_value['w'] ) : '';
+					$h                 = ( ! empty( $option_value['h'] ) ) ? intval( $option_value['h'] ) : '';
+					$html             .= '<input type="number" min="0" name="' . esc_attr( $option_name ) . '[w]" step="1" style="width: 100px;" value="' . esc_attr( $w ) . '" />px &times; <input type="number" name="' . esc_attr( $option_name ) . '[h]" min="0" step="1" style="width: 100px;" value="' . esc_attr( $h ) . '" />px';
 					$this->show_submit = true;
 					break;
 
 				case 'file':
 					$html .= '<div id="' . esc_attr( $option_name ) . '_file" class="sunshine-file-preview">';
 					if ( $option_value > 0 ) {
-						$attachment_url = wp_get_attachment_url( $option_value );
+						$attachment_url  = wp_get_attachment_url( $option_value );
 						$attachment_name = get_the_title( $option_value );
-						$html .= '<a href="' . esc_url( $attachment_url ) . '" target="_blank">' . esc_html( $attachment_name ) . '</a>';
+						$html           .= '<a href="' . esc_url( $attachment_url ) . '" target="_blank">' . esc_html( $attachment_name ) . '</a>';
 					}
-					$html .= '</div>';
-					$html .= '<input id="' . esc_attr( $option_name ) . '_button" type="button" ' . ( ( ! empty( $field['media_type'] ) ) ? 'data-media_type="' . esc_attr( $field['media_type'] ) . '"' : '' ) . ' data-uploader_title="' . __( 'Upload a file', 'sunshine-photo-cart' ) . '" data-uploader_button_text="' . __( 'Select file', 'sunshine-photo-cart' ) . '" class="file_upload_button button" value="' . __( 'Upload new file', 'sunshine-photo-cart' ) . '" />' . "\n";
-					$html .= '<input id="' . esc_attr( $option_name ) . '_delete" type="button" class="file_delete_button button delete" data-field="' . esc_attr( $option_name ) . '" style="display: ' . ( ( $option_value ) ? 'inline-block' : 'none' ) . '" value="' . __( 'Remove file', 'sunshine-photo-cart' ) . '" />' . "\n";
-					$html .= '<input id="' . esc_attr( $option_name ) . '" class="file_data_field" type="hidden" name="' . esc_attr( $option_name ) . '" value="' . esc_attr( $option_value ) . '"/>' . "\n";
+					$html             .= '</div>';
+					$html             .= '<input id="' . esc_attr( $option_name ) . '_button" type="button" ' . ( ( ! empty( $field['media_type'] ) ) ? 'data-media_type="' . esc_attr( $field['media_type'] ) . '"' : '' ) . ' data-uploader_title="' . __( 'Upload a file', 'sunshine-photo-cart' ) . '" data-uploader_button_text="' . __( 'Select file', 'sunshine-photo-cart' ) . '" class="file_upload_button button" value="' . __( 'Upload new file', 'sunshine-photo-cart' ) . '" />' . "\n";
+					$html             .= '<input id="' . esc_attr( $option_name ) . '_delete" type="button" class="file_delete_button button delete" data-field="' . esc_attr( $option_name ) . '" style="display: ' . ( ( $option_value ) ? 'inline-block' : 'none' ) . '" value="' . __( 'Remove file', 'sunshine-photo-cart' ) . '" />' . "\n";
+					$html             .= '<input id="' . esc_attr( $option_name ) . '" class="file_data_field" type="hidden" name="' . esc_attr( $option_name ) . '" value="' . esc_attr( $option_value ) . '"/>' . "\n";
 					$this->show_submit = true;
 					break;
 
@@ -491,13 +495,13 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 					if ( $option_value ) {
 						$image_thumb = wp_get_attachment_image_src( $option_value, 'medium' );
 						if ( $image_thumb ) {
-							$html       .= '<img src="' . $image_thumb[0] . '" />';
+							$html .= '<img src="' . $image_thumb[0] . '" />';
 						}
 					}
-					$html .= '</div>' . "\n";
-					$html .= '<input id="' . esc_attr( $option_name ) . '_button" type="button" ' . ( ( ! empty( $field['media_type'] ) ) ? 'data-media_type="' . esc_attr( $field['media_type'] ) . '"' : '' ) . ' data-uploader_title="' . __( 'Upload an image', 'sunshine-photo-cart' ) . '" data-uploader_button_text="' . __( 'Use image', 'sunshine-photo-cart' ) . '" class="image_upload_button button" value="' . __( 'Upload new image', 'sunshine-photo-cart' ) . '" />' . "\n";
-					$html .= '<input id="' . esc_attr( $option_name ) . '_delete" type="button" class="image_delete_button button delete" data-field="' . esc_attr( $option_name ) . '" style="display: ' . ( ( $option_value ) ? 'inline-block' : 'none' ) . '" value="' . __( 'Remove image', 'sunshine-photo-cart' ) . '" />' . "\n";
-					$html .= '<input id="' . esc_attr( $option_name ) . '" class="image_data_field" type="hidden" name="' . esc_attr( $option_name ) . '" value="' . esc_attr( $option_value ) . '"/>' . "\n";
+					$html             .= '</div>' . "\n";
+					$html             .= '<input id="' . esc_attr( $option_name ) . '_button" type="button" ' . ( ( ! empty( $field['media_type'] ) ) ? 'data-media_type="' . esc_attr( $field['media_type'] ) . '"' : '' ) . ' data-uploader_title="' . __( 'Upload an image', 'sunshine-photo-cart' ) . '" data-uploader_button_text="' . __( 'Use image', 'sunshine-photo-cart' ) . '" class="image_upload_button button" value="' . __( 'Upload new image', 'sunshine-photo-cart' ) . '" />' . "\n";
+					$html             .= '<input id="' . esc_attr( $option_name ) . '_delete" type="button" class="image_delete_button button delete" data-field="' . esc_attr( $option_name ) . '" style="display: ' . ( ( $option_value ) ? 'inline-block' : 'none' ) . '" value="' . __( 'Remove image', 'sunshine-photo-cart' ) . '" />' . "\n";
+					$html             .= '<input id="' . esc_attr( $option_name ) . '" class="image_data_field" type="hidden" name="' . esc_attr( $option_name ) . '" value="' . esc_attr( $option_value ) . '"/>' . "\n";
 					$this->show_submit = true;
 					break;
 
@@ -523,11 +527,11 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 					$html .= '<input id="' . esc_attr( $field['id'] ) . '" size="40" type="text" name="' . esc_attr( $option_name ) . '" placeholder="' . esc_attr( $field['placeholder'] ) . '" value="' . esc_attr( $option_value ) . '" ' . ( ( $field['required'] ) ? 'required' : '' ) . ' ' . ( ( isset( $field['status'] ) && $field['status'] == 'valid' ) ? 'readonly' : '' ) . ' />' . "\n";
 					if ( $option_value && isset( $field['status'] ) && $field['status'] == 'valid' ) {
 						$base_url = admin_url( 'admin.php?page=sunshine&section=license' );
-						$url = wp_nonce_url( $base_url, 'sunshine_addon_deactivate_' . $field['addon'], 'sunshine_addon_deactivate',  );
-						$url = add_query_arg( 'addon', $field['addon'], $url );
-						$html .= '<a href="' . esc_url( $url ) . '" class="button">' . __( 'Deactivate', 'sunshine-photo-cart' ) . '</a>';
-						$url = add_query_arg( 'check_license', $field['addon'], $base_url );
-						$html .= ' <a href="' . esc_url( $url ) . '" class="button">' . __( 'Refresh license', 'sunshine-photo-cart' ) . '</a>';
+						$url      = wp_nonce_url( $base_url, 'sunshine_addon_deactivate_' . $field['addon'], 'sunshine_addon_deactivate', );
+						$url      = add_query_arg( 'addon', $field['addon'], $url );
+						$html    .= '<a href="' . esc_url( $url ) . '" class="button">' . __( 'Deactivate', 'sunshine-photo-cart' ) . '</a>';
+						$url      = add_query_arg( 'check_license', $field['addon'], $base_url );
+						$html    .= ' <a href="' . esc_url( $url ) . '" class="button">' . __( 'Refresh license', 'sunshine-photo-cart' ) . '</a>';
 					} else {
 						$html .= '<button class="button">' . __( 'Activate', 'sunshine-photo-cart' ) . '</button>';
 					}
