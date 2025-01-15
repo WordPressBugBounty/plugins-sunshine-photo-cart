@@ -88,9 +88,12 @@ class SPC_Cart_Item {
 			$this->qty = intval( $item['qty'] );
 		}
 
+		/*
+		We do not want to get re-used price anymore in case it has changed since being added to cart
 		if ( ! empty( $item['price'] ) ) {
 			$this->price = floatval( $item['price'] );
 		}
+		*/
 
 		if ( ! empty( $item['comments'] ) ) {
 			$this->comments = $item['comments'];

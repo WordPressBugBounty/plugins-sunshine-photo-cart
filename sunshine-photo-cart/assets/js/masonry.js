@@ -24,28 +24,36 @@ function(t,e){"object"==typeof module&&module.exports?module.exports=e(t,require
 
 if ( sunshine_photo_cart_masonry.gallery == 1 ) {
 
-    var $sunshine_galleries_masonry = jQuery( '#sunshine--gallery-items' ).imagesLoaded( function() {
-        $sunshine_galleries_masonry.masonry({
-            itemSelector: '.sunshine--gallery-item',
-            columnWidth: '.sunshine--gallery-item',
-            percentPosition: true,
-            gutter: 5,
-            stagger: 30
-        });
-    });
+	var $sunshine_galleries_masonry = jQuery( '#sunshine--gallery-items.sunshine--layout--masonry' ); 
+	$sunshine_galleries_masonry.each( function() {
+		var $this = jQuery( this );
+		$this.imagesLoaded( function() {
+			$this.masonry({
+				itemSelector: '.sunshine--gallery-item',
+				columnWidth: '.sunshine--gallery-item',
+				percentPosition: true,
+				gutter: 5,
+				stagger: 30
+			});
+		});
+	});
 
 }
 
 if ( sunshine_photo_cart_masonry.image == 1 ) {
 
-    var $sunshine_images_masonry = jQuery( '#sunshine--image-items' ).imagesLoaded( function() {
-        $sunshine_images_masonry.masonry({
-              itemSelector: '.sunshine--image-item',
-              columnWidth: '.sunshine--image-item',
-              percentPosition: true,
-              gutter: 5,
-              stagger: 30
-        });
-    });
+	var $sunshine_images_masonry = jQuery( '#sunshine--image-items.sunshine--layout--masonry' ); 
+	$sunshine_images_masonry.each( function() {
+		var $this = jQuery( this );
+		$this.imagesLoaded( function() {
+			$this.masonry({
+				itemSelector: '.sunshine--image-item',
+				columnWidth: '.sunshine--image-item',
+				percentPosition: true,
+				gutter: 5,
+				stagger: 30
+			  });
+		});
+	});
 
 }

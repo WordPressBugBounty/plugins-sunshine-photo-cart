@@ -7,16 +7,16 @@ class SPC_Email_Customer_Receipt extends SPC_Email {
 		$this->class       = get_class( $this );
 		$this->name        = __( 'Customer Order Receipt', 'sunshine-photo-cart' );
 		$this->description = __( 'Email receipt sent to customer after successful order', 'sunshine-photo-cart' );
-		$this->subject           = sprintf( __( 'Receipt for %s from %s', 'sunshine-photo-cart' ), '[order_name]', '[sitename]' );
+		$this->subject     = sprintf( __( 'Receipt for %1$s from %2$s', 'sunshine-photo-cart' ), '[order_name]', '[sitename]' );
 
 		$this->add_search_replace(
 			array(
-				'order_id'   => '',
+				'order_id'     => '',
 				'order_number' => '',
-				'order_name' => '',
-				'first_name' => '',
-				'last_name'  => '',
-				'status'     => '',
+				'order_name'   => '',
+				'first_name'   => '',
+				'last_name'    => '',
+				'status'       => '',
 			)
 		);
 
@@ -40,13 +40,14 @@ class SPC_Email_Customer_Receipt extends SPC_Email {
 			$this->set_args( $args );
 
 			$search_replace = array(
-				'order_id'   => $order->get_id(),
+				'order_id'     => $order->get_id(),
 				'order_number' => $order->get_order_number(),
-				'order_name' => $order->get_name(),
-				'first_name' => $order->get_customer_first_name(),
-				'last_name'  => $order->get_customer_last_name(),
-				'status'     => $order->get_status_name(),
+				'order_name'   => $order->get_name(),
+				'first_name'   => $order->get_customer_first_name(),
+				'last_name'    => $order->get_customer_last_name(),
+				'status'       => $order->get_status_name(),
 			);
+			$search_replace = apply_filters( 'sunshine_order_email_search_replace', $search_replace, $order );
 			$this->add_search_replace( $search_replace );
 
 			// Send email

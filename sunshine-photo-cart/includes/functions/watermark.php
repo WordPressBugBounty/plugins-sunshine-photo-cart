@@ -126,8 +126,8 @@ function sunshine_watermark_image( $attachment_id, $metadata = array(), $passed_
 
 // Add the watermark
 add_action( 'sunshine_after_image_process', 'sunshine_watermark_media_upload', 10, 3 );
-function sunshine_watermark_media_upload( $attachment_id, $file_path, $watermark = '' ) {
-	if ( ! SPC()->get_option( 'watermark_image' ) || $watermark === 0 || $watermark === '0' ) {
+function sunshine_watermark_media_upload( $attachment_id, $file_path, $watermark = true ) {
+	if ( ! SPC()->get_option( 'watermark_image' ) || $watermark === 0 || $watermark === '0' || $watermark === false ) {
 		SPC()->log( 'Not watermarking ' . $attachment_id );
 		return;
 	}

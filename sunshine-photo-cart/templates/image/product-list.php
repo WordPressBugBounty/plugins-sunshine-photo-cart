@@ -7,6 +7,9 @@ foreach ( $categories as $category ) {
 
 		<div class="sunshine--image--add-to-cart--category" id="sunshine--image--add-to-cart--category-<?php echo $category->get_id(); ?>" aria-selected="true">
 			<div class="sunshine--image--add-to-cart--category-name"><?php echo $category->get_name(); ?></div>
+			<?php if ( $category->get_description() ) { ?>
+				<div class="sunshine--image--add-to-cart--category-description"><?php echo $category->get_description(); ?></div>
+			<?php } ?>
 			<div class="sunshine--image--add-to-cart--product-list">
 				<?php
 				foreach ( $products as $product ) {

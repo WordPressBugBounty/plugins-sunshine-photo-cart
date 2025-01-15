@@ -24,3 +24,20 @@ function sunshine_photon_skip_image( $valid, $url, $tag ) {
 	}
 	return $valid;
 }
+
+// EWWW bypass optimizer if in a sunshine folder.
+add_filter( 'ewww_image_optimizer_bypass', 'sunshine_ewww_image_optimizer_bypass', 10, 2 );
+function sunshine_ewww_image_optimizer_bypass( $bypass, $file ) {
+	if ( str_contains( $file, 'uploads/sunshine/' ) ) {
+		return true;
+	}
+	return $bypass;
+}
+
+add_filter( 'ewww_image_optimizer_resize_dimensions', 'sunshine_ewww_image_optimizer_resize_dimensions', 10, 2 );
+function sunshine_ewww_image_optimizer_resize_dimensions( $size, $file ) {
+	if ( str_contains( $file, 'uploads/sunshine/' ) ) {
+		return array( 0, 0 );
+	}
+	return $size;
+}

@@ -197,10 +197,10 @@ class SPC_Cart {
 			}
 		}
 
-		$final_contents   = apply_filters( 'sunshine_cart_items', $final_contents, $this );
+		$final_contents   = (array) apply_filters( 'sunshine_cart_items', $final_contents, $this );
 		$this->cart_items = $final_contents;
 
-		return (array) $final_contents;
+		return $final_contents;
 	}
 
 	public function add_item( $product_id, $image_id = 0, $gallery_id = '', $price_level = '', $options = array(), $qty = 1, $comments = '', $overwrite = false, $meta = array() ) {

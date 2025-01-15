@@ -1,4 +1,7 @@
 <div class="sunshine--store--product-item">
+	<?php if ( $product->has_image() ) { ?>
+		<div class="sunshine--store--product-item--image"><?php echo $product->get_image_html(); ?></div>
+	<?php } ?>
 	<div class="sunshine--store--product-item--name"><?php echo $product->get_name(); ?></div>
 	<div class="sunshine--store--product-item--price"><?php echo $product->get_price_formatted(); ?></div>
 	<div class="sunshine--store--product-item--action">

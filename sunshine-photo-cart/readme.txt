@@ -6,7 +6,7 @@ Tags: client photo gallery, sell photos, client galleries, client proofing, phot
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 6.7.1
-Stable tag: 3.4.7.1
+Stable tag: 3.4.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,18 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 11. Admin: Create a gallery and add images
 
 == Changelog ==
+
+= 3.4.8 =
+* Add: Product category descriptions shown in image add to cart modal
+* Add: Filter 'sunshine_order_email_search_replace' to allow custom checkout fields to order emails
+* Add: Automatically ignore optimization in EWWW Image Optimizer plugin for all Sunshine gallery images to prevent issues
+* Update: Prices in cart always use most recent product pricing instead of when added to cart
+* Update: Include product photo in Store if exists
+* Fix: Button styling dark on dark in packages modal
+* Fix: Default watermark state to true so it applies in other add-ons/areas as expected after adding new optional watermark setting
+* Fix: Image/folder deletion on FTP import when successful if option is set
+* Fix: Don't redefine DONOTCACHEPAGE if already set
+* Fix: Apply masonry properly to all instances of a gallery list on a single page
 
 = 3.4.7.1 =
 * Fix: User search bugs introduced in last update

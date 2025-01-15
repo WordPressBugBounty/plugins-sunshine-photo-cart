@@ -776,7 +776,6 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 	}
 
-
 	function webhooks() {
 
 		if ( ! isset( $_GET['sunshine_stripe_webhook'] ) ) {

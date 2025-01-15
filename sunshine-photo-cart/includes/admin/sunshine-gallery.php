@@ -1070,7 +1070,7 @@ function sunshine_gallery_admin_ajax_upload() {
 
 }
 
-function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json', $watermark = '' ) {
+function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json', $watermark = true ) {
 
 	$file_type = wp_check_filetype( $file_path );
 	$file_name = basename( $file_path );
@@ -1157,21 +1157,22 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 
 		do_action( 'sunshine_after_image_process', $attachment_id, $file_path, $apply_watermark );
 
-		if ( 'json' === $result ) {
-			$return['image_id']   = $attachment_id;
-			$return['file_name']  = $file_name;
-			$return['image_html'] = sunshine_admin_gallery_image_thumbnail( $attachment_id, false );
+		$return = array(
+			'image_id'   => $attachment_id,
+			'file_name'  => $file_name,
+			'image_html' => sunshine_admin_gallery_image_thumbnail( $attachment_id, false ),
+		);
+
+		if ( 'data' === $result ) {
+			return $return;
+		} elseif ( 'json' === $result ) {
 			wp_send_json_success( $return );
 		} else {
 			return $attachment_id;
 		}
 	}
 
-	if ( 'json' === $result ) {
-		wp_send_json_error();
-	} else {
-		return $attachment_id;
-	}
+	return false;
 
 }
 
@@ -1471,7 +1472,24 @@ function sunshine_ajax_gallery_import() {
 	@ chmod( $new_file_path, $perms );
 	$url = $upload_dir['url'] . '/' . $new_file_name;
 
-	sunshine_insert_gallery_image( $new_file_path, $gallery_id, 'json', $watermark );
+	$data = sunshine_insert_gallery_image( $new_file_path, $gallery_id, 'data', $watermark );
+
+	if ( ! empty( $data ) && SPC()->get_option( 'delete_images_folder' ) && $file_path === end( $images ) ) {
+
+		foreach ( $images as $image_file_path ) {
+			@unlink( $image_file_path ); // Delete the file
+			sunshine_log( 'Deleting image after successful import from FTP folder: ' . $image_file_path );
+			SPC()->log( 'Deleting image after successful import from FTP folder: ' . $image_file_path );
+		}
+
+		if ( count( scandir( $folder ) ) == 2 ) { // scandir returns . and ..
+			// Delete the folder.
+			rmdir( $folder );
+			SPC()->log( 'Deleting folder after successful import from FTP folder: ' . $folder );
+		}
+	}
+
+	wp_send_json_success( $data );
 
 }
 

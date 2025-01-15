@@ -1126,15 +1126,15 @@ class SPC_Frontend {
 	}
 
 	public function no_cache() {
-		if ( is_sunshine() ) {
+		if ( is_sunshine() && ! defined( 'DONOTCACHEPAGE' ) ) {
 			define( 'DONOTCACHEPAGE', true );
 		}
 	}
 
 	public function post_thumbnail_size( $size, $post_id ) {
-		// Check if the post type is the one you want to target
+		// Check if the post type is the one you want to target.
 		if ( get_post_type( $post_id ) === 'sunshine-gallery' ) {
-			$size = 'sunshine-large'; // Replace with your desired image size
+			$size = 'sunshine-large'; // Replace with your desired image size.
 		}
 
 		return $size;

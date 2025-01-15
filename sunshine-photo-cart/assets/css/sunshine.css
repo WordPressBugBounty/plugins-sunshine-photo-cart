@@ -528,7 +528,7 @@ body.sunshine--modal--open { position: relative; overflow: hidden; }
 }
 
 #sunshine--modal--content { background: #FFF; color: #000; max-height: 80vh; width: 100%; padding: 40px 70px; border-radius: var(--sunshine--border-radius); overflow-y: scroll; box-sizing: border-box; position: relative; }
-#sunshine--modal--content a { color: var(--sunshine--dark); }
+#sunshine--modal--content a:not(.sunshine--button) { color: var(--sunshine--dark); }
 
 #sunshine--modal.sunshine--loading { height: 400px; }
 #sunshine--modal--error { background: red; color: #FFF; padding: 100px; text-align: center; }
@@ -582,6 +582,7 @@ body.sunshine--modal--open { position: relative; overflow: hidden; }
 
 .sunshine--image--add-to-cart--category { margin-top: 40px; }
 .sunshine--image--add-to-cart--category-name { color: var(--sunshine--dark); font-size: 15px; font-weight: bold; text-transform: uppercase; }
+.sunshine--image--add-to-cart--category-description { color: var(--sunshine--dark-gray); font-size: 15px; padding: 10px 0; }
 .sunshine--image--add-to-cart--product-list { position: relative; border-bottom: 1px solid var(--sunshine--light-gray); }
 .sunshine--image--add-to-cart--product-list table { border-collapse: collapse; border: none; width: 100%; }
 .sunshine--image--add-to-cart--product-list .sunshine--image--add-to-cart--product-item { cursor: pointer; display: flex; gap: 20px; justify-content: space-between; align-items: center; border-top: 1px solid var(--sunshine--light-gray); padding: 10px 0; font-size: 20px; }
@@ -790,6 +791,7 @@ button#sunshine--product--details--close:hover { color: var(--sunshine--dark); }
 .sunshine--store--category--description { margin: 0 0 10px 0; }
 .sunshine--store--category--products { position: relative; border-bottom: 1px solid var(--sunshine--light-gray); }
 .sunshine--store--product-item { display: flex; gap: 20px; justify-content: space-between; align-items: center; border-top: 1px solid var(--sunshine--light-gray); padding: 10px 0; font-size: 20px; }
+.sunshine--store--product-item--image img { max-width: 50px; height: auto; }
 .sunshine--store--product-item--name { flex-basis: 50%; flex-grow: 10; }
 .sunshine--store--product-item--name img { max-width: 50px; height: auto; vertical-align: middle; margin-right: 20px; }
 .sunshine--store--product-item--action { text-align: right; white-space: nowrap; }
