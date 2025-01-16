@@ -6,7 +6,7 @@ Tags: client photo gallery, sell photos, client galleries, client proofing, phot
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 6.7.1
-Stable tag: 3.4.8
+Stable tag: 3.4.8.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,9 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 11. Admin: Create a gallery and add images
 
 == Changelog ==
+
+= 3.4.8.1 =
+* Fix: Rename hook back to "sunshine_checkout_create_order" to fix compatibility with various add-ons
 
 = 3.4.8 =
 * Add: Product category descriptions shown in image add to cart modal

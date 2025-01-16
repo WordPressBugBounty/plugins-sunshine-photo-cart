@@ -1935,7 +1935,7 @@ class SPC_Cart {
 				SPC()->cart->empty_cart();
 			}
 
-			do_action( 'sunshine_create_order', $order );
+			do_action( 'sunshine_checkout_create_order', $order, $data );
 
 			return $order;
 		}

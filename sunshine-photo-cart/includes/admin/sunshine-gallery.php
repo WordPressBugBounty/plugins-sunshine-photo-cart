@@ -280,7 +280,7 @@ function sunshine_galleries_columns_content( $column, $post_id ) {
 	}
 }
 
-function ajax_load_edit_image_modal() {
+function sunshine_ajax_load_edit_image_modal() {
 	// Check if the attachment ID is passed
 	if ( isset( $_POST['attachment_id'] ) && ! empty( $_POST['attachment_id'] ) ) {
 		$attachment_id = intval( $_POST['attachment_id'] );
@@ -303,10 +303,10 @@ function ajax_load_edit_image_modal() {
 	}
 	wp_die( 'Invalid attachment ID' );
 }
-add_action( 'wp_ajax_load_edit_image_modal', 'ajax_load_edit_image_modal' );
+add_action( 'wp_ajax_load_edit_image_modal', 'sunshine_ajax_load_edit_image_modal' );
 
 // Handle the custom AJAX request to save the attachment fields
-function save_attachment_fields_via_ajax() {
+function sunshine_save_attachment_fields_via_ajax() {
 	// Verify required data
 	if ( isset( $_POST['form_data'] ) && isset( $_POST['attachment_id'] ) ) {
 		parse_str( $_POST['form_data'], $fields ); // Parse serialized form data
@@ -322,7 +322,7 @@ function save_attachment_fields_via_ajax() {
 	// If something is wrong, return an error response
 	wp_send_json_error();
 }
-add_action( 'wp_ajax_save_attachment_fields', 'save_attachment_fields_via_ajax' );
+add_action( 'wp_ajax_save_attachment_fields', 'sunshine_save_attachment_fields_via_ajax' );
 
 
 /* Custom Meta Box Field Display for gallery image upload */
