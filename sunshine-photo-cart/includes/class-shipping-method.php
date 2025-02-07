@@ -129,14 +129,14 @@ class SPC_Shipping_Method {
 	/**
 	 * Every shipping method will at least have these options
 	 *
-	 * @param array $fields Array of existing option fields data.
+	 * @param array  $fields Array of existing option fields data.
 	 * @param string $instance_id Unique Instance ID for this method.
 	 * @return void
 	 */
 	public function default_options( $fields, $instance_id ) {
 		$fields['1']  = array(
 			'id'          => $this->id . '_header_' . $instance_id,
-			'name'        => $this->name,
+			'name'        => $this->name . ' <span style="float: right; font-size: 14px; font-weight: normal; color: #999;">' . __( 'Instance ID', 'sunshine-photo-cart' ) . ': ' . $instance_id . '</span>',
 			'type'        => 'header',
 			'description' => '',
 		);
@@ -182,7 +182,7 @@ class SPC_Shipping_Method {
 	/**
 	 * Default options for this shipping method.
 	 *
-	 * @param array $options Existing options.
+	 * @param array  $options Existing options.
 	 * @param string $instance_id Unique instance ID.
 	 * @return void
 	 */
@@ -330,15 +330,14 @@ class SPC_Shipping_Method {
 				$tax_rate = SPC()->cart->get_tax_rate();
 				if ( $tax_rate ) {
 					if ( SPC()->get_option( 'price_has_tax' ) == 'yes' ) {
-						$new_total = round( $this->price / ( $tax_rate['rate'] + 1 ), 2 );
-						$this->tax = $this->price - $new_total;
+						$new_total   = round( $this->price / ( $tax_rate['rate'] + 1 ), 2 );
+						$this->tax   = $this->price - $new_total;
 						$this->price = $new_total;
 					} else {
 						$this->tax = round( $this->price * $tax_rate['rate'], 2 );
 					}
 				}
 			}
-
 		}
 
 	}

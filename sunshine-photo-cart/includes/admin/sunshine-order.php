@@ -56,32 +56,34 @@ class SPC_Admin_Order {
 
 	function order_search_join( $join ) {
 		global $pagenow, $wpdb;
-	    if ( is_admin() && $pagenow == 'edit.php' && ! empty( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-order' && ! empty( $_GET['s'] ) ) {
-	        $join .= ' LEFT JOIN ' . $wpdb->postmeta . ' AS sunshine_order_meta ON ' . $wpdb->posts . '.ID = sunshine_order_meta.post_id ';
+		if ( is_admin() && $pagenow == 'edit.php' && ! empty( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-order' && ! empty( $_GET['s'] ) ) {
+			$join .= ' LEFT JOIN ' . $wpdb->postmeta . ' AS sunshine_order_meta ON ' . $wpdb->posts . '.ID = sunshine_order_meta.post_id ';
 			$join .= ' LEFT JOIN ' . $wpdb->prefix . 'sunshine_order_items AS sunshine_order_items ON ' . $wpdb->posts . '.ID = sunshine_order_items.order_id ';
 			$join .= ' LEFT JOIN ' . $wpdb->prefix . 'sunshine_order_itemmeta AS sunshine_order_itemmeta ON sunshine_order_items.order_item_id = sunshine_order_itemmeta.order_item_id ';
-	    }
-	    return $join;
+		}
+		return $join;
 	}
 
 	function order_search_where( $where ) {
 		global $pagenow, $wpdb;
-	    if ( is_admin() && $pagenow == 'edit.php' && ! empty( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-order' && ! empty( $_GET['s'] ) ) {
-	        $where = preg_replace(
-	       "/\(\s*" . $wpdb->posts . ".post_title\s+LIKE\s*(\'[^\']+\')\s*\)/",
-	       "(" . $wpdb->posts . ".post_title LIKE $1) OR (sunshine_order_meta.meta_value LIKE $1) OR (sunshine_order_itemmeta.meta_value LIKE $1)", $where );
-	    }
-	    return $where;
+		if ( is_admin() && $pagenow == 'edit.php' && ! empty( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-order' && ! empty( $_GET['s'] ) ) {
+			$where = preg_replace(
+				'/\(\s*' . $wpdb->posts . ".post_title\s+LIKE\s*(\'[^\']+\')\s*\)/",
+				'(' . $wpdb->posts . '.post_title LIKE $1) OR (sunshine_order_meta.meta_value LIKE $1) OR (sunshine_order_itemmeta.meta_value LIKE $1)',
+				$where
+			);
+		}
+		return $where;
 	}
 
 	function order_search_distinct( $distinct, $query ) {
-	    global $pagenow;
+		global $pagenow;
 
-	    if ( is_admin() && 'edit.php' === $pagenow && $query->is_search() && $query->get( 'post_type' ) === 'sunshine-order' ) {
-	        $distinct = "DISTINCT";
-	    }
+		if ( is_admin() && 'edit.php' === $pagenow && $query->is_search() && $query->get( 'post_type' ) === 'sunshine-order' ) {
+			$distinct = 'DISTINCT';
+		}
 
-	    return $distinct;
+		return $distinct;
 	}
 
 
@@ -110,7 +112,7 @@ class SPC_Admin_Order {
 
 	function filter_by_customer() {
 		if ( isset( $_GET['post_type'] ) && post_type_exists( $_GET['post_type'] ) && in_array( strtolower( $_GET['post_type'] ), array( 'sunshine-order' ) ) ) {
-			$mode = ( isset( $_GET['mode'] ) ) ? sanitize_text_field( $_GET['mode'] ) : '';
+			$mode                    = ( isset( $_GET['mode'] ) ) ? sanitize_text_field( $_GET['mode'] ) : '';
 			$selected_payment_method = ( isset( $_GET['payment_method'] ) ) ? sanitize_text_field( $_GET['payment_method'] ) : '';
 			?>
 			<select name="mode">
@@ -186,13 +188,13 @@ class SPC_Admin_Order {
 			}
 			if ( ! empty( $_GET['mode'] ) ) {
 				$meta_query[] = array(
-					'key' => 'mode',
+					'key'   => 'mode',
 					'value' => sanitize_text_field( $_GET['mode'] ),
 				);
 			}
 			if ( ! empty( $_GET['payment_method'] ) ) {
 				$meta_query[] = array(
-					'key' => 'payment_method',
+					'key'   => 'payment_method',
 					'value' => sanitize_text_field( $_GET['payment_method'] ),
 				);
 			}
@@ -264,16 +266,16 @@ class SPC_Admin_Order {
 
 
 	function column_headers( $columns ) {
-		$columns               = array(); // Reset so we can defeat all the other plugins trying to add stuff here that we don't want
-		$columns['cb']         = __( 'Select All' );
-		$columns['title']      = __( 'Order' );
-		$columns['order_date'] = __( 'Date', 'sunshine-photo-cart' );
-		$columns['customer']   = __( 'Customer', 'sunshine-photo-cart' );
-		$columns['status']     = __( 'Status', 'sunshine-photo-cart' );
+		$columns                   = array(); // Reset so we can defeat all the other plugins trying to add stuff here that we don't want
+		$columns['cb']             = __( 'Select All' );
+		$columns['title']          = __( 'Order' );
+		$columns['order_date']     = __( 'Date', 'sunshine-photo-cart' );
+		$columns['customer']       = __( 'Customer', 'sunshine-photo-cart' );
+		$columns['status']         = __( 'Status', 'sunshine-photo-cart' );
 		$columns['payment_method'] = __( 'Payment Method', 'sunshine-photo-cart' );
-		$columns['total']      = __( 'Order Total', 'sunshine-photo-cart' );
-		$columns['galleries']  = __( 'Galleries', 'sunshine-photo-cart' );
-		$columns['invoice']    = __( 'Invoice', 'sunshine-photo-cart' );
+		$columns['total']          = __( 'Order Total', 'sunshine-photo-cart' );
+		$columns['galleries']      = __( 'Galleries', 'sunshine-photo-cart' );
+		$columns['invoice']        = __( 'Invoice', 'sunshine-photo-cart' );
 		return $columns;
 	}
 
@@ -306,7 +308,7 @@ class SPC_Admin_Order {
 				$galleries = array();
 				foreach ( $order->get_cart() as $order_item ) {
 					if ( ! empty( $order_item->get_gallery_id() ) ) {
-						$gallery = $order_item->get_gallery();
+						$gallery                         = $order_item->get_gallery();
 						$galleries[ $gallery->get_id() ] = '<a href="' . admin_url( 'post.php?action=edit&post=' . $gallery->get_id() ) . '">' . $gallery->get_name() . '</a>';
 					}
 				}
@@ -319,8 +321,8 @@ class SPC_Admin_Order {
 	}
 
 	function sortable_columns( $columns ) {
-		$columns['order_date'] = 'date';
-		$columns['total']      = 'total';
+		$columns['order_date']     = 'date';
+		$columns['total']          = 'total';
 		$columns['payment_method'] = 'payment_method';
 		unset( $columns['title'] );
 		return $columns;
@@ -453,14 +455,14 @@ class SPC_Admin_Order {
 				<span><?php _e( 'Payment Method', 'sunshine-photo-cart' ); ?></span>
 				<?php
 					$payment_method = SPC()->payment_methods->get_payment_method_by_id( $order->get_payment_method() );
-					if ( $payment_method ) {
-						$transaction_url = $payment_method->get_transaction_url( $order );
-						if ( $transaction_url ) {
-							echo '<a href="' . esc_url( $transaction_url ) . '" target="_blank">' . $payment_method->get_name() . '</a>';
-						} else {
-							echo $payment_method->get_name();
-						}
+				if ( $payment_method ) {
+					$transaction_url = $payment_method->get_transaction_url( $order );
+					if ( $transaction_url ) {
+						echo '<a href="' . esc_url( $transaction_url ) . '" target="_blank">' . $payment_method->get_name() . '</a>';
+					} else {
+						echo $payment_method->get_name();
 					}
+				}
 				?>
 			</li>
 			<li id="sunshine-order-shipping">
@@ -620,19 +622,19 @@ class SPC_Admin_Order {
 						?>
 					<div class="sunshine-cart-item-name-gallery">
 						<?php
-							if ( $gallery->get_parent_gallery_id() > 0 ) {
-								$ancestors      = get_ancestors( $gallery->get_id(), 'sunshine-gallery', 'post_type' );
-								$ancestor_links = array( '<a href="' . admin_url( 'post.php?action=edit&post=' . $gallery->get_id() ). '">' . esc_html( $gallery->get_name() ) . '</a>' );
-								foreach ( $ancestors as $ancestor_id ) {
-									$ancestor_links[] = '<a href="' . admin_url( 'post.php?action=edit&post=' . $ancestor_id ) . '">' . esc_html( get_the_title( $ancestor_id ) ) . '</a>';
-								}
-								$ancestor_links = array_reverse( $ancestor_links );
-								echo join( ' > ', $ancestor_links );
-							} else {
-								echo '<a href="' . admin_url( 'post.php?action=edit&post=' . $gallery->get_id() ) . '">' . esc_html( $gallery->get_name() ) . '</a>';
+						if ( $gallery->get_parent_gallery_id() > 0 ) {
+							$ancestors      = get_ancestors( $gallery->get_id(), 'sunshine-gallery', 'post_type' );
+							$ancestor_links = array( '<a href="' . admin_url( 'post.php?action=edit&post=' . $gallery->get_id() ) . '">' . esc_html( $gallery->get_name() ) . '</a>' );
+							foreach ( $ancestors as $ancestor_id ) {
+								$ancestor_links[] = '<a href="' . admin_url( 'post.php?action=edit&post=' . $ancestor_id ) . '">' . esc_html( get_the_title( $ancestor_id ) ) . '</a>';
 							}
+							$ancestor_links = array_reverse( $ancestor_links );
+							echo join( ' > ', $ancestor_links );
+						} else {
+							echo '<a href="' . admin_url( 'post.php?action=edit&post=' . $gallery->get_id() ) . '">' . esc_html( $gallery->get_name() ) . '</a>';
+						}
 						?>
-						<?php //echo $item->get_gallery_name(); ?>
+						<?php // echo $item->get_gallery_name(); ?>
 					</div>
 					<?php } ?>
 					<div class="sunshine-cart-item-name-image"><?php echo $item->get_image_name(); ?></div>
@@ -651,7 +653,7 @@ class SPC_Admin_Order {
 					<?php echo $item->get_price_formatted(); ?>
 				</td>
 				<td class="sunshine-cart-item-total" data-label="<?php esc_attr_e( 'Total', 'sunshine-photo-cart' ); ?>">
-					<?php echo $item->get_total_formatted(); ?>
+					<?php echo $item->get_subtotal_formatted(); ?>
 				</td>
 			</tr>
 		<?php } ?>
@@ -715,7 +717,7 @@ class SPC_Admin_Order {
 	}
 
 	function images_tab( $order ) {
-		$items       = $order->get_items();
+		$items      = $order->get_items();
 		$file_names = array();
 		foreach ( $items as $item ) {
 			$file_names = array_merge( $file_names, $item->get_file_names() );
@@ -883,7 +885,7 @@ class SPC_Admin_Order {
 		if ( ! empty( $log ) ) {
 			echo '<ol>';
 			foreach ( $log as $entry ) {
-				echo '<li><span class="log-date">' . date( get_option( 'date_format' ) . ' @ ' . get_option( 'time_format' ), strtotime( $entry->comment_date_gmt ) ) . '</span> <span class="log-content">' . $entry->comment_content . '</span></li>';
+				echo '<li><span class="log-date">' . date( get_option( 'date_format' ) . ' @ ' . get_option( 'time_format' ), strtotime( $entry->comment_date ) ) . '</span> <span class="log-content">' . $entry->comment_content . '</span></li>';
 			}
 			echo '</ol>';
 		} else {
@@ -924,7 +926,7 @@ class SPC_Admin_Order {
 				$order->set_status( $new_order_status );
 				if ( ! empty( $_POST['order_status_change_notify'] ) && $_POST['order_status_change_notify'] == 'yes' ) {
 					do_action( 'sunshine_admin_order_status_update', $order );
-					//$order->notify( false );
+					// $order->notify( false );
 					SPC()->notices->add_admin( 'order_status_change', sprintf( __( 'Order status notification email sent to %s', 'sunshine-photo-cart' ), $order->get_email() ), 'success' );
 					$order->add_log( sprintf( __( 'Order status notification email sent to %s', 'sunshine-photo-cart' ), $order->get_email() ) );
 				}
@@ -977,7 +979,7 @@ class SPC_Admin_Order {
 	public function trash( $post_id ) {
 		if ( get_post_type( $post_id ) == 'sunshine-order' ) {
 			$customer_id = get_post_field( 'post_author', $post_id );
-			$customer = new SPC_Customer( $customer_id );
+			$customer    = new SPC_Customer( $customer_id );
 			$customer->recalculate_stats();
 		}
 	}
@@ -991,7 +993,7 @@ class SPC_Admin_Order {
 				)
 			);
 			$customer_id = get_post_field( 'post_author', $post_id );
-			$customer = new SPC_Customer( $customer_id );
+			$customer    = new SPC_Customer( $customer_id );
 			$customer->recalculate_stats();
 		}
 	}
@@ -1014,19 +1016,21 @@ $SPC_Admin_Order = new SPC_Admin_Order();
 
 add_action( 'wp', 'sunshine_admin_order_check' );
 function sunshine_admin_order_check() {
-    global $pagenow;
+	global $pagenow;
 
-    if ( empty( $_GET['s'] ) && ! empty( $_GET['customer'] ) && $pagenow == 'edit.php' && isset( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-order' ) {
-        $query = new WP_Query( array(
-            'post_type' => 'sunshine-order',
-            'post_status' => array( 'any', 'trashx' ),
-        ) );
-        if ( $query->found_posts == 0 ) {
+	if ( empty( $_GET['s'] ) && ! empty( $_GET['customer'] ) && $pagenow == 'edit.php' && isset( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-order' ) {
+		$query = new WP_Query(
+			array(
+				'post_type'   => 'sunshine-order',
+				'post_status' => array( 'any', 'trashx' ),
+			)
+		);
+		if ( $query->found_posts == 0 ) {
 			echo '<style>.wrap { display: none; }</style>';
 			add_thickbox();
-            add_action( 'admin_notices', 'sunshine_admin_no_orders' );
-        }
-    }
+			add_action( 'admin_notices', 'sunshine_admin_no_orders' );
+		}
+	}
 }
 
 function sunshine_admin_no_orders() {

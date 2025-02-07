@@ -54,6 +54,10 @@ final class Sunshine_Photo_Cart {
 		fwrite( $fp, $log_message );
 		fclose( $fp );
 
+		if ( WP_DEBUG ) {
+			sunshine_log( $message );
+		}
+
 	}
 
 	public function includes() {
@@ -218,7 +222,7 @@ final class Sunshine_Photo_Cart {
 
 		// Set log file
 		$wp_upload_dir  = wp_upload_dir();
-		$this->log_file = $wp_upload_dir['basedir'] . '/sunshine/sunshine.log';
+		$this->log_file = $wp_upload_dir['basedir'] . '/sunshine/sunshine.txt';
 
 		$this->prefix = apply_filters( 'sunshine_prefix', 'sunshine_' );
 

@@ -8,7 +8,8 @@ class SPC_Order_Item extends SPC_Cart_Item {
 	function __construct( $item ) {
 		global $wpdb;
 
-		parent::__construct( $item );
+		sunshine_log( $item );
+		 parent::__construct( $item );
 
 		$meta = $wpdb->get_results(
 			$wpdb->prepare(
@@ -20,6 +21,15 @@ class SPC_Order_Item extends SPC_Cart_Item {
 			foreach ( $meta as $meta_item ) {
 				$this->meta[ $meta_item->meta_key ] = maybe_unserialize( $meta_item->meta_value );
 			}
+		}
+
+		if ( ! empty( $item['price'] ) ) {
+			$this->price    = $item['price'];
+			$this->subtotal = $this->price * $item['qty'];
+		}
+
+		if ( ! empty( $item['tax'] ) ) {
+			$this->tax = $item['tax'];
 		}
 
 		// Do all the magic to determine actual price and tax based on order settings.
@@ -37,7 +47,7 @@ class SPC_Order_Item extends SPC_Cart_Item {
 		*/
 		$this->tax_total = $this->tax * $this->qty;
 
-		if ( !empty( $this->meta['options'] ) ) {
+		if ( ! empty( $this->meta['options'] ) ) {
 			$this->options = $this->meta['options'];
 		}
 
@@ -70,7 +80,7 @@ class SPC_Order_Item extends SPC_Cart_Item {
 				array( 'meta_value' => $value ),
 				array(
 					'order_item_id' => $this->get_id(),
-					'meta_key' => sanitize_key( $key ),
+					'meta_key'      => sanitize_key( $key ),
 				)
 			);
 		} else {
@@ -78,8 +88,8 @@ class SPC_Order_Item extends SPC_Cart_Item {
 				$wpdb->prefix . 'sunshine_order_itemmeta',
 				array(
 					'order_item_id' => $this->get_id(),
-					'meta_key' => $key,
-					'meta_value' => $value,
+					'meta_key'      => $key,
+					'meta_value'    => $value,
 				),
 			);
 		}
@@ -90,7 +100,7 @@ class SPC_Order_Item extends SPC_Cart_Item {
 		if ( ! empty( $this->name ) ) {
 			return $this->name;
 		}
-		$name = '';
+		$name         = '';
 		$product_name = $this->get_meta_value( 'product_name' );
 		if ( $product_name ) {
 			$name = $product_name;
@@ -98,7 +108,7 @@ class SPC_Order_Item extends SPC_Cart_Item {
 		$product_cat_name = $this->get_meta_value( 'product_cat_name' );
 		if ( $product_cat_name ) {
 			$separator = apply_filters( 'sunshine_product_name_separator', ' &mdash; ' );
-			$name = $product_cat_name . $separator . $name;
+			$name      = $product_cat_name . $separator . $name;
 		}
 		return $name;
 	}
@@ -197,8 +207,8 @@ class SPC_Order_Item extends SPC_Cart_Item {
 		$final_file_names = array();
 		if ( ! empty( $file_names ) ) {
 			foreach ( $file_names as $file_name ) {
-			    $info = pathinfo( $file_name );
-			    $final_file_names[] = $info['filename'];
+				$info = pathinfo( $file_name );
+				$final_file_names[] = $info['filename'];
 			}
 		}
 		*/

@@ -968,7 +968,8 @@ function sunshine_admin_gallery_image_thumbnail( $image, $echo = true ) {
 	$html .= '<a href="#" class="sunshine-image-delete dashicons dashicons-trash remove" data-image-id="' . esc_attr( $image->get_id() ) . '"></a> ';
 	$html .= '<a href="#" class="sunshine-image-featured dashicons dashicons-star-filled" data-image-id="' . esc_attr( $image->get_id() ) . '"></a> ';
 	$html .= '</span>';
-	$html .= '<span class="sunshine-image-name">' . esc_html( $image->get_name( 'filename' ) ) . '</span>';
+	// $html .= '<span class="sunshine-image-name">' . esc_html( $image->get_name( 'filename' ) ) . '</span>';
+	$html .= '<span class="sunshine-image-name">' . esc_html( $image->get_image_created_timestamp() ) . '</span>';
 	$html  = apply_filters( 'sunshine_admin_gallery_image_item', $html, $image );
 	$html .= '</li>';
 
@@ -1076,14 +1077,16 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 	$file_name = basename( $file_path );
 
 	// Generate a single random string to append to the file name and all sizes
-	$random_string = wp_generate_password( 24, false );
-	$info          = pathinfo( $file_name );
-	$new_file_name = $info['filename'] . '-' . $random_string . '.' . $info['extension'];
-	$new_file_path = str_replace( $file_name, $new_file_name, $file_path );
+	if ( ! SPC()->get_option( 'disable_secure_file_names' ) ) {
+		$random_string = wp_generate_password( 24, false );
+		$info          = pathinfo( $file_name );
+		$new_file_name = $info['filename'] . '-' . $random_string . '.' . $info['extension'];
+		$new_file_path = str_replace( $file_name, $new_file_name, $file_path );
 
-	// Rename the original file on the server
-	if ( rename( $file_path, $new_file_path ) ) {
-		$file_path = $new_file_path;
+		// Rename the original file on the server
+		if ( rename( $file_path, $new_file_path ) ) {
+			$file_path = $new_file_path;
+		}
 	}
 
 	// Adds file as attachment to WordPress
@@ -1110,7 +1113,7 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 		$attachment_image_meta = wp_generate_attachment_metadata( $attachment_id, $file_path );
 
 		// Don't do this when offloading is enabled.
-		if ( ! function_exists( 'as3cf_get_attachment_url' ) ) {
+		if ( ! function_exists( 'as3cf_get_attachment_url' ) && ! SPC()->get_option( 'disable_secure_file_names' ) ) {
 
 			// Modify the filenames in metadata for each intermediate size
 			if ( ! empty( $attachment_image_meta['sizes'] ) ) {
@@ -1498,7 +1501,7 @@ function sunshine_meta_gallery_emails_display() {
 	global $post;
 	$gallery = sunshine_get_gallery( $post->ID );
 	$emails  = $gallery->get_emails();
-	if ( ! empty( $emails ) ) {
+	if ( ! empty( $emails ) && is_array( $emails ) ) {
 		echo join( '<br />', $emails );
 	} else {
 		_e( 'No emails collected yet', 'sunshine-photo-cart' );

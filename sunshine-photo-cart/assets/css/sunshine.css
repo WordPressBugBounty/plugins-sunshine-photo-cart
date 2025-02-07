@@ -547,7 +547,7 @@ body.sunshine--modal--open { position: relative; overflow: hidden; }
 #sunshine--modal #sunshine--image--cart-review a:hover { background: var(--sunshine--dark); color: #FFF; }
 .sunshine--mini-cart--quantity:before { content: "\f149"; font-family: "SunshineIcons"; display: inline-block; margin-right: 5px; }
 #sunshine--image--cart-review.sunshine--loading:after { width: 30px; height: 30px; margin-top: -15px; margin-left: -15px; }
-.sunshine--mini-cart a { font-weight: bold; }
+#sunshine--image--cart-review .sunshine--mini-cart a { font-weight: bold; color: #FFF; }
 
 #sunshine--image--add-to-cart,
 #sunshine--store--product-details { position: relative; width: 100%; height: 100%; display: flex; overflow: auto; /*box-sizing: border-box; display: flex; align-items: stretch; justify-content: space-between;*/ text-align: left; }

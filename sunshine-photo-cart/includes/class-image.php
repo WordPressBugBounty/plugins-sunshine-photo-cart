@@ -61,11 +61,11 @@ class SPC_Image extends Sunshine_Data {
 	public function get_file_name() {
 		$file_name = $this->get_meta_value( 'sunshine_file_name' );
 		if ( ! empty( $file_name ) ) {
-			$info = pathinfo( $file_name );
+			$info      = pathinfo( $file_name );
 			$file_name = $info['filename'];
 		} else {
 			$file_path = get_attached_file( $this->get_id() );
-			$info = pathinfo( $file_path );
+			$info      = pathinfo( $file_path );
 			$file_name = $info['filename'];
 		}
 		return $file_name;
@@ -274,6 +274,13 @@ class SPC_Image extends Sunshine_Data {
 			$size_info = image_get_intermediate_size( $this->get_id(), 'full' );
 		}
 		return $size_info;
+	}
+
+	public function get_image_created_timestamp() {
+		if ( ! empty( $this->meta['created_timestamp'] ) ) {
+			return $this->meta['created_timestamp'];
+		}
+		return false;
 	}
 
 }

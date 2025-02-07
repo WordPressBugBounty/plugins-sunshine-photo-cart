@@ -125,7 +125,7 @@ class SPC_Discount extends Sunshine_Data {
 
 	public function get_allowed_galleries() {
 
-		$galleries = $this->meta['allowed_galleries'];
+		$galleries = (array) $this->meta['allowed_galleries'];
 		if ( ! empty( $galleries ) ) {
 			$descendants = array();
 			foreach ( $galleries as $gallery_id ) {

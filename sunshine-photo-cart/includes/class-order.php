@@ -814,7 +814,6 @@ class SPC_Order extends Sunshine_Data {
 		$this->update_meta_value( 'refunds', $refunds );
 
 		$this->add_log( sprintf( __( 'Refund has been processed for %s', 'sunshine-photo-cart' ), sunshine_price( $amount ) ) );
-		SPC()->log( sprintf( __( 'Refund on %1$s has been processed for %2$s', 'sunshine-photo-cart' ), $this->get_name(), sunshine_price( $amount ) ) );
 
 		// Update this customer's order stats.
 		$customer = $this->get_customer();

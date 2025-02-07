@@ -11,9 +11,9 @@ async function sunshine_square_create_payment( token ) {
 
 	sunshine_checkout_updating();
 	const data = {
-			'action': 'sunshine_square_init_order',
-			'source_id': token,
-			'security': spc_square_vars.security,
+		'action': 'sunshine_square_init_order',
+		'source_id': token,
+		'security': spc_square_vars.security,
 	}
 
 	jQuery.ajax(

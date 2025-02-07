@@ -146,7 +146,7 @@ function sunshine_get_settings_fields() {
 
 		$log_desc = '';
 		if ( SPC()->get_option( 'enable_log' ) ) {
-			$log_desc  = '<br /><br /><a href="' . get_bloginfo( 'url' ) . '/wp-content/uploads/sunshine/sunshine.log" target="_blank" class="button-primary">' . __( 'View log', 'sunshine-photo-cart' ) . '</a> ';
+			$log_desc  = '<br /><br /><a href="' . get_bloginfo( 'url' ) . '/wp-content/uploads/sunshine/sunshine.txt" target="_blank" class="button-primary">' . __( 'View log', 'sunshine-photo-cart' ) . '</a> ';
 			$clear_url = admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine' );
 			$clear_url = wp_nonce_url( $clear_url, 'sunshine_clear_log', 'sunshine_clear_log' );
 			$log_desc .= '<a href="' . esc_url( $clear_url ) . '" class="button delete">' . __( 'Clear log', 'sunshine-photo-cart' ) . '</a>';
@@ -548,6 +548,12 @@ function sunshine_get_settings_fields() {
 			'id'          => 'disable_image_sharing',
 			'type'        => 'checkbox',
 			'description' => __( 'Do not allow sharing images within a gallery', 'sunshine-photo-cart' ),
+		);
+		$galleries_fields['2801'] = array(
+			'name'        => __( 'Disable Secure File Names', 'sunshine-photo-cart' ),
+			'id'          => 'disable_secure_file_names',
+			'type'        => 'checkbox',
+			'description' => __( 'Disable the feature that adds random strings to image file names for added security', 'sunshine-photo-cart' ),
 		);
 
 		$galleries_fields['3000'] = array(

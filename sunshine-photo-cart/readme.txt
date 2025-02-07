@@ -5,8 +5,8 @@ Contributors: wpsunshine, sccr410
 Tags: client photo gallery, sell photos, client galleries, client proofing, photo proofing
 Requires at least: 5.5
 Requires PHP: 7.4
-Tested up to: 6.7.1
-Stable tag: 3.4.8.1
+Tested up to: 6.7.2
+Stable tag: 3.4.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,13 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 11. Admin: Create a gallery and add images
 
 == Changelog ==
+
+= 3.4.9 =
+* Add: New filter - sunshine_product_max_qty
+* Add: New setting - disable random strings in image file names for security
+* Fix: Improved check for when to increase qty vs add new line item
+* Fix: Order log use selected timezone time
+* Fix: Line item subtotals when prices enter with tax and shown with tax
 
 = 3.4.8.1 =
 * Fix: Rename hook back to "sunshine_checkout_create_order" to fix compatibility with various add-ons

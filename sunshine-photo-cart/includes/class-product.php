@@ -37,10 +37,9 @@ class SPC_Product extends Sunshine_Data {
 			$this->set_meta_data();
 
 			if ( ! empty( $price_level ) ) {
-				//sunshine_log( $price_level );
+				// sunshine_log( $price_level );
 				$this->price_level = intval( $price_level );
 			}
-
 		}
 
 	}
@@ -114,7 +113,7 @@ class SPC_Product extends Sunshine_Data {
 		if ( ! empty( $prices ) && is_array( $prices ) && array_key_exists( $price_level_id, $prices ) && $prices[ $price_level_id ] != '' ) {
 			$price = sunshine_sanitize_amount( $prices[ $price_level_id ] );
 		}
-		//sunshine_log( $prices, 'prices for ' . $this->get_name() . ': ' . $price_level_id );
+		// sunshine_log( $prices, 'prices for ' . $this->get_name() . ': ' . $price_level_id );
 
 		if ( ! empty( $options ) ) {
 			$product_options = $this->get_options();
@@ -285,7 +284,7 @@ class SPC_Product extends Sunshine_Data {
 
 	// category + name
 	public function get_display_name() {
-		$separator = apply_filters( 'sunshine_product_name_separator', ' &mdash; ' );
+		$separator    = apply_filters( 'sunshine_product_name_separator', ' &mdash; ' );
 		$display_name = '';
 		if ( $this->get_category() ) {
 			$display_name = '<span class="sunshine--product--category">' . $this->get_category_name() . '</span> <span class="sunshine--product--separator">' . $separator . '</span> ';
@@ -463,7 +462,7 @@ class SPC_Product extends Sunshine_Data {
 	}
 
 	public function get_max_qty() {
-		return $this->get_meta_value( 'max_qty' );
+		return apply_filters( 'sunshine_product_max_qty', $this->get_meta_value( 'max_qty' ), $this );
 	}
 
 	public function create() {

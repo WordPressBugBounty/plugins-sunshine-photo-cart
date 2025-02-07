@@ -265,7 +265,10 @@ class SPC_Cart {
 		// If object already in cart, increase quantity of existing and not add
 		if ( ! empty( $this->cart ) ) {
 			foreach ( $this->cart as $key => &$cart_item ) {
-				if ( ! empty( $item['image_id'] ) && ! empty( $cart_item['image_id'] ) && $item['image_id'] == $cart_item['image_id'] && $item['product_id'] == $cart_item['product_id'] ) {
+				if ( $item['product_id'] == $cart_item['product_id'] ) {
+					if ( ! empty( $item['image_id'] ) && ! empty( $cart_item['image_id'] ) && $item['image_id'] != $cart_item['image_id'] ) {
+						continue;
+					}
 					// Check options
 					if ( empty( $cart_item['options'] ) ) {
 						$cart_item['options'] = array();
