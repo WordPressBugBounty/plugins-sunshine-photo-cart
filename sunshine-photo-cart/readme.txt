@@ -6,7 +6,7 @@ Tags: client photo gallery, sell photos, client galleries, client proofing, phot
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 6.7.2
-Stable tag: 3.4.9
+Stable tag: 3.4.9.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,10 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 11. Admin: Create a gallery and add images
 
 == Changelog ==
+
+= 3.4.9.1 =
+* Fix: Left debug line showing file shoot time instead of file name in gallery admin
+* Fix: Discount allowed galleries force check for array value
 
 = 3.4.9 =
 * Add: New filter - sunshine_product_max_qty
