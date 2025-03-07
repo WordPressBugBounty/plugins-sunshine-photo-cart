@@ -32,7 +32,7 @@ if ( ! empty( $message ) ) {
 					<div class="order-item--extra"><?php echo $cart_item->get_extra(); ?></div>
 				</td>
 				<td class="order-item--total">
-					<?php echo $cart_item->get_total_formatted(); ?>
+					<?php echo $cart_item->get_subtotal_formatted(); ?>
 				</td>
 			</tr>
 		<?php } ?>
@@ -58,7 +58,7 @@ if ( ! empty( $message ) ) {
 								<?php
 								$discounts = $order->get_discounts();
 								if ( ! empty( $discounts ) ) {
-									echo '(' . join( ', ', $order->get_discounts() ) . ')';
+									echo '<br><em>(' . join( ', ', $discounts ) . ')</em>';
 								}
 								?>
 							</th>
@@ -111,12 +111,13 @@ if ( ! empty( $message ) ) {
 <?php } ?>
 
 <?php
-$items       = $order->get_items();
+$items      = $order->get_items();
 $file_names = array();
 foreach ( $items as $item ) {
 	$file_names = array_merge( $file_names, $item->get_file_names() );
 }
-if ( ! empty( $file_names ) ) { ?>
+if ( ! empty( $file_names ) ) {
+	?>
 <div id="order-files">
 	<h3><?php _e( 'Files', 'sunshine-photo-cart' ); ?></h3>
 	<?php

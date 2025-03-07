@@ -288,7 +288,7 @@ class SPC_Cart_Item {
 		}
 	}
 
-	public function get_image_name( $show = 'title' ) {
+	public function get_image_name( $show = '' ) {
 		$image_name = '';
 		if ( ! empty( $this->item['image_name'] ) ) {
 			$image_name = $this->item['image_name'];

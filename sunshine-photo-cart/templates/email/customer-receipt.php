@@ -34,7 +34,7 @@ if ( ! empty( $message ) ) {
 					<div class="order-item--extra"><?php echo $cart_item->get_extra(); ?></div>
 				</td>
 				<td class="order-item--total">
-					<?php echo $cart_item->get_total_formatted(); ?>
+					<?php echo $cart_item->get_subtotal_formatted(); ?>
 				</td>
 			</tr>
 		<?php } ?>
@@ -58,9 +58,9 @@ if ( ! empty( $message ) ) {
 							<th>
 								<?php _e( 'Discounts', 'sunshine-photo-cart' ); ?>
 								<?php
-								$discounts = $order->get_discounts();
+								$discounts = $order->get_discount_names();
 								if ( ! empty( $discounts ) ) {
-									echo '(' . join( ', ', $order->get_discounts() ) . ')';
+									echo '<br><em>(' . join( ', ', $discounts ) . ')</em>';
 								}
 								?>
 							</th>

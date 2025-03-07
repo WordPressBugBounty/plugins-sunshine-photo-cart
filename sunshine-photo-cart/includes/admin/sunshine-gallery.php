@@ -969,7 +969,6 @@ function sunshine_admin_gallery_image_thumbnail( $image, $echo = true ) {
 	$html .= '<a href="#" class="sunshine-image-featured dashicons dashicons-star-filled" data-image-id="' . esc_attr( $image->get_id() ) . '"></a> ';
 	$html .= '</span>';
 	$html .= '<span class="sunshine-image-name">' . esc_html( $image->get_name( 'filename' ) ) . '</span>';
-	// $html .= '<span class="sunshine-image-name">' . esc_html( $image->get_image_created_timestamp() ) . '</span>';
 	$html  = apply_filters( 'sunshine_admin_gallery_image_item', $html, $image );
 	$html .= '</li>';
 

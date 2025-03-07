@@ -67,6 +67,10 @@ function is_sunshine_page( $page ) {
 	}
 
 	if ( ! empty( $page ) && SPC()->get_page( $page ) == $post->ID ) {
+		if ( $page === 'checkout' && isset( $_GET['order_key'] ) ) {
+			// Special situation for checkout as the receipt page is technically still checkout page but with endpoint.
+			return false;
+		}
 		return true;
 	}
 

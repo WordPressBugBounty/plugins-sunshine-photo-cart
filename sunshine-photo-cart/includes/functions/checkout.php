@@ -527,18 +527,17 @@ function sunshine_checkout_scripts() {
 				google.maps.event.clearInstanceListeners( sunshine_autocomplete );
 				jQuery( ".pac-container" ).remove();
 			}
-			  address1Field = document.querySelector("#" + section + "_address1");
-			  address2Field = document.querySelector("#" + section + "_address2");
-			  postalField = document.querySelector("#" + section + "_postcode");
-			  sunshine_autocomplete = new google.maps.places.Autocomplete(address1Field, {
+			address1Field = document.querySelector("#" + section + "_address1");
+			address2Field = document.querySelector("#" + section + "_address2");
+			postalField = document.querySelector("#" + section + "_postcode");
+			sunshine_autocomplete = new google.maps.places.Autocomplete(address1Field, {
 				componentRestrictions: { country: [ default_country ] },
 				fields: ["address_components", "geometry"],
 				types: ["address"],
-			  });
-			  //address1Field.focus();
-			  sunshine_autocomplete_listener = sunshine_autocomplete.addListener( "place_changed", function(){
+			});
+			sunshine_autocomplete_listener = sunshine_autocomplete.addListener( "place_changed", function(){
 				sunshine_autopopulate_address( section );
-			} );
+			});
 		}
 
 		jQuery( document ).on( 'sunshine_shipping_country_change', function( event, country ){
@@ -550,7 +549,6 @@ function sunshine_checkout_scripts() {
 				sunshine_init_address_autocomplete( 'shipping', jQuery( '#shipping_country' ).val() );
 			}
 		});
-
 
 		function sunshine_autopopulate_address( section ) {
 			const place = sunshine_autocomplete.getPlace();

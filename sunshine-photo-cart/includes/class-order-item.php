@@ -8,8 +8,7 @@ class SPC_Order_Item extends SPC_Cart_Item {
 	function __construct( $item ) {
 		global $wpdb;
 
-		sunshine_log( $item );
-		 parent::__construct( $item );
+		parent::__construct( $item );
 
 		$meta = $wpdb->get_results(
 			$wpdb->prepare(

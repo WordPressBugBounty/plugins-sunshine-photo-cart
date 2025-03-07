@@ -148,9 +148,9 @@ function sunshine_gallery_password_shortcode() {
 
 	ob_start();
 	SPC()->notices->show();
-	//do_action( 'sunshine_before_content' );
+	// do_action( 'sunshine_before_content' );
 	sunshine_gallery_password_form();
-	//do_action( 'sunshine_after_content' );
+	// do_action( 'sunshine_after_content' );
 	$output = ob_get_contents();
 	ob_end_clean();
 
@@ -165,7 +165,7 @@ function sunshine_menu_shortcode() {
 
 add_shortcode( 'sunshine_search', 'sunshine_search_shortcode' );
 function sunshine_search_shortcode( $atts ) {
-	$atts = shortcode_atts(
+	$atts    = shortcode_atts(
 		array(
 			'gallery' => '',
 		),
@@ -180,4 +180,14 @@ function sunshine_search_shortcode( $atts ) {
 		}
 	}
 	return sunshine_search_form( $gallery, false );
+}
+
+add_shortcode( 'sunshine_cart_quantity', 'sunshine_cart_quantity_shortcode' );
+function sunshine_cart_quantity_shortcode() {
+	return '<span class="sunshine--cart--count sunshine--count">' . SPC()->cart->get_item_count() . '</span>';
+}
+
+add_shortcode( 'sunshine_mini_cart', 'sunshine_mini_cart_shortcode' );
+function sunshine_mini_cart_shortcode() {
+	return sunshine_get_template_html( 'cart/mini-cart' );
 }

@@ -188,7 +188,7 @@ class SPC_Cart {
 		$final_contents = array();
 		foreach ( $this->cart as $key => $item ) {
 			$cart_item = new SPC_Cart_Item( $item );
-			if ( empty( $cart_item->get_product() ) ) {
+			if ( empty( $cart_item->get_product() ) || $cart_item->get_price() === '' ) {
 				unset( $this->cart[ $key ] );
 				$this->update_cart();
 				SPC()->notices->add( __( 'An item has been removed from your cart because it no longer exists', 'sunshine-photo-cart' ) );
@@ -214,6 +214,11 @@ class SPC_Cart {
 		$product = sunshine_get_product( intval( $product_id ), $price_level );
 		if ( ! $product->exists() ) {
 			SPC()->log( 'Item not added to cart because product does not exist: ' . $product_id );
+			return false;
+		}
+
+		if ( $product->get_price( $price_level ) === '' ) {
+			SPC()->log( 'Item not added to cart because product has no price: ' . $product_id );
 			return false;
 		}
 
@@ -1900,13 +1905,15 @@ class SPC_Cart {
 
 			if ( $order->get_credits() > 0 ) {
 				SPC()->customer->decrease_credits( $order->get_credits() );
+				SPC()->log( 'Decreasing customer credits by ' . $order->get_credits() );
 			}
 
-			// SPC()->customer->add_action( 'order', array( 'order_id' => $order->get_id() ) );
+			SPC()->log( 'Recalculating customer stats' );
 			SPC()->customer->recalculate_stats();
 
 			// do_action( 'sunshine_checkout_process_payment', $this );
 			if ( $this->get_checkout_data_item( 'payment_method' ) ) {
+				SPC()->log( 'Processing payment action: ' . $this->get_checkout_data_item( 'payment_method' ) );
 				do_action( 'sunshine_checkout_process_payment_' . $this->get_checkout_data_item( 'payment_method' ), $order );
 			} elseif ( $order->get_total() > 0 ) {
 				$this->add_error( __( 'No payment method', 'sunshine-photo-cart' ) );
@@ -1935,7 +1942,7 @@ class SPC_Cart {
 				// Clear checkout data from session data.
 				SPC()->session->set( 'checkout_data', '' );
 				SPC()->session->set( 'checkout_sections_completed', '' );
-				SPC()->cart->empty_cart();
+				// SPC()->cart->empty_cart();
 			}
 
 			do_action( 'sunshine_checkout_create_order', $order, $data );

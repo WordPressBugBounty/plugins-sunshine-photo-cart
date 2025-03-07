@@ -39,14 +39,14 @@ function sunshine_modal_product_details() {
 		wp_send_json_error( __( 'Show product details failed - no product found', 'sunshine-photo-cart' ) );
 	}
 
-	//$options = $product->get_options( $image->get_price_level() );
+	// $options = $product->get_options( $image->get_price_level() );
 
 	$result = array(
 		'html' => sunshine_get_template_html(
 			'image/product-details',
 			array(
 				'product' => $product,
-				//'options' => $options,
+				// 'options' => $options,
 				'image'   => $image,
 			)
 		),
@@ -94,7 +94,7 @@ function sunshine_modal_add_item_to_cart() {
 	$image = $product = $gallery = $price_level = '';
 
 	if ( ! empty( $gallery_id ) ) {
-		$gallery = sunshine_get_gallery( $gallery_id );
+		$gallery     = sunshine_get_gallery( $gallery_id );
 		$price_level = $gallery->get_price_level();
 	}
 
@@ -104,7 +104,7 @@ function sunshine_modal_add_item_to_cart() {
 	}
 
 	$product_id = intval( $_POST['product_id'] );
-	$product = sunshine_get_product( $product_id, $price_level );
+	$product    = sunshine_get_product( $product_id, $price_level );
 
 	$comments = ( ! empty( $_POST['comments'] ) ) ? sanitize_textarea_field( $_POST['comments'] ) : '';
 
@@ -123,7 +123,7 @@ function sunshine_modal_add_item_to_cart() {
 		$add_to_cart_result = SPC()->cart->add_item( $product_id, $image_id, $gallery_id, $price_level, ( ! empty( $options ) ) ? $options : '', intval( $qty ), $comments );
 	}
 
-	//sunshine_log( 'subtotal: ' . SPC()->cart->get_subtotal() );
+	// sunshine_log( 'subtotal: ' . SPC()->cart->get_subtotal() );
 
 	// Add item to cart.
 	if ( ! empty( $add_to_cart_result ) ) {
@@ -149,6 +149,10 @@ function sunshine_add_to_cart_url() {
 		$action = sanitize_text_field( $_GET['sunshine_action'] );
 		if ( 'add_to_cart' == $action ) {
 
+			$image_id    = '';
+			$price_level = '';
+			$gallery_id  = '';
+
 			$qty = 1;
 			if ( ! empty( $_GET['qty'] ) ) {
 				$qty = intval( $_GET['qty'] );
@@ -160,17 +164,18 @@ function sunshine_add_to_cart_url() {
 			$product_id = '';
 			if ( ! empty( $_GET['product_id'] ) ) {
 				$product_id = intval( $_GET['product_id'] );
-				$product = sunshine_get_product( $product_id );
+				$product    = sunshine_get_product( $product_id );
 			}
 
-			$image_id = '';
-			$price_level = '';
-			$gallery_id = '';
+			if ( ! empty( $_GET['price_level'] ) ) {
+				$price_level = intval( $_GET['price_level'] );
+			}
+
 			if ( ! empty( $_GET['image_id'] ) ) {
-				$image_id = intval( $_GET['image_id'] );
-				$image = sunshine_get_image( $image_id );
+				$image_id    = intval( $_GET['image_id'] );
+				$image       = sunshine_get_image( $image_id );
 				$price_level = $image->get_price_level();
-				$gallery_id = $image->get_gallery_id();
+				$gallery_id  = $image->get_gallery_id();
 			}
 
 			if ( ! empty( $product_id ) ) {
@@ -179,7 +184,6 @@ function sunshine_add_to_cart_url() {
 					SPC()->notices->add( sprintf( __( '%s added to cart', 'sunshine-photo-cart' ), $product->get_name() ) );
 				}
 			}
-
 		}
 
 		$url = remove_query_arg( array_keys( $_GET ) );

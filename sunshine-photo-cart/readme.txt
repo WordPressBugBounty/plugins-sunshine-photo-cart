@@ -6,7 +6,7 @@ Tags: client photo gallery, sell photos, client galleries, client proofing, phot
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 6.7.2
-Stable tag: 3.4.9.1
+Stable tag: 3.4.10
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,17 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 11. Admin: Create a gallery and add images
 
 == Changelog ==
+
+= 3.4.10 =
+* New shortcode: sunshine_cart_quantity
+* New shortcode: sunshine_mini_cart
+* Fix: Line item subtotal function in receipt emails
+* Fix: Cart line item to properly show image file name when using "filename" image name setting
+* Fix: Show all discount names in receipt emails when multiple discounts are applied
+* Fix: Process price_level in add to cart via URL
+* Fix: Remove existing items from cart if the product pricing has since been removed
+* Fix: is_sunshine_page() special condition check for checkout to see if we are actually on receipt page
+* Update: Add additional code for EWWWW compatibility so it does not affect watermarks from their recent updates
 
 = 3.4.9.1 =
 * Fix: Left debug line showing file shoot time instead of file name in gallery admin
