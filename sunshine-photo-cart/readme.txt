@@ -6,7 +6,7 @@ Tags: client photo gallery, sell photos, client galleries, client proofing, phot
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 6.7.2
-Stable tag: 3.4.10
+Stable tag: 3.4.11
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,13 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 11. Admin: Create a gallery and add images
 
 == Changelog ==
+
+= 3.4.11 =
+* Add: Product minimum quantity (per cart line item)
+* Fix: Discount variable typing for allowed galleries removed as caused slowness in rare instances
+* Fix: Add error checking during watermark process to prevent fatal error when watermark PNG file is not valid
+* Fix: Watermarking work with more file formats: jpg, gif, webp
+* Fix: Security vulnerability around unused Stripe webhooks
 
 = 3.4.10 =
 * New shortcode: sunshine_cart_quantity

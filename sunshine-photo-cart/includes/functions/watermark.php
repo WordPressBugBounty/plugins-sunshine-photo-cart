@@ -26,11 +26,31 @@ function sunshine_watermark_image( $attachment_id, $metadata = array(), $passed_
 			}
 
 			if ( ! file_exists( $image ) ) {
+				SPC()->log( 'File does not exist during watermarking: ' . $image );
 				return;
 			}
 
 			$watermark = imagecreatefrompng( $watermark_image );
-			$new_image = imagecreatefromjpeg( $image );
+
+			// Detect image type and use appropriate function
+			$image_file_type = wp_check_filetype( $image );
+			$new_image       = false;
+
+			if ( $image_file_type['ext'] == 'jpg' || $image_file_type['ext'] == 'jpeg' ) {
+				$new_image = imagecreatefromjpeg( $image );
+			} elseif ( $image_file_type['ext'] == 'png' ) {
+				$new_image = imagecreatefrompng( $image );
+			} elseif ( $image_file_type['ext'] == 'gif' ) {
+				$new_image = imagecreatefromgif( $image );
+			} elseif ( $image_file_type['ext'] == 'webp' && function_exists( 'imagecreatefromwebp' ) ) {
+				$new_image = imagecreatefromwebp( $image );
+			}
+
+			// Check if watermark and new image were created successfully
+			if ( $watermark === false || $new_image === false ) {
+				SPC()->log( 'Failed to create image resources for watermarking: ' . $image );
+				return;
+			}
 
 			$margin           = ( SPC()->get_option( 'watermark_margin' ) != '' ) ? SPC()->get_option( 'watermark_margin' ) : 30;
 			$watermark_width  = imagesx( $watermark );
@@ -97,7 +117,16 @@ function sunshine_watermark_image( $attachment_id, $metadata = array(), $passed_
 				imagecopy( $new_image, $watermark, (int) $x_pos, (int) $y_pos, 0, 0, (int) $watermark_width, (int) $watermark_height );
 			}
 
-			$result = imagejpeg( $new_image, $image, 100 );
+			$result = false;
+			if ( $image_file_type['ext'] == 'jpg' || $image_file_type['ext'] == 'jpeg' ) {
+				$result = imagejpeg( $new_image, $image, 100 );
+			} elseif ( $image_file_type['ext'] == 'png' ) {
+				$result = imagepng( $new_image, $image, 0 );
+			} elseif ( $image_file_type['ext'] == 'gif' ) {
+				$result = imagegif( $new_image, $image );
+			} elseif ( $image_file_type['ext'] == 'webp' && function_exists( 'imagewebp' ) ) {
+				$result = imagewebp( $new_image, $image, 100 );
+			}
 
 			SPC()->log( 'Watermarked image: ' . $image );
 

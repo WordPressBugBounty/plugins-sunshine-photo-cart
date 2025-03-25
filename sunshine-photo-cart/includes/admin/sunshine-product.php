@@ -38,7 +38,7 @@ class Sunshine_Admin_Meta_Boxes_Product extends Sunshine_Admin_Meta_Boxes {
 			'name'    => __( 'Price', 'sunshine-photo-cart' ),
 			'type'    => 'price',
 			'default' => '',
-			'upgrade'       => array(
+			'upgrade' => array(
 				'addon' => 'price-levels',
 				'label' => __( 'Manage more price levels to offer different pricing in across galleries for the same product', 'sunshine-photo-cart' ),
 				'url'   => 'https://www.sunshinephotocart.com/addon/price-levels/',
@@ -50,9 +50,9 @@ class Sunshine_Admin_Meta_Boxes_Product extends Sunshine_Admin_Meta_Boxes {
 			'type' => 'checkbox',
 		);
 		$price_level_fields['1150'] = array(
-			'id'   => 'disable_shipping',
-			'name' => __( 'Disable Shipping', 'sunshine-photo-cart' ),
-			'type' => 'checkbox',
+			'id'          => 'disable_shipping',
+			'name'        => __( 'Disable Shipping', 'sunshine-photo-cart' ),
+			'type'        => 'checkbox',
 			'description' => __( 'Do not require shipping for this item at checkout', 'sunshine-photo-cart' ),
 		);
 		$price_level_fields['1200'] = array(
@@ -60,20 +60,26 @@ class Sunshine_Admin_Meta_Boxes_Product extends Sunshine_Admin_Meta_Boxes {
 			'name'        => __( 'Extra Shipping Cost', 'sunshine-photo-cart' ),
 			'type'        => 'price',
 			'description' => __( 'Additional shipping cost, intended for larger items such as canvases', 'sunshine-photo-cart' ),
-			'conditions' => array(
+			'conditions'  => array(
 				array(
-					'field' => 'disable_shipping',
-					'value' => 1,
+					'field'   => 'disable_shipping',
+					'value'   => 1,
 					'compare' => '==',
-					'action' => 'hide'
-				)
-			)
+					'action'  => 'hide',
+				),
+			),
 		);
 		$price_level_fields['1300'] = array(
-			'id'   => 'max_qty',
-			'name' => __( 'Max Quantity', 'sunshine-photo-cart' ),
-			'type' => 'number',
-			'description' => __( 'Do not allow customer to add more than this amount to cart', 'sunshine-photo-cart' ),
+			'id'          => 'min_qty',
+			'name'        => __( 'Minimum Quantity', 'sunshine-photo-cart' ),
+			'type'        => 'number',
+			'description' => __( 'Do not allow customer to add less than this amount to cart for each image', 'sunshine-photo-cart' ),
+		);
+		$price_level_fields['1400'] = array(
+			'id'          => 'max_qty',
+			'name'        => __( 'Max Quantity', 'sunshine-photo-cart' ),
+			'type'        => 'number',
+			'description' => __( 'Do not allow customer to add more than this amount to cart for each image', 'sunshine-photo-cart' ),
 		);
 
 		$options['sunshine-product-options'] = array(
@@ -128,26 +134,36 @@ function sunshine_product_filter_by_category() {
 	if ( isset( $_GET['post_type'] ) && post_type_exists( $_GET['post_type'] ) && in_array( strtolower( $_GET['post_type'] ), array( 'sunshine-product' ) ) ) {
 		$categories = sunshine_get_product_categories();
 		if ( ! empty( $categories ) ) {
-		?>
+			?>
 		<select name="category">
 			<option value=""><?php _e( 'All categories', 'sunshine-photo-cart' ); ?></option>
 			<?php foreach ( $categories as $category ) { ?>
-				<option value="<?php echo esc_attr( $category->get_id() ); ?>" <?php if ( ! empty( $_GET['category'] ) ) { selected( $_GET['category'], $category->get_id() ); } ?>><?php echo esc_html( $category->get_name() ); ?></option>
+				<option value="<?php echo esc_attr( $category->get_id() ); ?>" 
+										  <?php
+											if ( ! empty( $_GET['category'] ) ) {
+												selected( $_GET['category'], $category->get_id() ); }
+											?>
+				><?php echo esc_html( $category->get_name() ); ?></option>
 			<?php } ?>
 		</select>
-		<?php
+			<?php
 		}
 
 		$types = sunshine_get_product_types();
 		if ( ! empty( $types ) ) {
-		?>
+			?>
 		<select name="type">
 			<option value=""><?php _e( 'All types', 'sunshine-photo-cart' ); ?></option>
 			<?php foreach ( $types as $key => $type ) { ?>
-				<option value="<?php echo esc_attr( $key ); ?>" <?php if ( ! empty( $_GET['type'] ) ) { selected( $_GET['type'], $key ); } ?>><?php echo esc_html( $type['name'] ); ?></option>
+				<option value="<?php echo esc_attr( $key ); ?>" 
+										  <?php
+											if ( ! empty( $_GET['type'] ) ) {
+												selected( $_GET['type'], $key ); }
+											?>
+				><?php echo esc_html( $type['name'] ); ?></option>
 			<?php } ?>
 		</select>
-		<?php
+			<?php
 		}
 	}
 }
@@ -159,16 +175,16 @@ function sunshine_product_parse_query_category( $query ) {
 		$query->query_vars['tax_query'] = array(
 			array(
 				'taxonomy' => 'sunshine-product-category',
-				'terms' => intval( $_GET['category'] ),
-			)
+				'terms'    => intval( $_GET['category'] ),
+			),
 		);
 	}
 	if ( ! empty( $_GET['type'] ) && $pagenow == 'edit.php' && isset( $query->query_vars['post_type'] ) && $query->query_vars['post_type'] == 'sunshine-product' ) {
 		$query->query_vars['meta_query'] = array(
 			array(
-				'key' => 'type',
+				'key'   => 'type',
 				'value' => sanitize_text_field( $_GET['type'] ),
-			)
+			),
 		);
 	}
 
@@ -193,19 +209,21 @@ function sunshine_product_default_category( $post_id ) {
 
 add_action( 'wp', 'sunshine_admin_product_check' );
 function sunshine_admin_product_check() {
-    global $pagenow;
+	global $pagenow;
 
-    if ( empty( $_GET['s'] ) && $pagenow == 'edit.php' && isset( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-product' ) {
-        $query = new WP_Query( array(
-            'post_type' => 'sunshine-product',
-            'post_status' => array( 'any', 'trash' ),
-        ) );
-        if ( $query->found_posts == 0 ) {
+	if ( empty( $_GET['s'] ) && $pagenow == 'edit.php' && isset( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-product' ) {
+		$query = new WP_Query(
+			array(
+				'post_type'   => 'sunshine-product',
+				'post_status' => array( 'any', 'trash' ),
+			)
+		);
+		if ( $query->found_posts == 0 ) {
 			echo '<style>.wrap { display: none; }</style>';
 			add_thickbox();
-            add_action( 'admin_notices', 'sunshine_admin_no_products' );
-        }
-    }
+			add_action( 'admin_notices', 'sunshine_admin_no_products' );
+		}
+	}
 }
 
 add_filter( 'enter_title_here', 'sunshine_product_enter_title_here', 10, 2 );

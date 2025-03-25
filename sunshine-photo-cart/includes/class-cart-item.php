@@ -331,6 +331,18 @@ class SPC_Cart_Item {
 		return apply_filters( 'sunshine_cart_item_max_qty', $max_qty, $this );
 	}
 
+	public function get_min_qty() {
+		$min_qty = null;
+		$product = $this->get_product();
+		if ( $product->exists() ) {
+			$product_min_qty = $product->get_min_qty();
+			if ( $product_min_qty ) {
+				$min_qty = $product_min_qty;
+			}
+		}
+		return apply_filters( 'sunshine_cart_item_min_qty', $min_qty, $this );
+	}
+
 	public function get_price() {
 		$price = $this->price + $this->options_total;
 		if ( $this->discount > 0 ) {

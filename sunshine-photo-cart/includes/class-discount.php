@@ -125,7 +125,7 @@ class SPC_Discount extends Sunshine_Data {
 
 	public function get_allowed_galleries() {
 
-		$galleries = (array) $this->meta['allowed_galleries'];
+		$galleries = $this->meta['allowed_galleries'];
 		if ( ! empty( $galleries ) && is_array( $galleries ) ) {
 			$descendants = array();
 			foreach ( $galleries as $gallery_id ) {
@@ -133,24 +133,24 @@ class SPC_Discount extends Sunshine_Data {
 			}
 			$galleries = array_merge( $galleries, $descendants );
 			$galleries = array_unique( $galleries );
+			return $galleries;
 		}
-		return $galleries;
-
+		return false;
 	}
 
 	public function get_disallowed_galleries() {
 
 		$galleries = $this->meta['disallowed_galleries'];
-		if ( ! empty( $galleries ) ) {
+		if ( ! empty( $galleries ) && is_array( $galleries ) ) {
 			$descendants = array();
 			foreach ( $galleries as $gallery_id ) {
 				$descendants = array_merge( sunshine_get_gallery_descendant_ids( $gallery_id ), $descendants );
 			}
 			$galleries = array_merge( $galleries, $descendants );
 			$galleries = array_unique( $galleries );
+			return $galleries;
 		}
-		return $galleries;
-
+		return false;
 	}
 
 	public function max_product_quantity() {

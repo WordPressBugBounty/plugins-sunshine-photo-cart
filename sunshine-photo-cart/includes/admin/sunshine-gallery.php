@@ -1072,6 +1072,8 @@ function sunshine_gallery_admin_ajax_upload() {
 
 function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json', $watermark = true ) {
 
+	SPC()->log( 'Inserting a gallery image' );
+
 	$file_type = wp_check_filetype( $file_path );
 	$file_name = basename( $file_path );
 
@@ -1083,7 +1085,9 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 		$new_file_path = str_replace( $file_name, $new_file_name, $file_path );
 
 		// Rename the original file on the server
-		if ( rename( $file_path, $new_file_path ) ) {
+		$rename_result = rename( $file_path, $new_file_path );
+		if ( $rename_result ) {
+			SPC()->log( 'Main file renamed with secure file name' );
 			$file_path = $new_file_path;
 		}
 	}
@@ -1114,8 +1118,11 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 		// Don't do this when offloading is enabled.
 		if ( ! function_exists( 'as3cf_get_attachment_url' ) && ! SPC()->get_option( 'disable_secure_file_names' ) ) {
 
+			SPC()->log( 'Appending image sizes with random strings' );
+
 			// Modify the filenames in metadata for each intermediate size
 			if ( ! empty( $attachment_image_meta['sizes'] ) ) {
+				SPC()->log( $attachment_image_meta );
 				foreach ( $attachment_image_meta['sizes'] as $size => &$size_data ) {
 					// Use the same random string for all intermediate sizes
 					$size_info          = pathinfo( $size_data['file'] );
@@ -1127,7 +1134,13 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 					$original_size_path = trailingslashit( $upload_dir['path'] ) . $size_info['basename'];
 					$new_size_path      = trailingslashit( $upload_dir['path'] ) . $size_data['file'];
 					if ( file_exists( $original_size_path ) ) {
-						rename( $original_size_path, $new_size_path );
+						SPC()->log( 'Renaming: ' . $original_size_path );
+						$rename_result = rename( $original_size_path, $new_size_path );
+						if ( $rename_result ) {
+							SPC()->log( $size . ' file renamed from ' . basename( $original_size_path ) . ' to ' . basename( $new_size_path ) );
+						}
+					} else {
+						SPC()->log( 'File does not exist for renaming: ' . $original_size_path );
 					}
 				}
 			}

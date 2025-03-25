@@ -13,7 +13,7 @@
 		<?php echo $cart_item->get_price_formatted(); ?>
 	</td>
 	<td class="sunshine--cart-item--qty" data-label="<?php esc_attr_e( 'Qty', 'sunshine-photo-cart' ); ?>">
-		<input type="number" name="item[<?php echo esc_attr( $iterator ); ?>][qty]" class="sunshine--qty" value="<?php echo $cart_item->get_qty(); ?>" size="4" tabindex="<?php echo esc_attr( $iterator ); ?>" min="0" <?php echo ( $cart_item->get_max_qty() ) ? 'max="' . esc_attr( $cart_item->get_max_qty() ) . '"' : ''; ?> />
+		<input type="number" name="item[<?php echo esc_attr( $iterator ); ?>][qty]" class="sunshine--qty" value="<?php echo $cart_item->get_qty(); ?>" size="4" tabindex="<?php echo esc_attr( $iterator ); ?>" min="<?php echo ( $cart_item->get_min_qty() ) ? $cart_item->get_min_qty() : 0; ?>" <?php echo ( $cart_item->get_max_qty() ) ? 'max="' . esc_attr( $cart_item->get_max_qty() ) . '"' : ''; ?> />
 		<a href="<?php echo $cart_item->get_remove_url(); ?>" class="sunshine--cart-item--delete" aria-label="<?php esc_attr_e( 'Delete', 'sunshine-photo-cart' ); ?>"></a>
 	</td>
 	<td class="sunshine--cart-item--total" data-label="<?php esc_attr_e( 'Total', 'sunshine-photo-cart' ); ?>">

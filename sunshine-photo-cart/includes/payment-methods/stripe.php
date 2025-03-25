@@ -39,9 +39,6 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 		add_action( 'sunshine_checkout_process_payment_stripe', array( $this, 'process_payment' ) );
 
-		// add_action( 'template_redirect', array( $this, 'payment_return_listener' ), 999 );
-		add_action( 'template_redirect', array( $this, 'webhooks' ) );
-
 		add_filter( 'sunshine_order_transaction_url', array( $this, 'transaction_url' ) );
 
 		add_filter( 'sunshine_admin_order_tabs', array( $this, 'admin_order_tab' ), 10, 2 );
@@ -773,79 +770,6 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		}
 
 		wp_send_json_success();
-
-	}
-
-	function webhooks() {
-
-		if ( ! isset( $_GET['sunshine_stripe_webhook'] ) ) {
-			return;
-		}
-
-		SPC()->log( 'Received Stripe webhook' );
-
-		$this->setup();
-
-		$payload = @file_get_contents( 'php://input' );
-
-		$payload_data = maybe_unserialize( $payload );
-		SPC()->log( 'Payload: ' . print_r( $payload_data, 1 ) );
-
-		// sunshine_log( $payload_data, 'webhook payload data' );
-		if ( isset( $payload_data['livemode'] ) && $payload_data['livemode'] ) {
-			$mode = 'live';
-		} else {
-			$mode = 'test';
-		}
-
-		$endpoint_secret = $this->get_option( 'stripe_webhook_secret_' . $mode );
-		// $endpoint_secret = 'whsec_e44d4ef0b753a2ce80c9eacf0f00a183f68462f29dff87a6bb6418f7c9613e21'; // TODO: Remove, for Local testing
-
-		$sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'];
-		$event      = null;
-
-		try {
-			$event = \Stripe\Webhook::constructEvent(
-				$payload,
-				$sig_header,
-				$endpoint_secret
-			);
-		} catch ( \UnexpectedValueException $e ) {
-			// Invalid payload
-			http_response_code( 400 );
-			exit();
-		} catch ( \Stripe\Exception\SignatureVerificationException $e ) {
-			// Invalid signature
-			http_response_code( 400 );
-			exit();
-		}
-
-		SPC()->log( 'Event: ' . print_r( $event, 1 ) );
-
-		// Handle the event
-
-		switch ( $event->type ) {
-			case 'payment_intent.succeeded': // Successful payment!
-				// Do we need to actually do anything here?
-				break;
-			case 'charge.refunded':
-				/*
-				foreach ( $event->data->object->refunds->data as $refund ) {
-					$order = $this->get_order_by_payment_intent( $refund->payment_intent );
-					if ( $order ) {
-						$order->set_status( 'refunded' );
-						$order->add_refund( ( $refund->amount / 100 ), $refund->reason );
-						$order->update();
-					} else {
-						echo 'Unknown order';
-					}
-				}
-				*/
-			default:
-				echo 'Received unknown event type ' . $event->type;
-		}
-
-		http_response_code( 200 );
 
 	}
 

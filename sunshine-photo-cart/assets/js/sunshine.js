@@ -232,6 +232,7 @@ jQuery( document ).ready(function($){
     $( document ).on( 'click', 'button.sunshine--qty--up', function(){
         let qty_input = $( this ).siblings( 'input' );
 		let max = qty_input.attr( 'max' );
+		let min = qty_input.attr( 'min' );
         let qty = parseInt( qty_input.val() );
         qty += 1;
 		if ( qty > max ) {
@@ -243,11 +244,16 @@ jQuery( document ).ready(function($){
 
     $( document ).on( 'click', 'button.sunshine--qty--down', function(){
         let qty_input = $( this ).siblings( 'input' );
+		let max = qty_input.attr( 'max' );
+		let min = qty_input.attr( 'min' );
         let qty = parseInt( qty_input.val() );
         qty -= 1;
         if ( qty < 1 ) {
             return;
         }
+		if ( qty < min ) {
+			qty = min;
+		}
         qty_input.val( qty );
         qty_input.trigger( 'change' );
     });

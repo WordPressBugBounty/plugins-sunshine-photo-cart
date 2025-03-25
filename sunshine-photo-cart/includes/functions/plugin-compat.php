@@ -51,6 +51,5 @@ add_action( 'sunshine_after_image_process', 'sunshine_ewww_image_optimizer_edito
 function sunshine_ewww_image_optimizer_editor_overwrite( $attachment_id ) {
 	if ( ! defined( 'EWWWIO_EDITOR_OVERWRITE' ) ) {
 		define( 'EWWWIO_EDITOR_OVERWRITE', true );
-		SPC()->log( 'EWWWIO_EDITOR_OVERWRITE set to true' );
 	}
 }

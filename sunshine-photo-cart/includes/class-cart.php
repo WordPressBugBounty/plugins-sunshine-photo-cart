@@ -301,6 +301,10 @@ class SPC_Cart {
 			$item['qty'] = $product->get_max_qty();
 		}
 
+		if ( $product->get_min_qty() && $item['qty'] < $product->get_min_qty() ) {
+			$item['qty'] = $product->get_min_qty();
+		}
+
 		$item = apply_filters( 'sunshine_add_to_cart_item', $item );
 
 		// Add item data to cart contents
@@ -1942,7 +1946,7 @@ class SPC_Cart {
 				// Clear checkout data from session data.
 				SPC()->session->set( 'checkout_data', '' );
 				SPC()->session->set( 'checkout_sections_completed', '' );
-				// SPC()->cart->empty_cart();
+				SPC()->cart->empty_cart();
 			}
 
 			do_action( 'sunshine_checkout_create_order', $order, $data );

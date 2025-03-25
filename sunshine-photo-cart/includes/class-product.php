@@ -465,6 +465,10 @@ class SPC_Product extends Sunshine_Data {
 		return apply_filters( 'sunshine_product_max_qty', $this->get_meta_value( 'max_qty' ), $this );
 	}
 
+	public function get_min_qty() {
+		return apply_filters( 'sunshine_product_min_qty', $this->get_meta_value( 'min_qty' ), $this );
+	}
+
 	public function create() {
 
 		if ( empty( $this->get_name() ) ) {
