@@ -5,8 +5,8 @@ Contributors: wpsunshine, sccr410
 Tags: client photo gallery, sell photos, client galleries, client proofing, photo proofing
 Requires at least: 5.5
 Requires PHP: 7.4
-Tested up to: 6.7.2
-Stable tag: 3.4.11
+Tested up to: 6.8.1
+Stable tag: 3.4.12
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,9 @@ You can report security bugs through the Patchstack Vulnerability Disclosure Pro
 11. Admin: Create a gallery and add images
 
 == Changelog ==
+
+= 3.4.12 =
+* Fix: Security Fix: admin password could be reset via customer account password reset if user_login is known
 
 = 3.4.11 =
 * Add: Product minimum quantity (per cart line item)

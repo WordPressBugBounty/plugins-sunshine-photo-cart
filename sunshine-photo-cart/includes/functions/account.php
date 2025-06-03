@@ -149,13 +149,13 @@ function sunshine_modal_login() {
 		SPC()->customer->set_cart( $cart );
 	}
 
+	SPC()->log( 'Customer logged in: ' . SPC()->customer->get_id() );
 	SPC()->notices->add( __( 'You have been logged in', 'sunshine-photo-cart' ) );
 
 	// Let after login actions have a chance to do something.
 	do_action( 'sunshine_after_login', $post_data );
 
 	$result = apply_filters( 'sunshine_after_login_result', array(), SPC()->customer );
-	sunshine_log( $result );
 	if ( ! empty( $result['redirect_to'] ) ) {
 		$result['redirect_to'] = esc_url( $result['redirect_to'] );
 	}
@@ -306,7 +306,8 @@ function sunshine_password_reset_process() {
 		return;
 	}
 
-	if ( empty( $_POST['key'] ) || empty( $_POST['login'] ) || empty( $_POST['sunshine_new_password'] ) || empty( $_POST['sunshine_new_password_confirm'] ) ) {
+	if ( empty( $_POST['login'] ) || empty( $_POST['sunshine_new_password'] ) || empty( $_POST['sunshine_new_password_confirm'] ) ) {
+		SPC()->log( 'Invalid password reset attempt - missing information' );
 		SPC()->notices->add( __( 'Invalid password reset attempt', 'sunshine-photo-cart' ) );
 		wp_safe_redirect( sunshine_get_page_url( 'account' ) );
 		exit;
@@ -317,24 +318,22 @@ function sunshine_password_reset_process() {
 	$password         = sanitize_text_field( $_POST['sunshine_new_password'] );
 	$password_confirm = sanitize_text_field( $_POST['sunshine_new_password_confirm'] );
 
-	if ( ! check_password_reset_key( $key, $login ) ) {
+	$user = check_password_reset_key( $key, $login );
+	if ( is_wp_error( $user ) ) {
+		SPC()->log( 'Invalid password reset attempt - invalid key' );
 		SPC()->notices->add( __( 'Invalid password reset attempt', 'sunshine-photo-cart' ), 'error' );
 		wp_safe_redirect( sunshine_get_page_url( 'account' ) );
 		exit;
 	}
 
 	if ( $password != $password_confirm ) {
+		SPC()->log( 'Invalid password reset attempt - passwords do not match' );
 		SPC()->notices->add( __( 'Passwords do not match', 'sunshine-photo-cart' ), 'error' );
 		return;
 	}
 
-	$user = get_user_by( 'login', $login );
-	if ( ! $user ) {
-		SPC()->notices->add( __( 'Invalid user', 'sunshine-photo-cart' ) );
-		return;
-	}
-
 	wp_set_password( $password, $user->ID );
+	SPC()->log( 'Password reset successful for user: ' . $user->ID );
 	SPC()->notices->add( __( 'Password has been set', 'sunshine-photo-cart' ) );
 	wp_safe_redirect( sunshine_get_account_endpoint_url( 'login' ) );
 	exit;
