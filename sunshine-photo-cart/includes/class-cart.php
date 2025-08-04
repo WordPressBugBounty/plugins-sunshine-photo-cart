@@ -205,6 +205,8 @@ class SPC_Cart {
 
 	public function add_item( $product_id, $image_id = 0, $gallery_id = '', $price_level = '', $options = array(), $qty = 1, $comments = '', $overwrite = false, $meta = array() ) {
 
+		$can_add_item = true;
+
 		if ( empty( $price_level ) ) {
 			$price_level = sunshine_get_default_price_level_id();
 		}
@@ -259,7 +261,7 @@ class SPC_Cart {
 			// 'shipping' => $product->get_shipping(),
 			'discount'    => 0,
 			'comments'    => $comments,
-			'meta'        => $meta,
+			'meta'        => ( ! empty( $meta ) ) ? $meta : array(),
 			'hash'        => md5( time() . $product_id . $qty ),
 		);
 
@@ -269,11 +271,6 @@ class SPC_Cart {
 		if ( ! empty( $this->cart ) ) {
 			foreach ( $this->cart as $key => &$cart_item ) {
 				if ( $item['product_id'] == $cart_item['product_id'] ) {
-					// If no image ID, then this is a gallery download or a general product and we are not checking for uniqueness.
-					if ( empty( $item['image_id'] ) || empty( $cart_item['image_id'] ) ) {
-						continue;
-					}
-					// If the image IDs are different, then this is a unique cart item.
 					if ( ! empty( $item['image_id'] ) && ! empty( $cart_item['image_id'] ) && $item['image_id'] != $cart_item['image_id'] ) {
 						continue;
 					}
@@ -284,20 +281,10 @@ class SPC_Cart {
 					if ( empty( $item['options'] ) ) {
 						$item['options'] = array();
 					}
-					// If the options are different, then this is a unique cart item.
 					if ( json_encode( $item['options'] ) != json_encode( $cart_item['options'] ) ) {
 						continue;
 					}
-					// If the meta is different, then this is a unique cart item.
 					if ( json_encode( $item['meta'] ) != json_encode( $cart_item['meta'] ) ) {
-						continue;
-					}
-					// If the comments are different, then this is a unique cart item.
-					if ( ! empty( $item['comments'] ) && ! empty( $cart_item['comments'] ) && $item['comments'] != $cart_item['comments'] ) {
-						continue;
-					}
-					// If the price level is different, then this is a unique cart item.
-					if ( ! empty( $item['price_level'] ) && ! empty( $cart_item['price_level'] ) && $item['price_level'] != $cart_item['price_level'] ) {
 						continue;
 					}
 					$this->remove_item( $key ); // Remove the existing item with old quantity
@@ -321,7 +308,7 @@ class SPC_Cart {
 		$item = apply_filters( 'sunshine_add_to_cart_item', $item );
 
 		// Add item data to cart contents
-		if ( ! empty( $item ) && $item['qty'] > 0 ) {
+		if ( $can_add_item && $item['qty'] > 0 ) {
 			$this->cart[] = $item;
 		}
 

@@ -152,7 +152,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 	function stripe_connect_return() {
 
-		if ( ! isset( $_GET['sunshine_stripe_connect_return'] ) || ! current_user_can( 'sunshine_manage_options' ) ) {
+		if ( ! isset( $_GET['sunshine_stripe_connect_return'] ) || ! is_admin() || ! current_user_can( 'sunshine_manage_options' ) ) {
 			return false;
 		}
 
@@ -194,7 +194,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 	function stripe_disconnect_return() {
 
-		if ( ! isset( $_GET['sunshine_stripe_disconnect_return'] ) || empty( $_GET['status'] ) ) {
+		if ( ! isset( $_GET['sunshine_stripe_disconnect_return'] ) || empty( $_GET['status'] ) || ! is_admin() || ! current_user_can( 'sunshine_manage_options' ) ) {
 			return;
 		}
 
