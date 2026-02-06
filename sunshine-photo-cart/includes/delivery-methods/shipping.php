@@ -3,7 +3,8 @@
 class SPC_Delivery_Method_Shipping extends SPC_Delivery_Method {
 
 	public function init() {
-		$this->id             = 'shipping';
+		$this->id = 'shipping';
+		// Translators: This is the name of the delivery method that will be displayed to the customer.
 		$this->name           = __( 'Ship', 'sunshine-photo-cart' );
 		$this->class          = 'SPC_Delivery_Method_Shipping';
 		$this->description    = __( 'Order items shipped or delivered to your provided address', 'sunshine-photo-cart' );

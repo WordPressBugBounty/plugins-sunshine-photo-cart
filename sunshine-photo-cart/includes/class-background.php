@@ -35,7 +35,7 @@ class SPC_Background_Processing {
 				$files = array_merge( glob( $folder_path . '/.*' ), glob( $folder_path . '/*' ) );
 				foreach ( $files as $file ) {
 					if ( is_file( $file ) ) {
-						unlink( $file );
+						wp_delete_file( $file );
 					}
 				}
 				rmdir( $folder_path );

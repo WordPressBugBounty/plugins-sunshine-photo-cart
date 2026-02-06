@@ -92,7 +92,7 @@ abstract class Sunshine_Data {
 		if ( empty( $this->meta ) ) {
 			$this->set_meta_data();
 		}
-		if ( array_key_exists( $key, $this->meta ) ) {
+		if ( array_key_exists( $key, $this->meta ) && ! empty( $this->meta[ $key ] ) ) {
 			return maybe_unserialize( $this->meta[ $key ] );
 		}
 		if ( ! empty( $this->taxonomy ) ) {
@@ -124,10 +124,13 @@ abstract class Sunshine_Data {
 		}
 
 		$this->meta[ $key ] = $value;
-		if ( ! empty( $this->taxonomy ) ) {
-			$value = add_term_meta( $this->get_id(), $key, $value );
-		} else {
-			$value = add_post_meta( $this->get_id(), $key, $value );
+
+		if ( $this->get_id() > 0 ) {
+			if ( ! empty( $this->taxonomy ) ) {
+				$value = add_term_meta( $this->get_id(), $key, $value );
+			} else {
+				$value = add_post_meta( $this->get_id(), $key, $value );
+			}
 		}
 
 	}
@@ -139,10 +142,13 @@ abstract class Sunshine_Data {
 		}
 
 		$this->meta[ $key ] = $value;
-		if ( ! empty( $this->taxonomy ) ) {
-			$value = update_term_meta( $this->get_id(), $key, $value );
-		} else {
-			$value = update_post_meta( $this->get_id(), $key, $value );
+
+		if ( $this->get_id() > 0 ) {
+			if ( ! empty( $this->taxonomy ) ) {
+				$value = update_term_meta( $this->get_id(), $key, $value );
+			} else {
+				$value = update_post_meta( $this->get_id(), $key, $value );
+			}
 		}
 
 	}

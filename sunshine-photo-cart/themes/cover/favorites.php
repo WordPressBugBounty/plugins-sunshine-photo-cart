@@ -1,12 +1,13 @@
 <?php
-defined( 'ABSPATH' ) || exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly
+}
 
 sunshine_get_template( 'header' );
 
-do_action( 'sunshine_before_content' );
-
-do_action( 'sunshine_favorites' );
-
-do_action( 'sunshine_after_content' );
+// Get page content and apply proper WordPress filters.
+$page_id = SPC()->get_page( 'favorites' );
+$content = get_post_field( 'post_content', $page_id );
+echo apply_filters( 'the_content', $content ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Everything has been escaped by the previous functions used to build this massive HTML string.
 
 sunshine_get_template( 'footer' );

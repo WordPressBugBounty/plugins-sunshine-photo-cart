@@ -599,3 +599,8 @@ function sunshine_save_addresses() {
 	exit;
 
 }
+
+add_action( 'wp_login', 'sunshine_track_user_login', 10, 2 );
+function sunshine_track_user_login( $username, $user ) {
+	update_user_meta( $user->ID, 'sunshine_last_login', current_time( 'timestamp' ) );
+}

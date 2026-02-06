@@ -1,12 +1,12 @@
 <div id="sunshine--image--cart-review">
-	<!--<a href="#" class="sunshine--modal--close"><?php _e( 'Return to gallery', 'sunshine-photo-cart' ); ?></a>-->
+	<!--<a href="#" class="sunshine--modal--close"><?php esc_html_e( 'Return to gallery', 'sunshine-photo-cart' ); ?></a>-->
 	<?php sunshine_get_template( 'cart/mini-cart' ); ?>
 </div>
 <div id="sunshine--image--add-to-cart">
 	<div id="sunshine--image--add-to-cart--header">
 		<div id="sunshine--image--add-to-cart--header--image">
 			<?php $image->output(); ?>
-			<span><?php echo $image->get_name(); ?></span>
+			<span><?php echo esc_html( $image->get_name() ); ?></span>
 		</div>
 	</div>
 	<div id="sunshine--image--add-to-cart--content">
@@ -22,12 +22,12 @@
 					foreach ( $categories as $category ) {
 						$i++;
 						?>
-						<li aria-controls="sunshine--image--add-to-cart--category-<?php echo $category->get_id(); ?>" role="tab" data-id="<?php echo $category->get_id(); ?>"><?php echo $category->get_name(); ?></li>
+						<li aria-controls="sunshine--image--add-to-cart--category-<?php echo esc_attr( $category->get_id() ); ?>" role="tab" data-id="<?php echo esc_attr( $category->get_id() ); ?>"><?php echo esc_html( $category->get_name() ); ?></li>
 					<?php } ?>
 				</ul>
 			<?php } ?>
 			<?php if ( SPC()->store_enabled() ) { ?>
-				<a href="<?php echo $image->gallery->get_store_url(); ?>" id="sunshine--image--add-to-cart--store" class="sunshine--store-open"><?php _e( 'Store', 'sunshine-photo-cart' ); ?></a>
+				<a href="<?php echo esc_url( $image->gallery->get_store_url() ); ?>" id="sunshine--image--add-to-cart--store" class="sunshine--store-open"><?php esc_html_e( 'Store', 'sunshine-photo-cart' ); ?></a>
 			<?php } ?>
 		</div>
 

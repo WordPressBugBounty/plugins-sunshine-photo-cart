@@ -178,12 +178,13 @@ function sunshine_add_to_cart_url() {
 				$gallery_id  = $image->get_gallery_id();
 			}
 
-			if ( ! empty( $product_id ) ) {
-				$add_to_cart_result = SPC()->cart->add_item( $product_id, $image_id, $gallery_id, $price_level, '', $qty );
-				if ( $add_to_cart_result ) {
-					SPC()->notices->add( sprintf( __( '%s added to cart', 'sunshine-photo-cart' ), $product->get_name() ) );
-				}
+		if ( ! empty( $product_id ) ) {
+			$add_to_cart_result = SPC()->cart->add_item( $product_id, $image_id, $gallery_id, $price_level, '', $qty );
+			if ( $add_to_cart_result ) {
+				/* translators: %s is the product name */
+				SPC()->notices->add( sprintf( __( '%s added to cart', 'sunshine-photo-cart' ), $product->get_name() ) );
 			}
+		}
 		}
 
 		$url = remove_query_arg( array_keys( $_GET ) );

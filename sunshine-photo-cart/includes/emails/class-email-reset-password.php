@@ -7,7 +7,8 @@ class SPC_Email_Reset_Password extends SPC_Email {
 		$this->class       = get_class( $this );
 		$this->name        = __( 'Reset Password', 'sunshine-photo-cart' );
 		$this->description = __( 'Email sent to customer when resetting password', 'sunshine-photo-cart' );
-		$this->subject     = sprintf( __( 'Password reset request at %s', 'sunshine-photo-cart' ), '[sitename]' );
+		/* translators: %s is the site name */
+		$this->subject = sprintf( __( 'Password reset request at %s', 'sunshine-photo-cart' ), '[sitename]' );
 
 		$this->add_search_replace(
 			array(

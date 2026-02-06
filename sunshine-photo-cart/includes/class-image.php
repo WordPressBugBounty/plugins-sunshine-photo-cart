@@ -139,7 +139,7 @@ class SPC_Image extends Sunshine_Data {
 		);
 		*/
 		if ( $echo ) {
-			echo $output;
+			echo wp_kses_post( $output );
 			return;
 		}
 		return $output;

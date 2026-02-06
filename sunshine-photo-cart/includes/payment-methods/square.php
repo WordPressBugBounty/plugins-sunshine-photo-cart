@@ -17,7 +17,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		$this->class                 = get_class( $this );
 		$this->description           = __( 'Pay with credit card', 'sunshine-photo-cart' );
 		$this->can_be_enabled        = true;
-		$this->needs_billing_address = false;
+		$this->needs_billing_address = true;
 
 		add_action( 'sunshine_square_connect_display', array( $this, 'square_connect_display' ) );
 		add_action( 'admin_init', array( $this, 'square_connect_return' ) );
@@ -62,6 +62,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 		foreach ( $options as &$option ) {
 			if ( $option['id'] == 'square_header' && $this->get_application_fee_percent() > 0 ) {
+				/* translators: %s is the application fee percentage */
 				$option['description'] = sprintf( __( 'Note: You are using the free Square payment gateway integration. This includes an additional %s%% fee for payment processing on each order that goes to Sunshine Photo Cart in addition to Square processing fees. This added fee is removed by using the Square Pro add-on.', 'sunshine-photo-cart' ), $this->get_application_fee_percent() ) . ' <a href="https://www.sunshinephotocart.com/addon/square/?utm_source=plugin&utm_medium=link&utm_campaign=square" target="_blank">' . __( 'Learn more', 'sunshine-photo-cart' ) . '</a>';
 			}
 		}
@@ -98,6 +99,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 			'name'             => __( 'Sandbox Settings', 'sunshine-photo-cart' ),
 			'id'               => $this->id . '_sandbox_settings',
 			'type'             => 'header',
+			/* translators: %s is the URL to Square developer apps */
 			'description'      => sprintf( __( 'Sandbox details can be created at: %s', 'sunshine-photo-cart' ), '<a href="https://developer.squareup.com/apps" target="_blank">https://developer.squareup.com/apps</a>' ),
 			'conditions'       => array(
 				array(
@@ -203,12 +205,12 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		if ( $access_token ) {
 			?>
 
-			<p><a href="<?php echo wp_nonce_url( admin_url( 'admin.php?sunshine_square_disconnect' ), 'sunshine_square_disconnect' ); ?>" class="button"><?php _e( 'Disconnect from Square', 'sunshine-photo-cart' ); ?></a></p>
-			<p><a href="<?php echo wp_nonce_url( admin_url( 'admin.php?sunshine_square_refresh_token' ), 'sunshine_square_refresh_token' ); ?>"><?php _e( 'Refresh connection', 'sunshine-photo-cart' ); ?></a></p>
+			<p><a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?sunshine_square_disconnect' ), 'sunshine_square_disconnect' ) ); ?>" class="button"><?php esc_html_e( 'Disconnect from Square', 'sunshine-photo-cart' ); ?></a></p>
+			<p><a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?sunshine_square_refresh_token' ), 'sunshine_square_refresh_token' ) ); ?>"><?php esc_html_e( 'Refresh connection', 'sunshine-photo-cart' ); ?></a></p>
 
 	<?php } else { ?>
 
-			<p><a href="https://www.sunshinephotocart.com/?square_connect=1&mode=<?php echo $mode; ?>&nonce=<?php echo wp_create_nonce( 'sunshine_square_connect' ); ?>&return_url=<?php echo admin_url( 'admin.php' ); ?>" class="button"><?php _e( 'Connect to Square', 'sunshine-photo-cart' ); ?></a></p>
+			<p><a href="https://www.sunshinephotocart.com/?square_connect=1&mode=<?php echo esc_attr( $mode ); ?>&nonce=<?php echo esc_attr( wp_create_nonce( 'sunshine_square_connect' ) ); ?>&return_url=<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" class="button"><?php esc_html_e( 'Connect to Square', 'sunshine-photo-cart' ); ?></a></p>
 
 			<?php
 	}
@@ -268,7 +270,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 		$this->setup();
 
-		$mode = $this->get_mode();
+		$mode = $this->get_mode_value();
 
 		// Disconnect on sunshinephotocart.com
 		$request = array(
@@ -289,7 +291,9 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		$body = json_decode( wp_remote_retrieve_body( $response ) );
 
 		if ( isset( $body->error ) || isset( $body->data->error ) ) {
+			/* translators: %s is the error message */
 			SPC()->log( sprintf( __( 'Failed to remove association from Sunshine Photo Cart: %s', 'sunshine-photo-cart' ), $body->data->error ) );
+			/* translators: %s is the error message */
 			SPC()->notices->add_admin( 'square_failed_disconnect', sprintf( __( 'Failed to remove association from Sunshine Photo Cart: %s', 'sunshine-photo-cart' ), $body->data->error ), 'error' );
 		}
 
@@ -354,7 +358,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		foreach ( $body['locations'] as $location ) {
 			$locations[ $location['id'] ] = $location['name'] . ' (' . $location['address']['address_line_1'] . ')';
 		}
-		$this->update_option( 'locations_' . $this->get_mode(), $locations );
+		$this->update_option( 'locations_' . $this->get_mode_value(), $locations );
 		SPC()->notices->add_admin( 'square_location_refresh', __( 'Locations refreshed from Square', 'sunshine-photo-cart' ) );
 		SPC()->log( 'Square locations updated' );
 
@@ -392,13 +396,15 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		$body = json_decode( wp_remote_retrieve_body( $response ) );
 
 		if ( isset( $body->error ) || isset( $body->data->error ) ) {
+			/* translators: %s is the error message */
 			SPC()->log( sprintf( __( 'Failed to refresh Square token: %s', 'sunshine-photo-cart' ), $body->data->error ) );
+			/* translators: %s is the error message */
 			SPC()->notices->add_admin( 'square_failed_refresh', sprintf( __( 'Failed to refresh Square token: %s', 'sunshine-photo-cart' ), $body->data->error ), 'error' );
 			return false;
 		}
 
 		if ( $body->success ) {
-			$mode          = $this->get_mode();
+			$mode          = $this->get_mode_value();
 			$access_token  = $this->secure_token( sanitize_text_field( $body->data->access_token ), 'e' );
 			$refresh_token = $this->secure_token( sanitize_text_field( $body->data->refresh_token ), 'e' );
 			$this->update_option( 'access_token_' . $mode, $access_token );
@@ -446,7 +452,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 	private function setup( $mode = '' ) {
 
 		if ( empty( $mode ) ) {
-			$mode = $this->get_mode();
+			$mode = $this->get_mode_value();
 		}
 
 		if ( empty( $this->get_access_token( $mode ) ) ) {
@@ -463,13 +469,9 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 	}
 
-	private function get_mode() {
-		return $this->get_option( 'mode' );
-	}
-
 	private function get_merchant_id( $mode = '' ) {
 		if ( empty( $mode ) ) {
-			$mode = $this->get_mode();
+			$mode = $this->get_mode_value();
 		}
 		$merchant_id = $this->get_option( 'merchant_id_' . $mode );
 		return $merchant_id;
@@ -477,7 +479,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 	private function get_access_token( $mode = '' ) {
 		if ( empty( $mode ) ) {
-			$mode = $this->get_mode();
+			$mode = $this->get_mode_value();
 		}
 		$access_token = $this->get_option( 'access_token_' . $mode );
 		if ( $mode == 'live' ) {
@@ -488,7 +490,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 	private function get_refresh_token( $mode = '' ) {
 		if ( empty( $mode ) ) {
-			$mode = $this->get_mode();
+			$mode = $this->get_mode_value();
 		}
 		$access_token = $this->get_option( 'refresh_token_' . $mode );
 		$access_token = $this->secure_token( $access_token, 'd' );
@@ -497,7 +499,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 	private function get_location_id( $mode = '' ) {
 		if ( empty( $mode ) ) {
-			$mode = $this->get_mode();
+			$mode = $this->get_mode_value();
 		}
 		$location_id = $this->get_option( 'location_id_' . $mode );
 		if ( empty( $location_id ) ) {
@@ -510,7 +512,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 	}
 
 	public function get_application_id() {
-		if ( $this->get_mode() == 'live' ) {
+		if ( $this->get_mode_value() == 'live' ) {
 			// return 'sandbox-sq0idb-aNDJReIdhctf2o3OZA0FTA';
 			return 'sq0idp-19QAyk7l68V7ymxc2Fl9EQ';
 		}
@@ -530,18 +532,20 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 			return false;
 		}
 
-		if ( $this->get_mode() == 'live' ) {
+		if ( $this->get_mode_value() == 'live' ) {
 			wp_enqueue_script( 'sunshine-square', 'https://web.squarecdn.com/v1/square.js' );
 		} else {
 			wp_enqueue_script( 'sunshine-square', 'https://sandbox.web.squarecdn.com/v1/square.js' );
 		}
-		wp_enqueue_script( 'sunshine-square-processing', SUNSHINE_PHOTO_CART_URL . '/assets/js/square-processing.js', array( 'jquery' ), '', true );
+		wp_enqueue_script( 'sunshine-square-processing', SUNSHINE_PHOTO_CART_URL . '/assets/js/square-processing.js', array( 'jquery' ), SUNSHINE_PHOTO_CART_VERSION, true );
 		wp_localize_script(
 			'sunshine-square-processing',
 			'spc_square_vars',
 			array(
 				'application_id' => $this->get_application_id(),
 				'location_id'    => $this->get_location_id(),
+				'currency'       => $this->currency,
+				'total'          => SPC()->cart->get_total(), // Base currency for JavaScript SDK
 				'ajax_url'       => admin_url( 'admin-ajax.php' ),
 				'security'       => wp_create_nonce( 'sunshine_square' ),
 			)
@@ -553,9 +557,10 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 		ob_start();
 
-		if ( $this->get_mode() == 'test' ) {
-			echo '<div class="sunshine--payment--test">' . __( 'This will be processed as a test payment and no real money will be exchanged', 'sunshine-photo-cart' ) . '</div>';
+		if ( $this->get_mode_value() == 'test' ) {
+			echo '<div class="sunshine--payment--test">' . esc_html__( 'This will be processed as a test payment and no real money will be exchanged', 'sunshine-photo-cart' ) . '</div>';
 		}
+
 		?>
 
 		<div id="sunshine-square-payment">
@@ -611,7 +616,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 	private function api_request( $endpoint, $body = array(), $method = 'POST', $mode = '' ) {
 
 		if ( empty( $mode ) ) {
-			$mode = $this->get_mode();
+			$mode = $this->get_mode_value();
 		}
 
 		$url  = trailingslashit( $this->environmentUrl ) . $endpoint;
@@ -643,6 +648,8 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		}
 
 		$source_id = sanitize_text_field( $_POST['source_id'] );
+
+		SPC()->log( 'Square init order source_id: ' . $source_id );
 
 		$this->setup();
 
@@ -686,6 +693,8 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 			return;
 		}
 
+		SPC()->log( 'Square successful payment' );
+
 		$payment = $body['payment'];
 		wp_send_json_success( array( 'payment_id' => $payment['id'] ) );
 
@@ -723,6 +732,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 	public function create_order_status( $status, $order ) {
 		if ( $order->get_payment_method() == $this->id ) {
+			SPC()->log( 'Setting order status to new for Square payment' );
 			return 'new'; // Straight to new.
 		}
 		return $status;
@@ -759,14 +769,14 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 	public function admin_order_tab_content_square( $order ) {
 
 		echo '<table class="sunshine-data">';
-		echo '<tr><th>' . __( 'Transaction ID', 'sunshine-photo-cart' ) . '</th>';
-		echo '<td>' . $this->get_transaction_id( $order ) . '</td></tr>';
+		echo '<tr><th>' . esc_html__( 'Transaction ID', 'sunshine-photo-cart' ) . '</th>';
+		echo '<td>' . esc_html( $this->get_transaction_id( $order ) ) . '</td></tr>';
 
 		$application_fee_amount = $this->get_app_fee( $order );
 		if ( $application_fee_amount ) {
 			echo '<tr>';
-			echo '<th>' . __( 'Application Fee Amount (To Sunshine)', 'sunshine-photo-cart' ) . '</th>';
-			echo '<td>' . sunshine_price( $application_fee_amount ) . ' (<a href="https://www.sunshinephotocart.com/upgrade/?utm_source=plugin&utm_medium=link&utm_campaign=stripe" target="_blank">' . __( 'Upgrade to remove this fee on future transactions', 'sunshine-photo-cart' ) . '</a>)' . '</td>';
+			echo '<th>' . esc_html__( 'Application Fee Amount (To Sunshine)', 'sunshine-photo-cart' ) . '</th>';
+			echo '<td>' . wp_kses_post( sunshine_price( $application_fee_amount ) ) . ' (<a href="https://www.sunshinephotocart.com/upgrade/?utm_source=plugin&utm_medium=link&utm_campaign=stripe" target="_blank">' . esc_html__( 'Upgrade to remove this fee on future transactions', 'sunshine-photo-cart' ) . '</a>)' . '</td>';
 			echo '</tr>';
 		}
 
@@ -785,9 +795,9 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 	function order_actions_options( $order ) {
 		?>
 		<div id="square-refund-order-actions" style="display: none;">
-			<p><label><input type="checkbox" name="square_refund_notify" value="yes" checked="checked" /> <?php _e( 'Notify customer via email', 'sunshine-photo-cart' ); ?></label></p>
-			<p><label><input type="checkbox" name="square_refund_full" value="yes" checked="checked" /> <?php _e( 'Full refund', 'sunshine-photo-cart' ); ?></label></p>
-			<p id="square-refund-amount" style="display: none;"><label><input type="number" name="square_refund_amount" step=".01" size="6" style="width:100px" max="<?php echo esc_attr( $order->get_total_minus_refunds() ); ?>" value="<?php echo esc_attr( $order->get_total_minus_refunds() ); ?>" /> <?php _e( 'Amount to refund', 'sunshine-photo-cart' ); ?></label></p>
+			<p><label><input type="checkbox" name="square_refund_notify" value="yes" checked="checked" /> <?php esc_html_e( 'Notify customer via email', 'sunshine-photo-cart' ); ?></label></p>
+			<p><label><input type="checkbox" name="square_refund_full" value="yes" checked="checked" /> <?php esc_html_e( 'Full refund', 'sunshine-photo-cart' ); ?></label></p>
+			<p id="square-refund-amount" style="display: none;"><label><input type="number" name="square_refund_amount" step=".01" size="6" style="width:100px" max="<?php echo esc_attr( $order->get_total_minus_refunds() ); ?>" value="<?php echo esc_attr( $order->get_total_minus_refunds() ); ?>" /> <?php esc_html_e( 'Amount to refund', 'sunshine-photo-cart' ); ?></label></p>
 		</div>
 		<script>
 			jQuery( 'select[name="sunshine_order_action"]' ).on( 'change', function(){
@@ -847,12 +857,14 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		$response = $this->api_request( 'v2/refunds', $args );
 
 		if ( is_wp_error( $response ) ) {
+			/* translators: %s is the error reasons */
 			SPC()->notices->add_admin( 'square_refund_fail_' . $payment_id, sprintf( __( 'Could not refund payment: %s', 'sunshine-photo-cart' ), print_r( $reasons, 1 ) ), 'error' );
 			return;
 		}
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! empty( $body['errors'] ) ) {
+			/* translators: %s is the error detail message */
 			SPC()->notices->add_admin( 'square_refund_fail_' . $payment_id, sprintf( __( 'Could not refund payment: %s', 'sunshine-photo-cart' ), $body['errors'][0]['detail'] ), 'error' );
 			return;
 		}
@@ -867,9 +879,11 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		$order->update();
 
 		if ( ! empty( $refund_app_fee ) ) {
+			/* translators: %s is the refund amount formatted as price */
 			$order->add_log( sprintf( __( 'Sunshine contributed %s towards refund from processing fees', 'sunshine-photo-cart' ), sunshine_price( $refund_app_fee / 100 ) ) );
 		}
 
+		/* translators: %s is the refund amount formatted as price */
 		SPC()->notices->add_admin( 'square_refund_success_' . $payment_id, sprintf( __( 'Refund has been processed for %s', 'sunshine-photo-cart' ), sunshine_price( $refund_amount ) ) );
 
 		if ( ! empty( $_POST['square_refund_notify'] ) ) {
@@ -881,7 +895,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 	public function mode( $mode, $order ) {
 		if ( $order->get_payment_method() == 'square' ) {
-			return ( $this->get_mode() == 'live' ) ? 'live' : 'test';
+			return $this->get_mode_value();
 		}
 		return $mode;
 	}

@@ -317,29 +317,72 @@ class SPC_Shipping_Method {
 
 		if ( ! empty( $this->instance_id ) ) {
 			$this->price = floatval( SPC()->get_option( $this->id . '_price_' . $this->instance_id ) );
+
+			// When prices include tax, extract base price first from the configured price.
+			$price_has_tax = SPC()->get_option( 'price_has_tax' );
+			if ( 'yes' === $price_has_tax && $this->is_taxable() ) {
+				$tax_rate = SPC()->cart->get_tax_rate();
+				if ( $tax_rate ) {
+					// Extract tax from the base flat rate price.
+					$base_price  = round( $this->price / ( $tax_rate['rate'] + 1 ), 2 );
+					$this->tax   = round( $this->price - $base_price, 2 );
+					$this->price = $base_price;
+				}
+			}
+
+			// Add product shipping costs.
 			if ( ! SPC()->cart->is_empty() ) {
 				foreach ( SPC()->cart->get_cart_items() as $item ) {
 					$product_shipping = floatval( $item->product->get_shipping() );
 					if ( $product_shipping ) {
-						$this->price += ( $product_shipping * $item->get_qty() );
+						// If prices include tax, extract base from product shipping too.
+						if ( 'yes' === $price_has_tax && $this->is_taxable() && ! empty( $tax_rate ) ) {
+							$product_shipping_base = round( $product_shipping / ( $tax_rate['rate'] + 1 ), 2 );
+							$product_shipping_tax  = round( $product_shipping - $product_shipping_base, 2 );
+							$this->price          += ( $product_shipping_base * $item->get_qty() );
+							$this->tax            += ( $product_shipping_tax * $item->get_qty() );
+						} else {
+							$this->price += ( $product_shipping * $item->get_qty() );
+						}
 					}
 				}
 			}
 
-			if ( $this->price && $this->is_taxable() ) {
+			// Calculate tax if prices don't include tax.
+			if ( 'yes' !== $price_has_tax && $this->price && $this->is_taxable() ) {
 				$tax_rate = SPC()->cart->get_tax_rate();
 				if ( $tax_rate ) {
-					if ( SPC()->get_option( 'price_has_tax' ) == 'yes' ) {
-						$new_total   = round( $this->price / ( $tax_rate['rate'] + 1 ), 2 );
-						$this->tax   = $this->price - $new_total;
-						$this->price = $new_total;
-					} else {
-						$this->tax = round( $this->price * $tax_rate['rate'], 2 );
-					}
+					$this->tax = round( $this->price * $tax_rate['rate'], 2 );
 				}
 			}
 		}
 
+	}
+
+	/**
+	 * Calculate tax for shipping price.
+	 * Called by child classes to ensure consistent tax handling.
+	 */
+	public function calculate_tax() {
+		if ( ! $this->price || ! $this->is_taxable() ) {
+			return;
+		}
+
+		$tax_rate = SPC()->cart->get_tax_rate();
+		if ( ! $tax_rate ) {
+			return;
+		}
+
+		$price_has_tax = SPC()->get_option( 'price_has_tax' );
+		if ( 'yes' === $price_has_tax ) {
+			// Extract tax from price.
+			$base_price  = round( $this->price / ( $tax_rate['rate'] + 1 ), 2 );
+			$this->tax   = round( $this->price - $base_price, 2 );
+			$this->price = $base_price;
+		} else {
+			// Calculate tax on price.
+			$this->tax = round( $this->price * $tax_rate['rate'], 2 );
+		}
 	}
 
 	/**

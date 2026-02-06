@@ -3,11 +3,12 @@ class SPC_Email_Custom_Favorites extends SPC_Email {
 
 	function init() {
 
-		$this->id                = 'custom-favorites';
-		$this->class             = get_class( $this );
-		$this->name              = __( 'Favorites (Custom Recipient)', 'sunshine-photo-cart' );
-		$this->description       = __( 'Favorites notification sent by customers to a custom recipient', 'sunshine-photo-cart' );
-		$this->subject           = sprintf( __( '%s %s has sent you favorited images on %s', 'sunshine-photo-cart' ), '[first_name]', '[last_name]', '[sitename]' );
+		$this->id          = 'custom-favorites';
+		$this->class       = get_class( $this );
+		$this->name        = __( 'Favorites (Custom Recipient)', 'sunshine-photo-cart' );
+		$this->description = __( 'Favorites notification sent by customers to a custom recipient', 'sunshine-photo-cart' );
+		/* translators: %1$s is the customer first name, %2$s is the customer last name, %3$s is the site name */
+		$this->subject           = sprintf( __( '%1$s %2$s has sent you favorited images on %3$s', 'sunshine-photo-cart' ), '[first_name]', '[last_name]', '[sitename]' );
 		$this->custom_recipients = false;
 
 		$this->add_search_replace(

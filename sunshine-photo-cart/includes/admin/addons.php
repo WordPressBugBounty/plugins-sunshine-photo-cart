@@ -1,15 +1,19 @@
 <?php
 function is_sunshine_addon_active( $addon ) {
-	return is_plugin_active( 'sunshine-' . $addon . '/' . $addon . '.php' );
+	if ( array_key_exists( $addon, SPC()->active_addons ) ) {
+		return true;
+	}
+	return false;
 }
 
 function sunshine_addon_activation( $file, $name, $item_id ) {
 
 	$plugin_basename = plugin_basename( $file );
-	$filename = basename( $file, '.php' );
-	$license_key = sunshine_addon_get_license_key( $filename );
+	$filename        = basename( $file, '.php' );
+	$license_key     = sunshine_addon_get_license_key( $filename );
 
 	if ( ! $license_key ) {
+		/* translators: %s is the addon name */
 		SPC()->notices->add_admin( 'sunshine_license_invalid_' . $filename, sprintf( __( 'Could not automatically retrieve the license key for %s', 'sunshine-photo-cart' ), $name ), 'error' );
 		return;
 	}
@@ -37,6 +41,7 @@ function sunshine_addon_activation( $file, $name, $item_id ) {
 
 	// Make sure there are no errors.
 	if ( is_wp_error( $response ) ) {
+		/* translators: %s is the error message */
 		SPC()->notices->add_admin( 'sunshine_license_no_connection', sprintf( __( 'Your licenses could not be activated because your server failed to connect to SunshinePhotoCart.com: %s', 'sunshine-photo-cart' ), $response->get_error_message() ), 'error' );
 		return;
 	}
@@ -54,7 +59,8 @@ function sunshine_addon_activation( $file, $name, $item_id ) {
 			$message = __( 'Unknown error occured', 'sunshine-photo-cart' );
 		}
 
-		SPC()->notices->add_admin( $item_id . '_license_activation_fail', sprintf( __( 'License for %s failed to be activated: %s', 'sunshine-photo-cart' ), $name, $message ) );
+		/* translators: %1$s is the addon name, %2$s is the error message */
+		SPC()->notices->add_admin( $item_id . '_license_activation_fail', sprintf( __( 'License for %1$s failed to be activated: %2$s', 'sunshine-photo-cart' ), $name, $message ) );
 
 	} else {
 
@@ -75,8 +81,8 @@ function sunshine_addon_activation( $file, $name, $item_id ) {
 function sunshine_addon_deactivation( $file, $name, $item_id ) {
 
 	$plugin_basename = plugin_basename( $file );
-	$filename = basename( $file, '.php' );
-	$license_key = SPC()->get_option( 'license_' . $filename );
+	$filename        = basename( $file, '.php' );
+	$license_key     = SPC()->get_option( 'license_' . $filename );
 
 	if ( empty( $license_key ) ) {
 		return;
@@ -84,8 +90,8 @@ function sunshine_addon_deactivation( $file, $name, $item_id ) {
 
 	// Data to send to the API
 	$api_params = array(
-		'edd_action' => 'deactivate_license',
-		'license'    => $license_key,
+		'edd_action'  => 'deactivate_license',
+		'license'     => $license_key,
 		'item_id'     => $item_id,
 		'url'         => home_url(),
 		'environment' => function_exists( 'wp_get_environment_type' ) ? wp_get_environment_type() : 'production',
@@ -153,7 +159,7 @@ function sunshine_addons_page() {
 	$addons = sunshine_get_addon_data( true ); // TODO: Do not force this.
 	add_thickbox();
 	$current_plan = ( ! empty( SPC()->plan ) && SPC()->plan->is_valid() ) ? SPC()->plan->get_id() : 'free';
-?>
+	?>
 	<div class="wrap">
 		<h1>Add-ons</h1>
 		<?php
@@ -164,7 +170,7 @@ function sunshine_addons_page() {
 			}
 		}
 		if ( ! empty( $categories ) ) {
-		?>
+			?>
 		<p id="sunshine--addons--categories">
 			<a href="#all" data-category="all" class="active">All</a>
 			<?php foreach ( $categories as $key => $name ) { ?>
@@ -194,7 +200,8 @@ function sunshine_addons_page() {
 						|| ( $current_plan == 'basic' && ( $addon['plan'] == 'plus' || $addon['plan'] == 'pro' ) )
 						|| ( $current_plan == 'plus' && $addon['plan'] == 'pro' )
 					) {
-						echo '<div class="sunshine--addon--needs-upgrade" data-addon="' . esc_attr( $addon['slug'] ) . '">' . sprintf( __( 'Upgrade to %s', 'sunshine-photo-cart' ), $addon['plan'] ) . '</div>';
+						/* translators: %s is the plan name */
+						echo '<div class="sunshine--addon--needs-upgrade" data-addon="' . esc_attr( $addon['slug'] ) . '">' . esc_html( sprintf( __( 'Upgrade to %s', 'sunshine-photo-cart' ), $addon['plan'] ) ) . '</div>';
 					}
 					?>
 					<div class="sunshine--addon--content">
@@ -206,8 +213,8 @@ function sunshine_addons_page() {
 					</div>
 					<div class="sunshine--addon--actions">
 						<label class="sunshine-switch">
-						  	<input type="checkbox" name="addon" value="<?php echo esc_attr( $addon['slug'] ); ?>" class="<?php echo esc_attr( $addon['plan'] ); ?>" <?php checked( 1, is_sunshine_addon_active( $addon['slug'] ) ); ?> />
-						  	<span class="sunshine-switch-slider"></span>
+							  <input type="checkbox" name="addon" value="<?php echo esc_attr( $addon['slug'] ); ?>" class="<?php echo esc_attr( $addon['plan'] ); ?>" <?php checked( 1, is_sunshine_addon_active( $addon['slug'] ) ); ?> />
+							  <span class="sunshine-switch-slider"></span>
 						</label>
 						<a href="<?php echo esc_url( $addon['url'] ); ?>?utm_source=plugin&utm_medium=link&utm_campaign=addons-list-more" target="_blank" class="button">Learn more</a>
 					</div>
@@ -229,11 +236,11 @@ function sunshine_addons_page() {
 								</div>
 								<a href="https://www.sunshinephotocart.com/checkout?edd_action=add_to_cart&download_id=44&utm_source=plugin&utm_medium=link&utm_campaign=addons-list-modal" target="_blank" class="button-primary large">Upgrade to PRO</a><br /><br />
 								<a href="https://www.sunshinephotocart.com/upgrade/?utm_source=plugin&utm_medium=link&utm_campaign=addons-list-modal" target="_blank">Learn more about Pro</a> |
-								<a href="<?php echo admin_url( 'admin.php?page=sunshine&section=license&license_reminder' ); ?>">I already have a license</a>
+								<a href="<?php echo esc_url( admin_url( 'admin.php?page=sunshine&section=license&license_reminder' ) ); ?>">I already have a license</a>
 								<div class="sunshine--addons--upgrade-modal--content--divider">
 									OR
 								</div>
-								<a href="https://www.sunshinephotocart.com/checkout?edd_action=add_to_cart&download_id=<?php echo esc_attr( $addon['id'] ); ?>&utm_source=plugin&utm_medium=link&utm_campaign=addons-list-modal" target="_blank" class="button-alt">Buy <?php echo esc_html( $addon['title'] ); ?> for $<?php echo str_replace( '.00', '', $addon['price'] ); ?></a>
+								<a href="https://www.sunshinephotocart.com/checkout?edd_action=add_to_cart&download_id=<?php echo esc_attr( $addon['id'] ); ?>&utm_source=plugin&utm_medium=link&utm_campaign=addons-list-modal" target="_blank" class="button-alt">Buy <?php echo esc_html( $addon['title'] ); ?> for $<?php echo esc_html( str_replace( '.00', '', $addon['price'] ) ); ?></a>
 								<br /><br />
 								<a href="#" class="sunshine--addons--upgrade-modal--close">Nevermind, I do not want to upgrade</a>
 							</div>
@@ -245,7 +252,7 @@ function sunshine_addons_page() {
 		</ul>
 	</div>
 
-<?php
+	<?php
 }
 
 if ( ! class_exists( 'Plugin_Upgrader', false ) ) {
@@ -253,25 +260,25 @@ if ( ! class_exists( 'Plugin_Upgrader', false ) ) {
 }
 
 class Sunshine_Installer_Skin extends Plugin_Installer_Skin {
-    public function header() {}
+	public function header() {}
 
-    public function footer() {}
+	public function footer() {}
 
-    public function before() {}
+	public function before() {}
 
-    public function after() {}
+	public function after() {}
 
-    public function feedback($string, ...$args) {}
+	public function feedback( $string, ...$args ) {}
 }
 
 add_action( 'wp_ajax_sunshine_addon_toggle', 'sunshine_addon_toggle' );
 function sunshine_addon_toggle() {
 	$result = false;
 	if ( isset( $_REQUEST['addon_security'] ) && wp_verify_nonce( $_REQUEST['addon_security'], 'sunshine_addon_toggle' ) && current_user_can( 'sunshine_manage_options' ) ) {
-		$addon    = sanitize_text_field( $_REQUEST['addon'] );
+		$addon            = sanitize_text_field( $_REQUEST['addon'] );
 		$currently_active = is_sunshine_addon_active( $addon );
-		$status = 'inactive';
-		$reason = '';
+		$status           = 'inactive';
+		$reason           = '';
 		if ( $currently_active ) {
 			$deactivate = deactivate_plugins( 'sunshine-' . $addon . '/' . $addon . '.php' );
 			if ( ! is_wp_error( $deactivate ) ) {
@@ -305,22 +312,25 @@ function sunshine_addon_toggle() {
 				$install = $upgrader->install( $addon_item['file'] );
 
 				if ( $install ) {
-					//echo 'Files installed!';
+					// echo 'Files installed!';
 					$status = 'installed';
 				} else {
 					$status = 'failed';
 					$reason = __( 'Could not get download file', 'sunshine-photo-cart' );
 				}
-
-
 			}
-			//echo 'Activating addon...';
+			// echo 'Activating addon...';
 			$activate = activate_plugins( 'sunshine-' . $addon . '/' . $addon . '.php' );
 			if ( ! is_wp_error( $activate ) ) {
 				$status = 'active';
 			}
 		}
-		wp_send_json_success( array( 'status' => $status, 'reason' => $reason ) );
+		wp_send_json_success(
+			array(
+				'status' => $status,
+				'reason' => $reason,
+			)
+		);
 	}
 }
 
@@ -330,7 +340,7 @@ function sunshine_get_addon_data( $force = false ) {
 	$addons = get_transient( 'sunshine_addons_data' );
 
 	if ( $force || empty( $addons ) ) {
-		$url         = SUNSHINE_PHOTO_CART_STORE_URL . '/?sunshine_addons_feed&referrer=' . $_SERVER['SERVER_NAME'] . '&time=' . time();
+		$url = SUNSHINE_PHOTO_CART_STORE_URL . '/?sunshine_addons_feed&referrer=' . $_SERVER['SERVER_NAME'] . '&time=' . time();
 		if ( ! empty( SPC()->plan ) ) {
 			$license_key = SPC()->plan->get_license_key();
 			if ( ! empty( $license_key ) ) {
@@ -348,17 +358,17 @@ function sunshine_get_addon_data( $force = false ) {
 					foreach ( $remote_data_items as $remote_data_item ) {
 						// if ( empty( $addon->file ) ) continue;
 						$addons[] = array(
-							'id'      => $remote_data_item->id,
-							'title'   => $remote_data_item->title,
-							'slug'    => $remote_data_item->slug,
-							'file'    => $remote_data_item->file,
-							'url'     => $remote_data_item->url,
-							'plan'    => $remote_data_item->plan,
-							'excerpt' => $remote_data_item->excerpt,
-							'price'   => $remote_data_item->price,
-							'image'   => $remote_data_item->image,
-							'category'   => $remote_data_item->category,
-							'category_name'   => $remote_data_item->category_name,
+							'id'            => $remote_data_item->id,
+							'title'         => $remote_data_item->title,
+							'slug'          => $remote_data_item->slug,
+							'file'          => $remote_data_item->file,
+							'url'           => $remote_data_item->url,
+							'plan'          => $remote_data_item->plan,
+							'excerpt'       => $remote_data_item->excerpt,
+							'price'         => $remote_data_item->price,
+							'image'         => $remote_data_item->image,
+							'category'      => $remote_data_item->category,
+							'category_name' => $remote_data_item->category_name,
 						);
 					}
 				}

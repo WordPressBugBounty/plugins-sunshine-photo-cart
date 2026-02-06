@@ -215,6 +215,7 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 				'venmo'       => 'Venmo',
 			),
 			'default'     => 'true',
+			/* translators: %s is the URL to PayPal documentation */
 			'description' => sprintf( __( 'By default, all possible funding sources will be shown. This setting can disable funding sources such as Credit Cards, Pay Later, Venmo, or other <a href="%s" target="_blank">Alternative Payment Methods</a>', 'sunshine-photo-cart' ), 'https://developer.paypal.com/docs/checkout/apm/' ),
 		);
 
@@ -227,23 +228,20 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 
 	public function create_order_status( $status, $order ) {
 		if ( $order->get_payment_method() == $this->id ) {
-			return 'new'; // Straight to new
+			SPC()->log( 'Setting order status to new for PayPal payment' );
+			return 'new'; // Straight to new.
 		}
 		return $status;
 	}
 
-	public function get_mode() {
-		return SPC()->get_option( $this->id . '_mode' );
-	}
-
 	public function get_client_id() {
-		$client_id = ( $this->get_mode() == 'live' ) ? SPC()->get_option( $this->id . '_client_id' ) : SPC()->get_option( $this->id . '_client_id_sandbox' );
+		$client_id = ( $this->get_mode_value() == 'live' ) ? SPC()->get_option( $this->id . '_client_id' ) : SPC()->get_option( $this->id . '_client_id_sandbox' );
 		$client_id = str_replace( ' ', '', $client_id );
 		return $client_id;
 	}
 
 	public function get_secret() {
-		$secret = ( $this->get_mode() == 'live' ) ? SPC()->get_option( $this->id . '_secret' ) : SPC()->get_option( $this->id . '_secret_sandbox' );
+		$secret = ( $this->get_mode_value() == 'live' ) ? SPC()->get_option( $this->id . '_secret' ) : SPC()->get_option( $this->id . '_secret_sandbox' );
 		$secret = str_replace( ' ', '', $secret );
 		return $secret;
 	}
@@ -258,7 +256,7 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 
 	public function setup() {
 
-		if ( $this->get_mode() == 'live' ) {
+		if ( $this->get_mode_value() == 'live' ) {
 			$this->api_url = 'https://api-m.paypal.com/v2/';
 		} else {
 			$this->api_url = 'https://api-m.sandbox.paypal.com/v2/';
@@ -270,9 +268,28 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 
 	public function enqueue_scripts() {
 		if ( is_sunshine_page( 'checkout' ) && $this->get_client_id() && $this->get_secret() ) {
-			$url = 'https://www.paypal.com/sdk/js?client-id=' . $this->get_client_id() . '&currency=' . SPC()->get_option( 'currency' );
+			$url = 'https://www.paypal.com/sdk/js';
+			$url = add_query_arg( 'client-id', trim( $this->get_client_id() ), $url );
+			$url = add_query_arg( 'currency', SPC()->get_option( 'currency' ), $url );
+			$url = add_query_arg( 'intent', 'capture', $url ); // Force capture intent which may help with popup behavior
+			$url = add_query_arg( 'components', 'buttons', $url ); // Exclude hosted-fields component
+
+			// Handle enabled funding sources.
 			if ( SPC()->get_option( 'paypal_allow_venmo' ) ) {
 				$url = add_query_arg( 'enable-funding', 'venmo', $url );
+			}
+
+			// Handle disabled funding sources.
+			$disabled_funding_sources = SPC()->get_option( 'paypal_disable_funding_sources' );
+			if ( empty( $disabled_funding_sources ) ) {
+				$disabled_funding_sources = array();
+			}
+			// Force disable card funding to prevent inline forms - only allow popup methods
+			if ( ! in_array( 'card', $disabled_funding_sources ) ) {
+				$disabled_funding_sources[] = 'card';
+			}
+			if ( ! empty( $disabled_funding_sources ) && is_array( $disabled_funding_sources ) ) {
+				$url = add_query_arg( 'disable-funding', implode( ',', $disabled_funding_sources ), $url );
 			}
 			wp_enqueue_script( 'sunshine-paypal-checkout', $url, '', null );
 		}
@@ -282,8 +299,8 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 
 		ob_start();
 
-		if ( $this->get_mode() == 'sandbox' ) {
-			echo '<div class="sunshine--payment--test">' . __( 'This will be processed as a test payment and no real money will be exchanged', 'sunshine-photo-cart' ) . '</div>';
+		if ( $this->get_mode_value() == 'sandbox' ) {
+			echo '<div class="sunshine--payment--test">' . esc_html__( 'This will be processed as a test payment and no real money will be exchanged', 'sunshine-photo-cart' ) . '</div>';
 		}
 
 		?>
@@ -329,7 +346,7 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 						color:  '<?php echo esc_js( $this->get_option( 'style_color' ) ); ?>',
 						shape:  '<?php echo esc_js( $this->get_option( 'style_shape' ) ); ?>',
 						label:  '<?php echo esc_js( $this->get_option( 'style_label' ) ); ?>',
-						<?php if ( $this->get_option( 'style_layout' ) == 'horizontal' ) { ?>
+					<?php if ( $this->get_option( 'style_layout' ) == 'horizontal' ) { ?>
 							tagline:  <?php echo esc_js( $this->get_option( 'style_tagline' ) ); ?>
 						<?php } ?>
 					},
@@ -339,8 +356,8 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 						sunshine_checkout_updating();
 						var data = new FormData();
 						data.append( 'action', 'sunshine_checkout_paypal_create_order' );
-						data.append( 'security', '<?php echo wp_create_nonce( 'sunshine_checkout_paypal_create_order' ); ?>' );
-						return fetch('<?php echo admin_url( 'admin-ajax.php' ); ?>', {
+						data.append( 'security', '<?php echo esc_js( wp_create_nonce( 'sunshine_checkout_paypal_create_order' ) ); ?>' );
+						return fetch('<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>', {
 						  method: 'post',
 						  body: data
 					  }).then(function(result) {
@@ -380,11 +397,11 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 
 	private function generate_access_token() {
 
-		$token = get_transient( 'sunshine_paypal_token_' . $this->get_mode() );
+		$token = get_transient( 'sunshine_paypal_token_' . $this->get_mode_value() );
 
 		if ( empty( $token ) ) {
 
-			if ( $this->get_mode() == 'live' ) {
+			if ( $this->get_mode_value() == 'live' ) {
 				$api_url = 'https://api-m.paypal.com';
 			} else {
 				$api_url = 'https://api-m.sandbox.paypal.com';
@@ -420,7 +437,7 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 
 			$token = $body->access_token;
 
-			set_transient( 'sunshine_paypal_token_' . $this->get_mode(), $body->access_token, ( $body->expires_in - ( 30 * MINUTE_IN_SECONDS ) ) );
+			set_transient( 'sunshine_paypal_token_' . $this->get_mode_value(), $body->access_token, ( $body->expires_in - ( 30 * MINUTE_IN_SECONDS ) ) );
 
 		}
 
@@ -485,16 +502,30 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 			);
 		}
 
+		$fees = SPC()->cart->get_fees();
+		if ( ! empty( $fees ) ) {
+			foreach ( $fees as $fee ) {
+				$items[] = array(
+					'name'        => $fee['name'],
+					'unit_amount' => array(
+						'value'         => (string) round( $fee['amount'], 2 ),
+						'currency_code' => SPC()->get_option( 'currency' ),
+					),
+					'quantity'    => 1,
+				);
+			}
+		}
+
 		$order_args = array(
 			'intent'              => 'CAPTURE',
 			'purchase_units'      => array(
 				array(
 					'amount' => array(
-						'value'         => (string) round( SPC()->cart->get_total(), 2 ),
+						'value'         => (string) SPC()->cart->get_total(),
 						'currency_code' => SPC()->get_option( 'currency' ),
 						'breakdown'     => array(
 							'item_total' => array(
-								'value'         => (string) round( SPC()->cart->get_subtotal(), 2 ),
+								'value'         => (string) round( SPC()->cart->get_subtotal() + SPC()->cart->get_fees_total(), 2 ),
 								'currency_code' => SPC()->get_option( 'currency' ),
 							),
 							'tax_total'  => array(
@@ -540,7 +571,7 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 
 		$order_args = apply_filters( 'sunshine_paypal_order_args', $order_args );
 
-		// sunshine_log( $order_args );
+		SPC()->log( $order_args );
 
 		$order = $this->make_request( 'checkout/orders', $order_args );
 		if ( ! empty( $order->id ) ) {
@@ -570,7 +601,12 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 		$endpoint = 'checkout/orders/' . $paypal_order_id . '/capture';
 		$capture  = $this->make_request( $endpoint, '', '', 'POST' );
 		if ( empty( $capture->status ) || $capture->status != 'COMPLETED' ) {
-			SPC()->cart->add_error( __( 'Failed to capture PayPal payment', 'sunshine-photo-cart' ) );
+			$error = __( 'Failed to capture PayPal payment', 'sunshine-photo-cart' );
+			if ( ! empty( $capture->details ) ) {
+				$error .= ': ' . $capture->details[0]->description;
+			}
+			SPC()->cart->add_error( $error );
+			SPC()->log( $error );
 			return;
 		}
 
@@ -578,6 +614,7 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 		$order->update_meta_value( 'paypal_order_id', $paypal_order_id );
 		$order->update_meta_value( 'paypal_payer_id', sanitize_text_field( $_POST['paypal_payer_id'] ) );
 		$order->update_meta_value( 'paypal_payment_source', sanitize_text_field( $_POST['paypal_payment_source'] ) );
+		/* translators: %s is the payment method name */
 		$note = sprintf( __( 'Payment processed by %s', 'sunshine-photo-cart' ), $this->name );
 		$order->add_log( $note );
 
@@ -624,19 +661,19 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 	public function admin_order_tab_content_paypal( $order ) {
 		echo '<table class="sunshine-data">';
 		if ( $order->get_meta_value( 'paypal_order_id' ) ) {
-			echo '<tr><th>' . __( 'Transaction ID', 'sunshine-photo-cart' ) . '</th><td>' . $order->get_meta_value( 'paypal_order_id' ) . '</td></tr>';
+			echo '<tr><th>' . esc_html__( 'Transaction ID', 'sunshine-photo-cart' ) . '</th><td>' . esc_html( $order->get_meta_value( 'paypal_order_id' ) ) . '</td></tr>';
 		}
 		if ( $order->get_meta_value( 'paypal_fee' ) ) {
-			echo '<tr><th>' . __( 'Transaction fees', 'sunshine-photo-cart' ) . '</th><td>' . sunshine_price( $order->get_meta_value( 'paypal_fee' ), true ) . '</td></tr>';
+			echo '<tr><th>' . esc_html__( 'Transaction fees', 'sunshine-photo-cart' ) . '</th><td>' . wp_kses_post( sunshine_price( $order->get_meta_value( 'paypal_fee' ), true ) ) . '</td></tr>';
 		}
 		if ( $order->get_meta_value( 'net_amount' ) ) {
-			echo '<tr><th>' . __( 'Net amount', 'sunshine-photo-cart' ) . '</th><td>' . sunshine_price( $order->get_meta_value( 'net_amount' ), true ) . '</td></tr>';
+			echo '<tr><th>' . esc_html__( 'Net amount', 'sunshine-photo-cart' ) . '</th><td>' . wp_kses_post( sunshine_price( $order->get_meta_value( 'net_amount' ), true ) ) . '</td></tr>';
 		}
 		if ( $order->get_meta_value( 'paypal_payment_source' ) ) {
-			echo '<tr><th>' . __( 'Payment Source', 'sunshine-photo-cart' ) . '</th><td>' . $order->get_meta_value( 'paypal_payment_source' ) . '</td></tr>';
+			echo '<tr><th>' . esc_html__( 'Payment Source', 'sunshine-photo-cart' ) . '</th><td>' . esc_html( $order->get_meta_value( 'paypal_payment_source' ) ) . '</td></tr>';
 		}
 		if ( $this->get_capture_id( $order ) ) {
-			echo '<tr><th>' . __( 'Capture ID', 'sunshine-photo-cart' ) . '</th><td>' . $this->get_capture_id( $order ) . '</td></tr>';
+			echo '<tr><th>' . esc_html__( 'Capture ID', 'sunshine-photo-cart' ) . '</th><td>' . esc_html( $this->get_capture_id( $order ) ) . '</td></tr>';
 		}
 		echo '</table>';
 	}
@@ -652,9 +689,9 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 	function order_actions_options( $order ) {
 		?>
 		<div id="paypal-refund-order-actions" style="display: none;">
-			<p><label><input type="checkbox" name="paypal_refund_notify" value="yes" checked="checked" /> <?php _e( 'Notify customer via email', 'sunshine-photo-cart' ); ?></label></p>
-			<p><label><input type="checkbox" name="paypal_refund_full" value="yes" checked="checked" /> <?php _e( 'Full refund', 'sunshine-photo-cart' ); ?></label></p>
-			<p id="paypal-refund-amount" style="display: none;"><label><input type="number" name="paypal_refund_amount" step=".01" size="6" style="width:100px" max="<?php echo esc_attr( $order->get_total() ); ?>" value="<?php echo esc_attr( $order->get_total() ); ?>" /> <?php _e( 'Amount to refund', 'sunshine-photo-cart' ); ?></label></p>
+			<p><label><input type="checkbox" name="paypal_refund_notify" value="yes" checked="checked" /> <?php esc_html_e( 'Notify customer via email', 'sunshine-photo-cart' ); ?></label></p>
+			<p><label><input type="checkbox" name="paypal_refund_full" value="yes" checked="checked" /> <?php esc_html_e( 'Full refund', 'sunshine-photo-cart' ); ?></label></p>
+			<p id="paypal-refund-amount" style="display: none;"><label><input type="number" name="paypal_refund_amount" step=".01" size="6" style="width:100px" max="<?php echo esc_attr( $order->get_total() ); ?>" value="<?php echo esc_attr( $order->get_total() ); ?>" /> <?php esc_html_e( 'Amount to refund', 'sunshine-photo-cart' ); ?></label></p>
 		</div>
 		<script>
 			jQuery( 'select[name="sunshine_order_action"]' ).on( 'change', function(){
@@ -698,24 +735,31 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 					),
 			);
 			$request = $this->make_request( 'payments/captures/' . $capture_id . '/refund', $body );
-			if ( empty( $request->status ) || $request->status != 'COMPLETED' ) {
+
+			if ( ! empty( $request->status ) && $request->status == 'PENDING' ) {
+				/* translators: %s is the order ID */
+				$order->add_log( sprintf( __( 'Order %s refund is pending in PayPal', 'sunshine-photo-cart' ), $order_id ) );
+				SPC()->notices->add_admin( 'paypal_refund_' . $capture_id, __( 'PayPal refund is pending', 'sunshine-photo-cart' ), 'error' );
+				$order->set_status( 'refunded' );
+				$order->add_refund( $refund_amount );
+			} elseif ( ! empty( $request->status ) && $request->status == 'COMPLETED' ) {
+				/* translators: %s is the refund amount formatted as price */
+				$order->add_log( sprintf( __( 'Refund has been processed for %s', 'sunshine-photo-cart' ), sunshine_price( $refund_amount ) ) );
+				/* translators: %s is the refund amount formatted as price */
+				SPC()->notices->add_admin( 'paypal_refund_' . $capture_id, sprintf( __( 'Refund has been processed for %s', 'sunshine-photo-cart' ), sunshine_price( $refund_amount ) ) );
+				$order->set_status( 'refunded' );
+				$order->add_refund( $refund_amount );
+			} else {
 				SPC()->notices->add_admin( 'paypal_refund_' . $capture_id, __( 'PayPal failed to refund', 'sunshine-photo-cart' ), 'error' );
+				/* translators: %s is the order ID */
 				$order->add_log( sprintf( __( 'Order %s failed refund in PayPal', 'sunshine-photo-cart' ), $order_id ) );
-				return;
 			}
-
-			$order->add_log( sprintf( __( 'Refund has been processed for %s', 'sunshine-photo-cart' ), sunshine_price( $refund_amount ) ) );
-			$order->set_status( 'refunded' );
-			SPC()->notices->add_admin( 'paypal_refund_' . $capture_id, sprintf( __( 'Refund has been processed for %s', 'sunshine-photo-cart' ), sunshine_price( $refund_amount ) ) );
-			$order->add_refund( $refund_amount );
-
 		}
-
 	}
 
 	public function mode( $mode, $order ) {
 		if ( $order->get_payment_method() == 'paypal' ) {
-			return ( $this->get_mode() == 'live' ) ? 'live' : 'test';
+			return $this->get_mode_value();
 		}
 		return $mode;
 	}

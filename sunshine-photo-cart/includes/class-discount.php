@@ -64,7 +64,7 @@ class SPC_Discount extends Sunshine_Data {
 	}
 
 	public function is_auto() {
-		return $this->meta['auto'];
+		return apply_filters( 'sunshine_discount_auto', $this->meta['auto'], $this );
 	}
 
 	public function get_code() {
@@ -72,55 +72,55 @@ class SPC_Discount extends Sunshine_Data {
 	}
 
 	public function get_type() {
-		return $this->meta['discount_type'];
+		return apply_filters( 'sunshine_discount_type', $this->meta['discount_type'], $this );
 	}
 
 	public function get_amount() {
-		return floatval( $this->meta['discount_amount'] );
+		return apply_filters( 'sunshine_discount_amount', floatval( $this->meta['discount_amount'] ), $this );
 	}
 
 	public function get_min_amount() {
-		return floatval( $this->meta['min_amount'] );
+		return apply_filters( 'sunshine_discount_min_amount', floatval( $this->meta['min_amount'] ), $this );
 	}
 
 	public function is_solo() {
-		return ( $this->meta['solo'] == 1 ) ? true : false;
+		return apply_filters( 'sunshine_discount_solo', ( $this->meta['solo'] == 1 ) ? true : false, $this );
 	}
 
 	public function apply_to_shipping() {
-		return ( $this->meta['apply_to_shipping'] == 1 ) ? true : false;
+		return apply_filters( 'sunshine_discount_apply_to_shipping', ( $this->meta['apply_to_shipping'] == 1 ) ? true : false, $this );
 	}
 
 	public function enables_free_shipping() {
-		return $this->meta['free_shipping'];
+		return apply_filters( 'sunshine_discount_free_shipping', $this->meta['free_shipping'], $this );
 	}
 
 	public function get_start_date() {
-		return $this->meta['start_date'];
+		return apply_filters( 'sunshine_discount_start_date', $this->meta['start_date'], $this );
 	}
 
 	public function get_end_date() {
-		return $this->meta['end_date'];
+		return apply_filters( 'sunshine_discount_end_date', $this->meta['end_date'], $this );
 	}
 
 	public function get_required_products() {
-		return $this->meta['required_products'];
+		return apply_filters( 'sunshine_discount_required_products', $this->meta['required_products'], $this );
 	}
 
 	public function get_allowed_products() {
-		return $this->meta['allowed_products'];
+		return apply_filters( 'sunshine_discount_allowed_products', $this->meta['allowed_products'], $this );
 	}
 
 	public function get_disallowed_products() {
-		return $this->meta['disallowed_products'];
+		return apply_filters( 'sunshine_discount_disallowed_products', $this->meta['disallowed_products'], $this );
 	}
 
 	public function get_allowed_categories() {
-		return $this->meta['allowed_categories'];
+		return apply_filters( 'sunshine_discount_allowed_categories', $this->meta['allowed_categories'], $this );
 	}
 
 	public function get_disallowed_categories() {
-		return $this->meta['disallowed_categories'];
+		return apply_filters( 'sunshine_discount_disallowed_categories', $this->meta['disallowed_categories'], $this );
 	}
 
 	public function get_allowed_galleries() {
@@ -133,7 +133,7 @@ class SPC_Discount extends Sunshine_Data {
 			}
 			$galleries = array_merge( $galleries, $descendants );
 			$galleries = array_unique( $galleries );
-			return $galleries;
+			return apply_filters( 'sunshine_discount_allowed_galleries', $galleries, $this );
 		}
 		return false;
 	}
@@ -148,17 +148,17 @@ class SPC_Discount extends Sunshine_Data {
 			}
 			$galleries = array_merge( $galleries, $descendants );
 			$galleries = array_unique( $galleries );
-			return $galleries;
+			return apply_filters( 'sunshine_discount_disallowed_galleries', $galleries, $this );
 		}
 		return false;
 	}
 
 	public function max_product_quantity() {
-		return $this->meta['max_product_quantity'];
+		return apply_filters( 'sunshine_discount_max_product_quantity', $this->meta['max_product_quantity'], $this );
 	}
 
 	public function get_use_count() {
-		return intval( $this->meta['use_count'] );
+		return apply_filters( 'sunshine_discount_use_count', intval( $this->meta['use_count'] ), $this );
 	}
 
 	public function get_use_count_by( $value ) {
@@ -174,11 +174,11 @@ class SPC_Discount extends Sunshine_Data {
 	}
 
 	public function get_max_uses() {
-		return intval( $this->meta['max_uses'] );
+		return apply_filters( 'sunshine_discount_max_uses', intval( $this->meta['max_uses'] ), $this );
 	}
 
 	public function get_max_uses_per_person() {
-		return intval( $this->meta['max_uses_per_person'] );
+		return apply_filters( 'sunshine_discount_max_uses_per_person', intval( $this->meta['max_uses_per_person'] ), $this );
 	}
 
 	// Determines if this coupon is valid with the current cart vs discount settings
@@ -207,7 +207,7 @@ class SPC_Discount extends Sunshine_Data {
 		}
 
 		$min_amount = $this->get_min_amount();
-		if ( $min_amount && SPC()->cart->get_total() < $min_amount ) {
+		if ( $min_amount && SPC()->cart->get_subtotal() < $min_amount ) {
 			return false;
 		}
 
@@ -291,7 +291,7 @@ class SPC_Discount extends Sunshine_Data {
 
 	}
 
-	public function get_total() {
+	public function get_total( $tax = false ) {
 
 		if ( SPC()->cart->is_empty() || empty( $this->get_amount() ) ) {
 			return false;
@@ -315,6 +315,9 @@ class SPC_Discount extends Sunshine_Data {
 		foreach ( $cart as $item ) {
 
 			// Skip the cart item if it does not meet the rules for it.
+			if ( $tax && ! $item->is_taxable() ) {
+				continue;
+			}
 
 			if ( ! empty( $allowed_products ) && ! in_array( $item->get_product_id(), $allowed_products ) ) {
 				continue;
@@ -340,7 +343,8 @@ class SPC_Discount extends Sunshine_Data {
 				continue;
 			}
 
-			$discountable_total += $item->get_subtotal();
+			// This is the total after the line item discount has been applied.
+			$discountable_total += $item->get_total();
 
 			if ( empty( $product_total[ $item->get_product_id() ] ) ) {
 				$product_total[ $item->get_product_id() ] = 0;
@@ -380,7 +384,8 @@ class SPC_Discount extends Sunshine_Data {
 				}
 			}
 
-			return round( $discountable_total * ( $percent / 100 ), 2 );
+			$discount = round( $discountable_total * ( $percent / 100 ), 2 );
+			return $discount;
 
 		} elseif ( $type == 'amount-total' ) {
 

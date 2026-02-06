@@ -13,6 +13,11 @@ class SPC_Dashboard_Widget {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return false;
 		}
+		if ( isset( $_GET['sunshine_dashboard_clear_stats'] ) ) {
+			$this->recalculate_stats();
+			wp_safe_redirect( admin_url( 'index.php' ) );
+			exit;
+		}
 		wp_add_dashboard_widget( 'sunshine-dashboard', __( 'Sunshine Photo Cart Sales Summary', 'sunshine-photo-cart' ), array( $this, 'sales' ), null, null, 'normal', 'high' );
 		if ( $this->needs_setup() ) {
 			wp_add_dashboard_widget( 'sunshine-dashboard-setup', __( 'Sunshine Photo Cart Setup', 'sunshine-photo-cart' ), array( $this, 'setup' ), null, null, 'side', 'high' );
@@ -24,30 +29,30 @@ class SPC_Dashboard_Widget {
 		?>
 		<div id="sunshine-dashboard-widget-sales" class="sunshine-loading">
 			<div class="sunshine-dashboard-widget-sales--group" id="sunshine-this-month">
-				<h3><?php _e( 'Current month sales', 'sunshine-photo-cart' ); ?></h3>
+				<h3><?php esc_html_e( 'Current month sales', 'sunshine-photo-cart' ); ?></h3>
 				<p>
 					<span class="total">&mdash;</span>
 					<span class="count">&mdash;</span>
 				</p>
 			</div>
 			<div class="sunshine-dashboard-widget-sales--group" id="sunshine-last-month">
-				<h3><?php _e( 'Last month sales', 'sunshine-photo-cart' ); ?></h3>
+				<h3><?php esc_html_e( 'Last month sales', 'sunshine-photo-cart' ); ?></h3>
 				<p>
 					<span class="total">&mdash;</span>
 					<span class="count">&mdash;</span>
 				</p>
 			</div>
 			<div class="sunshine-dashboard-widget-sales--group" id="sunshine-lifetime">
-				<h3><?php _e( 'Lifetime sales', 'sunshine-photo-cart' ); ?></h3>
+				<h3><?php esc_html_e( 'Lifetime sales', 'sunshine-photo-cart' ); ?></h3>
 				<p>
 					<span class="total">&mdash;</span>
 					<span class="count">&mdash;</span>
 				</p>
 			</div>
 			<div class="sunshine-dashboard-widget-sales--group" id="sunshine-new">
-				<h3><?php _e( 'New Orders', 'sunshine-photo-cart' ); ?></h3>
+				<h3><?php esc_html_e( 'New Orders', 'sunshine-photo-cart' ); ?></h3>
 				<p>
-					<a href="<?php echo admin_url( 'edit.php?post_type=sunshine-order&sunshine-order-status=new' ); ?>"><span class="total">&mdash;</span></a>
+					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-order&sunshine-order-status=new' ) ); ?>"><span class="total">&mdash;</span></a>
 				</p>
 			</div>
 		</div>
@@ -85,14 +90,14 @@ class SPC_Dashboard_Widget {
 		if ( ! empty( $orders ) ) {
 			?>
 		<div id="sunshine-dashboard-widget-recent">
-			<h3><?php _e( 'Recent Orders', 'sunshine-photo-cart' ); ?></h3>
+			<h3><?php esc_html_e( 'Recent Orders', 'sunshine-photo-cart' ); ?></h3>
 			<table id="sunshine-orders-table">
 				<?php foreach ( $orders as $order ) { ?>
 				<tr>
-					<td><a href="<?php echo admin_url( 'post.php?action=edit&post=' . $order->get_id() ); ?>"><?php echo $order->get_name(); ?></a></td>
-					<td><?php echo $order->get_date(); ?></td>
-					<td><?php echo $order->get_status_name(); ?></td>
-					<td><?php echo sunshine_price( $order->get_total() ); ?></td>
+					<td><a href="<?php echo esc_url( admin_url( 'post.php?action=edit&post=' . $order->get_id() ) ); ?>"><?php echo esc_html( $order->get_name() ); ?></a></td>
+					<td><?php echo esc_html( $order->get_date() ); ?></td>
+					<td><?php echo esc_html( $order->get_status_name() ); ?></td>
+					<td><?php echo wp_kses_post( sunshine_price( $order->get_total() ) ); ?></td>
 				</tr>
 				<?php } ?>
 			</table>
@@ -110,40 +115,67 @@ class SPC_Dashboard_Widget {
 
 			$paid_statuses = sunshine_order_statuses_paid();
 			// Prepare the placeholders for the terms in the SQL query
-			$term_placeholders = array_fill(0, count($paid_statuses), '%s');
-			$term_placeholders = implode(',', $term_placeholders);
+			$term_placeholders = array_fill( 0, count( $paid_statuses ), '%s' );
+			$term_placeholders = implode( ',', $term_placeholders );
 
 			// Get the current month's start and end dates
-			$current_month_start = date( 'Y-m-01' );
-			$current_month_end = date( 'Y-m-t' );
+			$current_month_start = date( 'Y-m-01 00:00:00' );
+			$current_month_end   = date( 'Y-m-t 23:59:59' );
 
 			// Prepare the SQL query
-			$query = $wpdb->prepare("
-				SELECT SUM(pm.meta_value) AS order_total, COUNT(p.ID) AS order_count
-				FROM {$wpdb->posts} p
-				INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-				INNER JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id
-				INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
-				INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-				INNER JOIN {$wpdb->terms} t ON tt.term_id = t.term_id
-				WHERE p.post_type = 'sunshine-order'
-				AND pm.meta_key = 'total'
-				AND pm2.meta_key = 'mode' AND pm2.meta_value = 'live'
-				AND tt.taxonomy = 'sunshine-order-status'
-				AND t.slug IN ( $term_placeholders )
-			    AND p.post_date >= %s
-			    AND p.post_date <= %s
-				AND p.post_status = 'publish'
-			", array_merge( $paid_statuses, array( $current_month_start, $current_month_end ) ) );
+			$query = $wpdb->prepare(
+				"
+			SELECT SUM(pm.meta_value) AS order_total, COUNT(p.ID) AS order_count
+			FROM {$wpdb->posts} p
+			INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+			INNER JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id
+			INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+			INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+			INNER JOIN {$wpdb->terms} t ON tt.term_id = t.term_id
+			WHERE p.post_type = 'sunshine-order'
+			AND pm.meta_key = 'total'
+			AND pm2.meta_key = 'mode' AND pm2.meta_value = 'live'
+			AND tt.taxonomy = 'sunshine-order-status'
+			AND t.slug IN ( $term_placeholders )
+		    AND p.post_date >= %s
+		    AND p.post_date <= %s
+			AND p.post_status = 'publish'
+		",
+				array_merge( $paid_statuses, array( $current_month_start, $current_month_end ) )
+			);
 
 			// Retrieve the results
 			$this_month = $wpdb->get_row( $query );
 
-			$last_month_start = date( 'Y-m-01', strtotime( '-1 month' ) );
-			$last_month_end = date( 'Y-m-t', strtotime( '-1 month' ) );
+			$last_month_start = date( 'Y-m-01 00:00:00', strtotime( '-1 month' ) );
+			$last_month_end   = date( 'Y-m-t 23:59:59', strtotime( '-1 month' ) );
 
 			// Prepare the SQL query
-			$query = $wpdb->prepare("
+			$query = $wpdb->prepare(
+				"
+			SELECT SUM(pm.meta_value) AS order_total, COUNT(p.ID) AS order_count
+			FROM {$wpdb->posts} p
+			INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+			INNER JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id
+			INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+			INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+			INNER JOIN {$wpdb->terms} t ON tt.term_id = t.term_id
+			WHERE p.post_type = 'sunshine-order'
+			AND pm.meta_key = 'total'
+			AND pm2.meta_key = 'mode' AND pm2.meta_value = 'live'
+			AND tt.taxonomy = 'sunshine-order-status'
+			AND t.slug IN ( $term_placeholders )
+			AND p.post_date >= %s
+			AND p.post_date <= %s
+		",
+				array_merge( $paid_statuses, array( $last_month_start, $last_month_end ) )
+			);
+
+			// Retrieve the results
+			$last_month = $wpdb->get_row( $query );
+
+			$query = $wpdb->prepare(
+				"
 				SELECT SUM(pm.meta_value) AS order_total, COUNT(p.ID) AS order_count
 				FROM {$wpdb->posts} p
 				INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
@@ -156,30 +188,12 @@ class SPC_Dashboard_Widget {
 				AND pm2.meta_key = 'mode' AND pm2.meta_value = 'live'
 				AND tt.taxonomy = 'sunshine-order-status'
 				AND t.slug IN ( $term_placeholders )
-				AND p.post_date >= %s
-				AND p.post_date <= %s
-			", array_merge($paid_statuses, array($last_month_start, $last_month_end)) );
+			",
+				$paid_statuses
+			);
 
 			// Retrieve the results
-			$last_month = $wpdb->get_row($query);
-
-			$query = $wpdb->prepare("
-				SELECT SUM(pm.meta_value) AS order_total, COUNT(p.ID) AS order_count
-				FROM {$wpdb->posts} p
-				INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-				INNER JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id
-				INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
-				INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-				INNER JOIN {$wpdb->terms} t ON tt.term_id = t.term_id
-				WHERE p.post_type = 'sunshine-order'
-				AND pm.meta_key = 'total'
-				AND pm2.meta_key = 'mode' AND pm2.meta_value = 'live'
-				AND tt.taxonomy = 'sunshine-order-status'
-				AND t.slug IN ( $term_placeholders )
-			", $paid_statuses );
-
-			// Retrieve the results
-			$lifetime = $wpdb->get_row($query);
+			$lifetime = $wpdb->get_row( $query );
 
 			$new_orders = $wpdb->get_row(
 				"SELECT COUNT(*) as order_count FROM {$wpdb->posts} p
@@ -248,7 +262,7 @@ class SPC_Dashboard_Widget {
 					<li>
 						<div>
 							<p>Start configuring your store including address, pages, URLs, and more...</p>
-							<p><a href="<?php echo admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine' ); ?>">See settings</a></p>
+							<p><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine' ) ); ?>">See settings</a></p>
 						</div>
 					</li>
 				<?php } else { ?>
@@ -259,7 +273,7 @@ class SPC_Dashboard_Widget {
 					<li>
 						<div>
 							<p>Configure payment methods to start receiving money</p>
-							<p><a href="<?php echo admin_url( 'admin.php?page=sunshine&section=payment_methods' ); ?>">Select payment methods</a></p>
+							<p><a href="<?php echo esc_url( admin_url( 'admin.php?page=sunshine&section=payment_methods' ) ); ?>">Select payment methods</a></p>
 						</div>
 					</li>
 				<?php } else { ?>
@@ -270,7 +284,7 @@ class SPC_Dashboard_Widget {
 					<li>
 						<div>
 							<p>Configure shipping methods to get orders to customers</p>
-							<p><a href="<?php echo admin_url( 'admin.php?page=sunshine&section=shipping_methods' ); ?>">Setup shipping methods</a></p>
+							<p><a href="<?php echo esc_url( admin_url( 'admin.php?page=sunshine&section=shipping_methods' ) ); ?>">Setup shipping methods</a></p>
 						</div>
 					</li>
 				<?php } else { ?>
@@ -281,7 +295,7 @@ class SPC_Dashboard_Widget {
 					<li>
 						<div>
 							<p>Create products and set prices to start selling</p>
-							<p><a href="<?php echo admin_url( 'edit.php?post_type=sunshine-product' ); ?>">Add products</a></p>
+							<p><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-product' ) ); ?>">Add products</a></p>
 						</div>
 					</li>
 				<?php } else { ?>
@@ -292,7 +306,7 @@ class SPC_Dashboard_Widget {
 					<li>
 						<div>
 							<p>Customize the look of Sunshine with your logo and other options</p>
-							<p><a href="<?php echo admin_url( 'admin.php?page=sunshine&section=display' ); ?>">Configure display options</a></p>
+							<p><a href="<?php echo esc_url( admin_url( 'admin.php?page=sunshine&section=display' ) ); ?>">Configure display options</a></p>
 						</div>
 					</li>
 				<?php } else { ?>

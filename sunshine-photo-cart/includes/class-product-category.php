@@ -65,7 +65,7 @@ class SPC_Product_Category extends Sunshine_Data {
 		}
 		$output = '<img src="' . esc_url( $this->get_image_url( $size ) ) . '" alt="' . esc_attr( $this->get_name() ) . '" />';
 		if ( $echo ) {
-			echo $output;
+			echo wp_kses_post( $output );
 			return;
 		}
 		return $output;

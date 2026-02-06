@@ -7,21 +7,21 @@ $can_purchase      = $product->can_purchase();
 ?>
 <div id="sunshine--product--details" class="<?php $product->classes(); ?>" data-product-id="<?php echo esc_attr( $product->get_id() ); ?>" data-image-id="<?php echo esc_attr( $image->get_id() ); ?>">
 
-	<button id="sunshine--product--details--close"><?php _e( 'Return to products', 'sunshine-photo-cart' ); ?></button>
+	<button id="sunshine--product--details--close"><?php esc_html_e( 'Return to products', 'sunshine-photo-cart' ); ?></button>
 
-	<div id="sunshine--product--details--title"><?php echo $product->get_name(); ?></div>
+	<div id="sunshine--product--details--title"><?php echo esc_html( $product->get_name() ); ?></div>
 	<?php if ( $product->has_image() ) { ?>
-		<div id="sunshine--product--details--image"><?php echo $product->get_image_html( 'large' ); ?></div>
+		<div id="sunshine--product--details--image"><?php echo wp_kses_post( $product->get_image_html( 'large' ) ); ?></div>
 	<?php } ?>
 
 	<?php if ( $product->get_description() ) { ?>
-		<div clidass="sunshine--product--details--description"><?php echo $product->get_description(); ?></div>
+		<div class="sunshine--product--details--description"><?php echo wp_kses_post( $product->get_description() ); ?></div>
 	<?php } ?>
 
 	<?php do_action( 'sunshine_product_details_before_price', $product, $image ); ?>
 
 	<div id="sunshine--product--details--price">
-		<?php echo $product->get_price_formatted(); ?>
+		<?php echo wp_kses_post( $product->get_price_formatted() ); ?>
 	</div>
 
 	<?php do_action( 'sunshine_product_details_after_price', $product, $image ); ?>
@@ -29,7 +29,7 @@ $can_purchase      = $product->can_purchase();
 	<?php if ( $can_purchase && ( ! $max_qty || $max_qty > 1 ) ) { ?>
 	<div id="sunshine--product--details--qty">
 		<button class="sunshine--qty--down"><span><?php esc_html_e( 'Decrease quantity', 'sunshine-photo-cart' ); ?></span></button>
-		<input type="text" name="qty" class="sunshine--qty" min="<?php echo ( $min_qty ) ? $min_qty : 0; ?>" <?php echo ( $max_qty ) ? 'max="' . esc_attr( $max_qty ) . '"' : ''; ?>  pattern="[0-9]+" value="<?php echo ( $min_qty ) ? $min_qty : 1; ?>" aria-label="<?php esc_attr_e( 'Qty', 'sunshine-photo-cart' ); ?>" />
+		<input type="text" name="qty" class="sunshine--qty" min="<?php echo ( $min_qty ) ? esc_attr( $min_qty ) : 0; ?>" <?php echo ( $max_qty ) ? 'max="' . esc_attr( $max_qty ) . '"' : ''; ?>  pattern="[0-9]+" value="<?php echo ( $min_qty ) ? esc_attr( $min_qty ) : 1; ?>" aria-label="<?php esc_attr_e( 'Qty', 'sunshine-photo-cart' ); ?>" />
 		<button class="sunshine--qty--up"><span><?php esc_html_e( 'Increase quantity', 'sunshine-photo-cart' ); ?></span></button>
 	</div>
 	<?php } ?>
@@ -42,18 +42,21 @@ $can_purchase      = $product->can_purchase();
 
 	<?php if ( $can_purchase ) { ?>
 		<div id="sunshine--product--details--action">
-			<button class="sunshine--button" data-product-id="<?php echo esc_attr( $product->get_id() ); ?>" data-gallery-id="<?php echo esc_attr( $image->gallery->get_id() ); ?>" data-image-id="<?php echo esc_attr( $image->get_id() ); ?>"><?php _e( 'Add to cart', 'sunshine-photo-cart' ); ?></button>
+			<button class="sunshine--button" data-product-id="<?php echo esc_attr( $product->get_id() ); ?>" data-gallery-id="<?php echo esc_attr( $image->gallery->get_id() ); ?>" data-image-id="<?php echo esc_attr( $image->get_id() ); ?>"><?php esc_html_e( 'Add to cart', 'sunshine-photo-cart' ); ?></button>
 		</div>
 	<?php } ?>
 
 	<?php if ( $can_purchase && ( $max_qty || $min_qty ) ) { ?>
 		<div id="sunshine--product--details--cart-qty">
 			<?php if ( $min_qty && $max_qty ) { ?>
-				<?php echo sprintf( __( 'You must add at least %1$s and no more than %2$s to cart', 'sunshine-photo-cart' ), $min_qty, $max_qty ); ?>
+				<?php /* translators: %1$s is the minimum quantity, %2$s is the maximum quantity */ ?>
+				<?php echo esc_html( sprintf( __( 'You must add at least %1$s and no more than %2$s to cart', 'sunshine-photo-cart' ), $min_qty, $max_qty ) ); ?>
 			<?php } elseif ( $min_qty ) { ?>
-				<?php echo sprintf( __( 'You must add at least %1$s to cart', 'sunshine-photo-cart' ), $min_qty ); ?>
+				<?php /* translators: %1$s is the minimum quantity */ ?>
+				<?php echo esc_html( sprintf( __( 'You must add at least %1$s to cart', 'sunshine-photo-cart' ), $min_qty ) ); ?>
 			<?php } elseif ( $max_qty ) { ?>
-				<?php echo sprintf( __( 'You can only add up to %1$s to cart', 'sunshine-photo-cart' ), $max_qty, $product->get_name() ); ?>
+				<?php /* translators: %1$s is the maximum quantity */ ?>
+				<?php echo esc_html( sprintf( __( 'You can only add up to %1$s to cart', 'sunshine-photo-cart' ), $max_qty, $product->get_name() ) ); ?>
 			<?php } ?>
 		</div>
 	<?php } ?>

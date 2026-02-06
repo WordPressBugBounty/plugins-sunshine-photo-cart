@@ -3,7 +3,7 @@ function sunshine_show_checkout_fields( $active_section = '' ) {
 	SPC()->cart->show_checkout_fields( $active_section );
 }
 
-add_action( 'wp_footer', 'sunshine_checkout_scripts', 999 );
+add_action( 'wp_footer', 'sunshine_checkout_scripts', 5 );
 function sunshine_checkout_scripts() {
 
 	if ( ! is_sunshine_page( 'checkout' ) ) {
@@ -12,28 +12,69 @@ function sunshine_checkout_scripts() {
 	?>
 	<script id="sunshine-checkout-js">
 
-	const sunshine_active_section = "<?php echo esc_js( SPC()->cart->get_active_section() ); ?>";
+	// Create a registry for payment gateways that need frontend processing
+	window.sunshinePaymentGateways = window.sunshinePaymentGateways || {};
 
-	function sunshine_checkout_updating() {
-		jQuery( '#sunshine--checkout' ).addClass( 'sunshine--loading' );
+	var sunshine_active_section = "<?php echo esc_js( SPC()->cart->get_active_section() ); ?>";
+	var sunshine_checkout_processing = false;
+
+	function sunshine_checkout_updating( text = '' ) {
+		jQuery( '#sunshine--loading-window--message' ).remove();
+		
+		// Clear any existing timer
+		if ( window.sunshine_checkout_timer ) {
+			clearInterval( window.sunshine_checkout_timer );
+		}
+		
+		// Array of status messages to cycle through
+		var status_messages = [
+			'<?php echo esc_js( __( 'Processing your information...', 'sunshine-photo-cart' ) ); ?>',
+			'<?php echo esc_js( __( 'Still working on your information...', 'sunshine-photo-cart' ) ); ?>',
+			'<?php echo esc_js( __( 'Almost finished...', 'sunshine-photo-cart' ) ); ?>',
+			'<?php echo esc_js( __( 'Please continue waiting...', 'sunshine-photo-cart' ) ); ?>',
+		];
+		
+		// Only display message if text is provided
+		if ( text ) {
+			jQuery( 'body' ).prepend( '<div id="sunshine--loading-window--message">' + text + '</div>' );
+		}
+		
+		jQuery( 'body' ).addClass( 'sunshine--loading' );
+		
+		// Start timer to update message every 5 seconds only if text was provided and it's not the payment warning
+		if ( text && text.indexOf( '<?php echo esc_js( __( 'Do not close or refresh', 'sunshine-photo-cart' ) ); ?>' ) === -1 ) {
+			var message_index = 0;
+			window.sunshine_checkout_timer = setInterval( function() {
+				message_index = ( message_index + 1 ) % status_messages.length;
+				var new_message = status_messages[message_index];
+				jQuery( '#sunshine--loading-window--message' ).html( new_message );
+			}, 5000 ); // 5 seconds
+		}
 	}
 	function sunshine_checkout_updating_done() {
-		jQuery( '#sunshine--checkout' ).removeClass( 'sunshine--loading' );
+		// Clear the timer
+		if ( window.sunshine_checkout_timer ) {
+			clearInterval( window.sunshine_checkout_timer );
+			window.sunshine_checkout_timer = null;
+		}
+		
+		jQuery( '#sunshine--loading-window--message' ).remove();
+		jQuery( 'body' ).removeClass( 'sunshine--loading' );
 	}
 
 	jQuery( document ).ready(function($){
 
 		function sunshine_reload_checkout( section = '' ) {
 
-			sunshine_checkout_updating();
+			sunshine_checkout_updating( '<?php echo esc_js( __( 'Updating checkout', 'sunshine-photo-cart' ) ); ?>' );
 
 			$.ajax({
 				type: 'GET',
-				url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+				url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 				data: {
 					action: 'sunshine_checkout_update',
 					section: section,
-					security: "<?php echo wp_create_nonce( 'sunshine-checkout-update' ); ?>"
+					security: "<?php echo esc_js( wp_create_nonce( 'sunshine-checkout-update' ) ); ?>"
 				},
 				success: function( result, textStatus, XMLHttpRequest ) {
 					if ( result.success ) {
@@ -42,7 +83,7 @@ function sunshine_checkout_scripts() {
 						}
 						$( '#sunshine--checkout' ).replaceWith( result.data.html );
 						$( '#sunshine--checkout input, #sunshine--checkout select' ).trigger( 'conditional' );
-						$( document ).trigger( 'sunshine_reload_checkout', [ result.data.section ] );
+						$( document ).trigger( 'sunshine_reload_checkout', [ result.data ] );
 						$( '.sunshine--checkout--section-active' ).find( 'input:visible, select:visible' ).first().focus();
 					} else {
 						var newURL = window.location.protocol + "//" + window.location.host + window.location.pathname;
@@ -63,26 +104,54 @@ function sunshine_checkout_scripts() {
 
 		}
 
+		$( document ).on( 'click', '#sunshine--checkout--order-review--toggle', function(){
+			$( '#sunshine--checkout--order-review' ).toggle();
+			$( this ).toggleClass( 'sunshine--active' );
+		});
+
+		// Debug: Check if Enter key is being pressed and handle form submission
+		$( 'body' ).on( 'keydown', '#sunshine--checkout--steps input', function(e){
+			if ( e.keyCode === 13 ) {
+				console.log( 'Enter key pressed in input field' );
+				e.preventDefault();
+				// Manually trigger form submission
+				$( this ).closest( 'form' ).submit();
+			}
+		});
+
 		$( 'body' ).on( 'submit', '#sunshine--checkout--steps form', function(e){
-			sunshine_checkout_updating();
+			sunshine_checkout_updating( '<?php echo esc_js( __( 'Processing checkout information, please be patient...', 'sunshine-photo-cart' ) ); ?>' );
 			var section = $( 'input[name="sunshine_checkout_section"]' ).val();
 			// Process all sections except payment, that gets normal submit.
 			if ( section != 'payment' ) {
 				e.preventDefault();
 				var form_data = new FormData( $( '#sunshine--checkout form' )[0] );
 				form_data.append( 'action', 'sunshine_checkout_process_section' );
-				form_data.append( 'security', "<?php echo wp_create_nonce( 'sunshine-checkout-process-section' ); ?>" );
+				form_data.append( 'security', "<?php echo esc_js( wp_create_nonce( 'sunshine-checkout-process-section' ) ); ?>" );
+				
+				// Testing: Add delay parameter if present in URL
+				var urlParams = new URLSearchParams( window.location.search );
+				var testDelay = urlParams.get( 'test_delay' );
+				if ( testDelay ) {
+					form_data.append( 'test_delay', testDelay );
+				}
 				$.ajax({
 					async: true,
 					type: 'POST',
-					url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+					url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 					data: form_data,
 					cache: false,
 					processData: false,
 					contentType: false,
+					timeout: 15000, // 15 second timeout for section processing
 					success: function( result, textStatus, XMLHttpRequest ) {
 						if ( result.success ) {
 							if ( result.data.next_section ) {
+								// If any section was just completed and we have a section query arg, remove it from URL
+								if ( window.location.search.includes('section=') ) {
+									var cleanURL = window.location.protocol + "//" + window.location.host + window.location.pathname;
+									window.history.replaceState( {}, document.title, cleanURL );
+								}
 								sunshine_reload_checkout();
 								$( document ).trigger( 'sunshine_checkout_load_' + result.data.next_section );
 							}
@@ -93,26 +162,32 @@ function sunshine_checkout_scripts() {
 						}
 					},
 					error: function(MLHttpRequest, textStatus, errorThrown) {
-						alert( '<?php echo esc_js( __( 'Sorry, there was an error with your request', 'sunshine-photo-cart' ) ); ?>' );
+						if ( textStatus === 'timeout' ) {
+							alert( '<?php echo esc_js( __( 'Request timed out. Please check your internet connection and try again.', 'sunshine-photo-cart' ) ); ?>' );
+						} else {
+							alert( '<?php echo esc_js( __( 'Sorry, there was an error with your request', 'sunshine-photo-cart' ) ); ?>' );
+						}
+						sunshine_checkout_updating_done();
 					}
 				});
 			}
 		});
 
 		// Auto click the first payment option.
-		$( document ).on( 'sunshine_reload_checkout', function( event, section ) {
-			if ( section == 'payment' ) {
+		$( document ).on( 'sunshine_reload_checkout', function( event, data ) {
+			if ( data.section == 'payment' ) {
 				setTimeout(function() {
 					var payment_methods = $( '#sunshine--form--field--payment_method' ).find( 'input' );
-					if ( payment_methods.length ) {
-						//payment_methods[0].click();
-						//$( payment_methods[0] ).trigger( 'change' );
+					if ( payment_methods.length == 1 ) {
+						payment_methods[0].click();
 					}
 				}, 500 );
 			}
 		});
 
-		$( document ).trigger( 'sunshine_reload_checkout', [ sunshine_active_section ] );
+		if ( sunshine_active_section == 'payment' ) {
+			$( document ).trigger( 'sunshine_reload_checkout', [ { section: sunshine_active_section } ] );
+		}
 
 		$( 'body' ).on( 'click', '.sunshine--checkout--section-edit', function(e) {
 			e.preventDefault();
@@ -127,15 +202,16 @@ function sunshine_checkout_scripts() {
 		});
 
 		$( document ).on( 'change', 'input[name="delivery_method"]', function(){
+			console.log( 'changing delivery method' );
 			var sunshine_selected_delivery_method = $( 'input[name="delivery_method"]:checked' ).val();
 			sunshine_checkout_updating();
 			$.ajax({
 				type: 'POST',
-				url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+				url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 				data: {
 					action: 'sunshine_checkout_select_delivery_method',
 					delivery_method: sunshine_selected_delivery_method,
-					security: "<?php echo wp_create_nonce( 'sunshine-checkout-select-delivery-method' ); ?>"
+					security: "<?php echo esc_js( wp_create_nonce( 'sunshine-checkout-select-delivery-method' ) ); ?>"
 				},
 				success: function( result, textStatus, XMLHttpRequest ) {
 					if ( result.data.summary ) {
@@ -156,15 +232,16 @@ function sunshine_checkout_scripts() {
 		});
 
 		$( document ).on( 'change', 'input[name="shipping_method"]', function(){
+			console.log( 'changing shipping method' );
 			var sunshine_selected_shipping_method = $( 'input[name="shipping_method"]:checked' ).val();
 			sunshine_checkout_updating();
 			$.ajax({
 				type: 'POST',
-				url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+				url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 				data: {
 					action: 'sunshine_checkout_select_shipping_method',
 					shipping_method: sunshine_selected_shipping_method,
-					security: "<?php echo wp_create_nonce( 'sunshine-checkout-select-shipping-method' ); ?>"
+					security: "<?php echo esc_js( wp_create_nonce( 'sunshine-checkout-select-shipping-method' ) ); ?>"
 				},
 				success: function( result, textStatus, XMLHttpRequest ) {
 					if ( result.data.summary ) {
@@ -180,15 +257,16 @@ function sunshine_checkout_scripts() {
 		});
 
 		$( document ).on( 'change', 'input[name="use_credits"]', function(){
+			console.log( 'changing use credits' );
 			var sunshine_use_credits = $( 'input[name="use_credits"]:checked' ).val() || false;
 			sunshine_checkout_updating();
 			$.ajax({
 				type: 'POST',
-				url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+				url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 				data: {
 					action: 'sunshine_checkout_use_credits',
 					use_credits: sunshine_use_credits,
-					security: "<?php echo wp_create_nonce( 'sunshine-checkout-use-credits' ); ?>"
+					security: "<?php echo esc_js( wp_create_nonce( 'sunshine-checkout-use-credits' ) ); ?>"
 				},
 				success: function( result, textStatus, XMLHttpRequest ) {
 					if ( result.success ) {
@@ -204,27 +282,31 @@ function sunshine_checkout_scripts() {
 		});
 
 		$( document ).on( 'change', 'input[name="payment_method"]', function(){
+			console.log( 'changing payment method' );
 			var sunshine_selected_payment_method = $( 'input[name="payment_method"]:checked' ).val();
 			sunshine_checkout_updating();
 			$( '.sunshine--checkout--payment-method--extra' ).hide();
 			$.ajax({
 				type: 'POST',
-				url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+				url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 				data: {
 					action: 'sunshine_checkout_select_payment_method',
 					payment_method: sunshine_selected_payment_method,
-					security: "<?php echo wp_create_nonce( 'sunshine-checkout-select-payment-method' ); ?>"
+					security: "<?php echo esc_js( wp_create_nonce( 'sunshine-checkout-select-payment-method' ) ); ?>"
 				},
 				success: function( result, textStatus, XMLHttpRequest ) {
-					$( '#sunshine--checkout--payment-method--extra--' + sunshine_selected_payment_method ).show();
-					var sunshine_checkout_payment_event = new CustomEvent( 'sunshine_checkout_payment_change', { detail: sunshine_selected_payment_method } );
-					document.dispatchEvent( sunshine_checkout_payment_event );
 
-					if ( result.data && result.data.summary ) {
-						$( '#sunshine--checkout--summary' ).html( result.data.summary );
-					}
-					if ( result.data && result.data.submit_label ) {
-						$( '#sunshine--checkout--submit' ).html( result.data.submit_label );
+					if ( result.success ) {
+						$( '#sunshine--checkout--payment-method--extra--' + sunshine_selected_payment_method ).show();
+						$( '#sunshine--checkout input, #sunshine--checkout select' ).trigger( 'conditional' );
+						$( document ).trigger( 'sunshine_checkout_payment_change', [ sunshine_selected_payment_method ] );
+
+						if ( result.data && result.data.summary ) {
+							$( '#sunshine--checkout--summary' ).html( result.data.summary );
+						}
+						if ( result.data && result.data.submit_label ) {
+							$( '#sunshine--checkout--submit' ).html( result.data.submit_label );
+						}
 					}
 
 					sunshine_checkout_updating_done();
@@ -237,9 +319,10 @@ function sunshine_checkout_scripts() {
 		});
 
 
-		sunshine_state_change_security = '<?php echo wp_create_nonce( 'sunshine-checkout-update-state' ); ?>';
+		sunshine_state_change_security = '<?php echo esc_js( wp_create_nonce( 'sunshine-checkout-update-state' ) ); ?>';
 
 		$( document ).on( 'change', 'select[name="shipping_country"]', function(){
+			console.log( 'changing shipping country' );
 			sunshine_checkout_updating();
 			var sunshine_selected_shipping_country = $( this ).val();
 			var sunshine_selected_shipping_country_required;
@@ -249,7 +332,7 @@ function sunshine_checkout_scripts() {
 			setTimeout( function () {
 				$.ajax({
 					type: 'POST',
-					url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+					url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 					data: {
 						action: 'sunshine_checkout_update_state',
 						country: sunshine_selected_shipping_country,
@@ -275,6 +358,7 @@ function sunshine_checkout_scripts() {
 		});
 
 		$( document ).on( 'change', 'select[name="billing_country"]', function(){
+			console.log( 'changing billing country' );
 			sunshine_checkout_updating();
 			var sunshine_selected_billing_country = $( this ).val();
 			var sunshine_selected_billing_country_required;
@@ -284,7 +368,7 @@ function sunshine_checkout_scripts() {
 			setTimeout( function () {
 				$.ajax({
 					type: 'POST',
-					url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+					url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 					data: {
 						action: 'sunshine_checkout_update_state',
 						country: sunshine_selected_billing_country,
@@ -294,9 +378,10 @@ function sunshine_checkout_scripts() {
 					},
 					success: function(output, textStatus, XMLHttpRequest) {
 						if ( output ) {
+							console.log( output );
 							$( '#sunshine--checkout--payment div[id*="billing_"]' ).remove();
 							//$( '#sunshine-checkout-payment .sunshine--form--fields' ).append( output );
-							$( output ).insertAfter( '#sunshine--checkout--field--different_billing' );
+							$( output ).insertAfter( '#sunshine--form--field--shipping_as_billing' );
 							//sunshine_mark_filled();
 						}
 						sunshine_checkout_updating_done();
@@ -310,6 +395,7 @@ function sunshine_checkout_scripts() {
 		});
 
 		$( document ).on( 'submit', '#sunshine--checkout--discount-form', function(e){
+			console.log( 'Submitting discount form' );
 			e.preventDefault();
 			$( '#sunshine--checkout--discount-form--error' ).remove();
 			$( '#sunshine--checkout--discount-form' ).removeClass( 'error' );
@@ -320,11 +406,11 @@ function sunshine_checkout_scripts() {
 			sunshine_checkout_updating();
 			$.ajax({
 				type: 'POST',
-				url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+				url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 				data: {
 					action: 'sunshine_checkout_discount_code',
 					discount_code: sunshine_discount_code,
-					security: "<?php echo wp_create_nonce( 'sunshine-checkout-discount-code' ); ?>"
+					security: "<?php echo esc_js( wp_create_nonce( 'sunshine-checkout-discount-code' ) ); ?>"
 				},
 				success: function( result, textStatus, XMLHttpRequest ) {
 					if ( result.success ) {
@@ -342,6 +428,7 @@ function sunshine_checkout_scripts() {
 		});
 
 		$( document ).on( 'click', '.sunshine--checkout--discount-applied button', function(){
+			console.log( 'Submitting discount code delete' );
 			var sunshine_discount_code = $( this ).data( 'id' );
 			if ( !sunshine_discount_code ) {
 				return false;
@@ -349,11 +436,11 @@ function sunshine_checkout_scripts() {
 			sunshine_checkout_updating();
 			$.ajax({
 				type: 'POST',
-				url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+				url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 				data: {
 					action: 'sunshine_checkout_discount_code_delete',
 					discount_code: sunshine_discount_code,
-					security: "<?php echo wp_create_nonce( 'sunshine-checkout-discount-code-delete' ); ?>"
+					security: "<?php echo esc_js( wp_create_nonce( 'sunshine-checkout-discount-code-delete' ) ); ?>"
 				},
 				success: function( result, textStatus, XMLHttpRequest ) {
 					if ( result.success ) {
@@ -363,6 +450,89 @@ function sunshine_checkout_scripts() {
 				},
 				error: function(MLHttpRequest, textStatus, errorThrown) {
 					alert( '<?php echo esc_js( __( 'Sorry, there was an error with your request', 'sunshine-photo-cart' ) ); ?>' );
+					sunshine_checkout_updating_done();
+				}
+			});
+		});
+
+		function sunshine_handle_payment_processing(eventDetails) {
+			return new Promise((resolve, reject) => {
+				const { payment_method, checkout_data } = eventDetails;
+				// Check if the selected payment method has registered for frontend processing
+				if (window.sunshinePaymentGateways[payment_method]) {
+					// Dispatch event only if the payment method needs frontend processing
+					$( document ).trigger( 'sunshine_payment_processing', [ { payment_method: payment_method, resolve: resolve, reject: reject, checkout_data: checkout_data } ] );
+				} else {
+					// No frontend processing needed, resolve immediately
+					resolve();
+				}
+			});
+		}
+
+		jQuery(document).on( 'click', '#sunshine--checkout--submit', function(event) {
+			var sunshine_selected_payment_method = jQuery('input[name="payment_method"]:checked').val();
+			var sunshine_customer_notes = jQuery('textarea[name="customer_notes"]').val();
+			event.preventDefault();
+			if ( sunshine_checkout_processing ) {
+				return;
+			}
+			sunshine_checkout_processing = true;
+			sunshine_checkout_updating( '<?php echo esc_js( __( 'Please wait while payment is processing', 'sunshine-photo-cart' ) ); ?><br><strong><?php echo esc_js( __( 'Do not close or refresh your browser window', 'sunshine-photo-cart' ) ); ?></strong>' );
+			$.ajax({
+				type: 'POST',
+				url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
+				data: {
+					action: 'sunshine_checkout_init_order',
+					payment_method: sunshine_selected_payment_method,
+					customer_notes: sunshine_customer_notes,
+					security: "<?php echo esc_js( wp_create_nonce( 'sunshine-checkout-init-order' ) ); ?>",
+					test_delay: new URLSearchParams( window.location.search ).get( 'test_delay' ) // Testing delay
+				},
+				timeout: 15000, // 15 second timeout for payment initialization
+				success: function(result, textStatus, XMLHttpRequest) {
+					if ( result.success ) {
+						var event_details = {
+							order_id: result.data.order_id,
+							payment_method: sunshine_selected_payment_method,
+							checkout_data: result.data.checkout_data,
+						};
+						sunshine_handle_payment_processing( event_details )
+							.then(() => {
+								// Promise resolved - either immediately or by payment gateway
+								// Now we can submit the form
+								jQuery( '#sunshine--checkout--form' ).submit();
+							})
+							.catch(error => {
+								// Notify server about payment failure
+								$.ajax({
+									type: 'POST',
+									url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
+									data: {
+										action: 'sunshine_checkout_payment_failed',
+										order_id: event_details.order_id,
+										payment_method: event_details.payment_method,
+										error: 'Payment processing failed',
+										security: "<?php echo esc_js( wp_create_nonce( 'sunshine-checkout-payment-failed' ) ); ?>"
+									},
+									complete: function() {
+										sunshine_checkout_processing = false;
+										sunshine_checkout_updating_done();
+									}
+								});
+							});
+					} else {
+						// There were errors, lets reload to see them.
+						window.location.href = window.location.pathname;
+					}
+				},
+				error: function(MLHttpRequest, textStatus, errorThrown) {
+					if ( textStatus === 'timeout' ) {
+						alert('<?php echo esc_js( __( 'Payment request timed out. Please check your connection and try again.', 'sunshine-photo-cart' ) ); ?>');
+					} else {
+						alert('<?php echo esc_js( __( 'Sorry, there was an error with your request', 'sunshine-photo-cart' ) ); ?>');
+					}
+					sunshine_checkout_processing = false;
+					window.location.reload();
 					sunshine_checkout_updating_done();
 				}
 			});
@@ -417,43 +587,48 @@ function sunshine_checkout_scripts() {
 						if ( ! in_array( $condition['action'], array( 'show', 'hide' ) ) ) {
 							continue;
 						}
-						if ( ! in_array( $condition['compare'], array( '==', '!=', '<', '>', '<=', '>=' ) ) ) {
+						if ( ! in_array( $condition['compare'], array( '==', '!=', '<', '>', '<=', '>=', 'IN', 'NOT IN' ) ) ) {
 							continue;
 						}
 						$i++;
 						?>
-							var condition_field_value_<?php echo $i; ?> = sunshine_get_condition_field_value( '<?php echo esc_js( $condition['field'] ); ?>' );
-							function condition_field_action_<?php echo $i; ?>( value ) {
+							var condition_field_value_<?php echo esc_js( $i ); ?> = sunshine_get_condition_field_value( '<?php echo esc_js( $condition['field'] ); ?>' );
+							function condition_field_action_<?php echo esc_js( $i ); ?>( value ) {
 								<?php
-								$action_target     = ( isset( $condition['action_target'] ) ) ? $condition['action_target'] : '#sunshine--form--field--' . $field['id'];
-								$true_action       = ( $condition['action'] == 'show' ) ? 'show' : 'hide';
-								$false_action      = ( $condition['action'] == 'show' ) ? 'hide' : 'show';
-								$comparison_string = '';
+								$action_target          = ( isset( $condition['action_target'] ) ) ? $condition['action_target'] : '#sunshine--form--field--' . $field['id'];
+								$true_action            = ( $condition['action'] == 'show' ) ? 'show' : 'hide';
+								$false_action           = ( $condition['action'] == 'show' ) ? 'hide' : 'show';
+								$comparison_string_safe = '';
 								if ( is_array( $condition['value'] ) ) { // If value is an array, need to compare against each array value
+									if ( $condition['compare'] == 'IN' ) {
+										$condition['compare'] = '==';
+									} elseif ( $condition['compare'] == 'NOT IN' ) {
+										$condition['compare'] = '!=';
+									}
 									$comparison_strings = array();
 									foreach ( $condition['value'] as $value ) {
 										$comparison_strings[] = '( value ' . esc_js( $condition['compare'] ) . ' "' . esc_js( $value ) . '" )';
 									}
-									$comparison_string = join( ' || ', $comparison_strings );
+									$comparison_string_safe = join( ' || ', $comparison_strings );
 								} else {
-									$comparison_string = 'value ' . esc_js( $condition['compare'] ) . ' "' . esc_js( $condition['value'] ) . '"';
+									$comparison_string_safe = 'value ' . esc_js( $condition['compare'] ) . ' "' . esc_js( $condition['value'] ) . '"';
 								}
 								?>
-								if ( <?php echo $comparison_string; ?> ) {
-									$( '<?php echo esc_js( $action_target ); ?>' ).<?php echo $true_action; ?>();
+								if ( <?php echo $comparison_string_safe; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> ) {
+									$( '<?php echo esc_js( $action_target ); ?>' ).<?php echo esc_js( $true_action ); ?>();
 								} else {
-									$( '<?php echo esc_js( $action_target ); ?>' ).<?php echo $false_action; ?>();
+									$( '<?php echo esc_js( $action_target ); ?>' ).<?php echo esc_js( $false_action ); ?>();
 								}
 								sunshine_set_field_disabled();
 							}
 
 							// Default action
-							condition_field_action_<?php echo $i; ?>( condition_field_value_<?php echo $i; ?> );
+							condition_field_action_<?php echo esc_js( $i ); ?>( condition_field_value_<?php echo esc_js( $i ); ?> );
 
 							// On change action
 							$( 'body' ).on( 'change conditional', '#<?php echo esc_js( $condition['field'] ); ?>, #sunshine--form--field--<?php echo esc_js( $condition['field'] ); ?> input[type="radio"]', function(){
-								condition_field_value_<?php echo $i; ?> = sunshine_get_condition_field_value( '<?php echo esc_js( $condition['field'] ); ?>' );
-								condition_field_action_<?php echo $i; ?>( condition_field_value_<?php echo $i; ?> );
+								condition_field_value_<?php echo esc_js( $i ); ?> = sunshine_get_condition_field_value( '<?php echo esc_js( $condition['field'] ); ?>' );
+								condition_field_action_<?php echo esc_js( $i ); ?>( condition_field_value_<?php echo esc_js( $i ); ?> );
 							});
 						<?php
 					}
@@ -496,7 +671,6 @@ function sunshine_checkout_scripts() {
 					if ( value.length == 2 ) {
 						value += '/';
 					}
-					console.log( 'exdate: ' + value );
 					return value;
 				});
 			}
@@ -516,9 +690,8 @@ function sunshine_checkout_scripts() {
 		var sunshine_autocomplete, sunshine_autocomplete_listener;
 
 		function sunshine_load_address_autocomplete() {
-			<?php if ( $active_section == 'shipping' ) { ?>
-				sunshine_init_address_autocomplete( 'shipping' );
-			<?php } ?>
+			sunshine_init_address_autocomplete( 'shipping' );
+			sunshine_init_address_autocomplete( 'billing' );
 		}
 
 		function sunshine_init_address_autocomplete( section, default_country = '<?php echo esc_js( $default_country ); ?>' ) {
@@ -528,6 +701,9 @@ function sunshine_checkout_scripts() {
 				jQuery( ".pac-container" ).remove();
 			}
 			address1Field = document.querySelector("#" + section + "_address1");
+			if ( ! address1Field ) {
+				return;
+			}
 			address2Field = document.querySelector("#" + section + "_address2");
 			postalField = document.querySelector("#" + section + "_postcode");
 			sunshine_autocomplete = new google.maps.places.Autocomplete(address1Field, {
@@ -544,9 +720,12 @@ function sunshine_checkout_scripts() {
 			sunshine_init_address_autocomplete( 'shipping', country );
 		});
 
-		jQuery( document ).on( 'sunshine_reload_checkout', function( event, section ) {
+		jQuery( document ).on( 'sunshine_reload_checkout', function( event, data ) {
+			section = data.section;
 			if ( section == 'shipping' ) {
 				sunshine_init_address_autocomplete( 'shipping', jQuery( '#shipping_country' ).val() );
+			} else if ( section == 'billing' ) {
+				sunshine_init_address_autocomplete( 'billing', jQuery( '#billing_country' ).val() );
 			}
 		});
 
@@ -621,13 +800,17 @@ function sunshine_checkout_update_summary() {
 	$html    = sunshine_get_template_html( 'checkout/checkout' );
 	$refresh = SPC()->session->get( 'checkout_refresh' );
 	SPC()->session->set( 'checkout_refresh', false );
-	wp_send_json_success(
-		array(
-			'html'    => $html,
-			'section' => SPC()->cart->get_active_section(),
-			'refresh' => $refresh,
-		)
+
+	$data           = SPC()->cart->get_checkout_data();
+	$necessary_data = array(
+		'html'    => $html,
+		'section' => SPC()->cart->get_active_section(),
+		'refresh' => $refresh,
+		'total'   => SPC()->cart->get_total(),
 	);
+
+	$data = array_merge( $necessary_data, $data );
+	wp_send_json_success( $data );
 
 }
 
@@ -639,9 +822,16 @@ function sunshine_checkout_process_section() {
 		wp_send_json_error();
 	}
 
+	// Testing: Add delay if test_delay parameter is provided
+	if ( ! empty( $_POST['test_delay'] ) && is_numeric( $_POST['test_delay'] ) ) {
+		$delay = intval( $_POST['test_delay'] );
+		if ( $delay > 0 && $delay <= 60 ) { // Max 60 seconds for safety
+			sleep( $delay );
+		}
+	}
+
 	// Do validation.
 	$current_section = sanitize_text_field( $_POST['sunshine_checkout_section'] );
-	SPC()->log( 'Processing checkout section: ' . $current_section );
 	SPC()->cart->setup();
 	$next_section = SPC()->cart->process_section( $current_section, $_POST );
 	SPC()->log( 'Going to next checkout section: ' . $next_section );
@@ -761,6 +951,7 @@ function sunshine_checkout_select_payment_method() {
 		if ( $submit_label ) {
 			$result['submit_label'] = $submit_label;
 		}
+		do_action( 'sunshine_checkout_update_payment_method', $payment_method );
 		wp_send_json_success( $result );
 	}
 
@@ -794,16 +985,39 @@ function sunshine_checkout_update_state() {
 
 		SPC()->cart->set_checkout_data_item( $prefix . '_country', $country );
 
-		$output         = '';
+		$output_safe    = '';
 		$address_fields = SPC()->countries->get_address_fields( $country, $prefix );
 		foreach ( $address_fields as $address_field ) {
-			$output .= SPC()->cart->get_checkout_field_html( $address_field['id'], $address_field );
+			$output_safe .= SPC()->cart->get_checkout_field_html( $address_field['id'], $address_field );
 		}
 	}
-	echo $output;
+	// Functions above all do escaping, so we can safely output the result.
+	echo $output_safe; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	exit;
 }
 
+add_action( 'wp_ajax_sunshine_checkout_payment_failed', 'sunshine_checkout_payment_failed' );
+add_action( 'wp_ajax_nopriv_sunshine_checkout_payment_failed', 'sunshine_checkout_payment_failed' );
+function sunshine_checkout_payment_failed() {
+
+	if ( ! wp_verify_nonce( $_POST['security'], 'sunshine-checkout-payment-failed' ) ) {
+		wp_send_json_error();
+	}
+
+	$order_id       = isset( $_POST['order_id'] ) ? intval( $_POST['order_id'] ) : 0;
+	$payment_method = isset( $_POST['payment_method'] ) ? sanitize_text_field( $_POST['payment_method'] ) : '';
+	$error          = isset( $_POST['error'] ) ? sanitize_text_field( $_POST['error'] ) : '';
+
+	if ( ! $order_id ) {
+		wp_send_json_error();
+	}
+
+	// Update the order status to failed.
+	$order = sunshine_get_order( $order_id );
+	$order->set_status( 'failed', __( 'Payment failed', 'sunshine-photo-cart' ) . ': ' . $error );
+
+	wp_send_json_success();
+}
 
 function sunshine_get_sections_completed() {
 	$completed = SPC()->session->get( 'checkout_sections_completed' );
@@ -844,6 +1058,10 @@ function sunshine_value_comparison( $var1, $var2, $comparison ) {
 			return $var1 > $var2;
 		case '<':
 			return $var1 < $var2;
+		case 'IN':
+			return in_array( $var1, $var2 );
+		case 'NOT IN':
+			return ! in_array( $var1, $var2 );
 		default:
 			return false;
 	}

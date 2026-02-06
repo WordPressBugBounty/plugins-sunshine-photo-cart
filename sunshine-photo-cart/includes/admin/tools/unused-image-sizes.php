@@ -12,31 +12,37 @@ class SPC_Tool_Unused_Images extends SPC_Tool {
 		add_action( 'wp_ajax_sunshine_delete_unused_image_sizes', array( $this, 'delete_unused_image_sizes' ) );
 	}
 
-	function process() {
+	protected function do_process() {
 		global $wpdb;
 
-		if ( ! current_user_can( 'sunshine_manage_options' ) ) {
-			return false;
-		}
-
-		// Images
-		$sql = "SELECT COUNT(p.ID) FROM {$wpdb->posts} p
-				INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-				WHERE p.post_type = 'attachment'
-				AND pm.meta_key = 'sunshine_file_name'
-				AND pm.meta_value != ''";
-		$count = $wpdb->get_var( $sql );
+		// Count images using WP_Query for better WordPress integration.
+		$query = new WP_Query(
+			array(
+				'post_type'      => 'attachment',
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'meta_query'     => array(
+					array(
+						'key'     => 'sunshine_file_name',
+						'value'   => '',
+						'compare' => '!=',
+					),
+				),
+			)
+		);
+		$count = $query->found_posts;
 		?>
 		<h3>Checking all images in galleries</h3>
 		<p>This tool is checking every image that has been uploaded to a gallery. Any unused images found and removed will be listed below.</p>
 		<div id="progress-bar" style="background: #000; height: 30px; position: relative;">
 			<div id="percentage" style="height: 30px; background-color: green; width: 0%;"></div>
 			<div id="processed" style="position: absolute; top: 0; left: 0; width: 100%; color: #FFF; text-align: center; font-size: 18px; height: 30px; line-height: 30px;">
-				<span id="processed-count">0</span> / <span id="processed-total"><?php echo $count; ?></span>
+				<span id="processed-count">0</span> / <span id="processed-total"><?php echo esc_html( $count ); ?></span>
 			</div>
 		</div>
-		<p align="center" id="abort"><a href="<?php echo admin_url( 'admin.php?page=sunshine-tools' ); ?>" class="button"><?php _e( 'Abort', 'sunshine' ); ?></a></p>
-		<p align="center" id="return" style="display:none;"><a href="<?php echo admin_url( 'admin.php?page=sunshine-tools' ); ?>" class="button"><?php _e( 'Return to tools', 'sunshine' ); ?></a></p>
+		<p align="center" id="abort"><a href="<?php echo esc_url( admin_url( 'admin.php?page=sunshine-tools' ) ); ?>" class="button"><?php esc_html_e( 'Abort', 'sunshine-photo-cart' ); ?></a></p>
+		<p align="center" id="return" style="display:none;"><a href="<?php echo esc_url( admin_url( 'admin.php?page=sunshine-tools' ) ); ?>" class="button"><?php esc_html_e( 'Return to tools', 'sunshine-photo-cart' ); ?></a></p>
 		<ol id="results"></ol>
 		<script type="text/javascript">
 		jQuery( document ).ready(function($) {
@@ -48,7 +54,7 @@ class SPC_Tool_Unused_Images extends SPC_Tool {
 				var data = {
 					'action': 'sunshine_delete_unused_image_sizes',
 					'item_number': item_number,
-					'security': "<?php echo wp_create_nonce( 'sunshine_delete_unused_image_sizes' ); ?>"
+					'security': "<?php echo esc_js( wp_create_nonce( 'sunshine_delete_unused_image_sizes' ) ); ?>"
 				};
 				$.postq( 'sunshinedeleteunused', ajaxurl, data, function(response) {
 					processed++;
@@ -68,7 +74,7 @@ class SPC_Tool_Unused_Images extends SPC_Tool {
 					}
 				}).fail( function( jqXHR ) {
 					if ( jqXHR.status == 500 || jqXHR.status == 0 ){
-						$( '#results' ).append( '<li><strong><?php esc_js( __( 'Cannot process image, likely out of memory', 'sunshine' ) ); ?></strong></li>' );
+						$( '#results' ).append( '<li><strong><?php esc_js( __( 'Cannot process image, likely out of memory', 'sunshine-photo-cart' ) ); ?></strong></li>' );
 					}
 				});
 			}
@@ -88,23 +94,25 @@ class SPC_Tool_Unused_Images extends SPC_Tool {
 			wp_send_json_error();
 		}
 
-		$o = get_posts(array(
-			'post_type' => 'attachment',
-			'posts_per_page' => 1,
-			'offset' => intval( $_POST['item_number'] ),
-			'post_status' => 'any',
-			'meta_query' => array(
-				array(
-					'key' => 'sunshine_file_name',
-					'compare' => 'EXISTS',
+		$o = get_posts(
+			array(
+				'post_type'      => 'attachment',
+				'posts_per_page' => 1,
+				'offset'         => intval( $_POST['item_number'] ),
+				'post_status'    => 'any',
+				'meta_query'     => array(
+					array(
+						'key'     => 'sunshine_file_name',
+						'compare' => 'EXISTS',
+					),
 				),
-			),
-		));
+			)
+		);
 		if ( ! empty( $o ) ) {
 			$object = $o[0];
 
 			// Get the attachment metadata
-			$metadata = wp_get_attachment_metadata( $object->ID );
+			$metadata      = wp_get_attachment_metadata( $object->ID );
 			$files_removed = array();
 
 			if ( isset( $metadata['sizes'] ) && is_array( $metadata['sizes'] ) ) {
@@ -114,11 +122,11 @@ class SPC_Tool_Unused_Images extends SPC_Tool {
 					if ( strpos( $size, 'sunshine-' ) !== 0 ) {
 						// Get the file path
 						$upload_dir = wp_upload_dir();
-						$file_path = $upload_dir['basedir'] . '/' . dirname( $metadata['file'] ) . '/' . $info['file'];
+						$file_path  = $upload_dir['basedir'] . '/' . dirname( $metadata['file'] ) . '/' . $info['file'];
 
 						// Remove the file
 						if ( file_exists( $file_path ) ) {
-							unlink( $file_path );
+							wp_delete_file( $file_path );
 							SPC()->log( 'Unused image removed: ' . $file_path );
 							$files_removed[] = $info['file'];
 						}
@@ -140,7 +148,6 @@ class SPC_Tool_Unused_Images extends SPC_Tool {
 					)
 				);
 			}
-
 		}
 
 		exit;

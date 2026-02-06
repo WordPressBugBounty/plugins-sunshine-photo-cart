@@ -102,4 +102,21 @@ jQuery( document ).ready(function($) {
 		return false;
 	});
 
+	$( '.sunshine-tooltip' ).tooltip( {
+		position: {
+			my: 'left top+5',
+			at: 'left bottom'
+		},
+		show: {
+			duration: 200
+		},
+		hide: {
+			duration: 200
+		},
+		classes: {
+			'ui-tooltip': 'sunshine-tooltip-ui'
+		}
+	} );
+
+
 });

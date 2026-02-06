@@ -15,7 +15,7 @@ class SPC_Update {
 			$this->need_update = true;
 		}
 
-		$this->update_actions = array( '3.0', '3.0.17', '3.0.18' );
+		$this->update_actions = array( '3.0', '3.0.17', '3.0.18', '3.5.6' );
 
 		add_action( 'admin_init', array( $this, 'update_check' ) );
 		add_action( 'admin_menu', array( $this, 'menu' ) );
@@ -36,6 +36,7 @@ class SPC_Update {
 
 		add_action( 'sunshine_update_3.0.17', array( $this, 'update_3_0_17' ) );
 		add_action( 'sunshine_update_3.0.18', array( $this, 'update_3_0_18' ) );
+		add_action( 'sunshine_update_3.5.6', array( $this, 'update_3_5_6' ) );
 
 		add_action( 'activated_plugin', array( $this, 'check_plugin_activation' ), 10, 2 );
 		add_action( 'admin_notices', array( $this, 'show_deactivation_notice' ), 10, 2 );
@@ -85,7 +86,10 @@ class SPC_Update {
 
 		$run_updates = array();
 		foreach ( $this->update_actions as $version ) {
-			if ( version_compare( SUNSHINE_PHOTO_CART_VERSION, $version, '>=' ) ) {
+			// Only run updates if:
+			// 1. The update version is greater than the user's previous version.
+			// 2. The update version is less than or equal to the current plugin version.
+			if ( version_compare( $version, $this->current_version, '>' ) && version_compare( SUNSHINE_PHOTO_CART_VERSION, $version, '>=' ) ) {
 				$run_updates[] = $version;
 			}
 		}
@@ -178,8 +182,18 @@ class SPC_Update {
 		}
 	}
 
+	function update_3_5_6() {
+		global $wpdb;
+		// Delete all usermeta with key "sunshine_customer_notes"
+		$wpdb->query( "DELETE FROM {$wpdb->prefix}usermeta WHERE meta_key = 'sunshine_customer_notes'" );
+	}
+
 	public function update_3_settings_data() {
 		global $wpdb;
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'sunshine-photo-cart' ) ) );
+		}
 
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
@@ -601,6 +615,10 @@ class SPC_Update {
 	public function update_3_customers_update() {
 		global $wpdb;
 
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'sunshine-photo-cart' ) ) );
+		}
+
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
 		$query     = "
@@ -666,6 +684,10 @@ class SPC_Update {
 
 	public function update_3_products_update() {
 		global $wpdb;
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'sunshine-photo-cart' ) ) );
+		}
 
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
@@ -834,6 +856,10 @@ class SPC_Update {
 
 	public function update_3_orders_update() {
 		global $wpdb;
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'sunshine-photo-cart' ) ) );
+		}
 
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
@@ -1175,6 +1201,10 @@ class SPC_Update {
 	public function update_3_discounts_update() {
 		global $wpdb;
 
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'sunshine-photo-cart' ) ) );
+		}
+
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
 		$query   = "
@@ -1209,6 +1239,10 @@ class SPC_Update {
 
 	public function update_3_emails_update() {
 		global $wpdb;
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'sunshine-photo-cart' ) ) );
+		}
 
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
@@ -1332,6 +1366,13 @@ class SPC_Update {
 	public function update_3_galleries_common_update() {
 		global $wpdb;
 
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'sunshine-photo-cart' ) ) );
+		}
+
+		// Check nonce for CSRF protection.
+		check_admin_referer( 'sunshine_update_3', 'security' );
+
 		$conversions = array(
 			'sunshine_gallery_price_level'       => 'price_level',
 			'sunshine_gallery_password_hint'     => 'password_hint',
@@ -1390,6 +1431,10 @@ class SPC_Update {
 
 	public function update_3_galleries_update() {
 		global $wpdb;
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'sunshine-photo-cart' ) ) );
+		}
 
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
@@ -1508,6 +1553,10 @@ class SPC_Update {
 	public function update_3_images_update() {
 		global $wpdb;
 
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'sunshine-photo-cart' ) ) );
+		}
+
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
 		$prepared_sql = $wpdb->prepare(
@@ -1533,6 +1582,10 @@ class SPC_Update {
 
 	public function update_3_galleries_duplicate_meta() {
 		global $wpdb;
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'sunshine-photo-cart' ) ) );
+		}
 
 		check_admin_referer( 'sunshine_update_3', 'security' );
 
@@ -1582,6 +1635,10 @@ class SPC_Update {
 
 	public function update_3_complete() {
 
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'sunshine-photo-cart' ) ) );
+		}
+
 		check_admin_referer( 'sunshine_update_3', 'security' );
 		SPC()->update_option( 'update_3', true );
 		flush_rewrite_rules();
@@ -1594,6 +1651,10 @@ class SPC_Update {
 
 	public function update_3_cleanup() {
 		global $wpdb;
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'sunshine-photo-cart' ) ) );
+		}
 
 		check_admin_referer( 'sunshine_update_3', 'security' );
 

@@ -20,7 +20,7 @@ function sunshine_after_login_add_to_favorites( $user_id ) {
 		SPC()->session->delete( 'add_to_favorites' );
 		SPC()->notices->add( __( 'Image added to favorites', 'sunshine-photo-cart' ) );
 		$image = sunshine_get_image( $image_id );
-		SPC()->log( $image->get_name() . ' in ' . $image->get_gallery()->get_name() . ' added to favorites by ' . SPC()->customer->get_name() );
+		SPC()->log( $image->get_name() . ' in ' . $image->get_gallery()->get_name() . ' added to favorites by ' . SPC()->customer->get_id() );
 	}
 }
 
@@ -38,11 +38,11 @@ function sunshine_add_to_favorites() {
 			if ( SPC()->customer->has_favorite( $image_id ) ) {
 				$count  = SPC()->customer->delete_favorite( $image_id );
 				$action = 'DELETE';
-				SPC()->log( $image->get_name() . ' in ' . $image->get_gallery()->get_name() . ' removed from favorites by ' . SPC()->customer->get_name() );
+				SPC()->log( $image->get_name() . ' in ' . $image->get_gallery()->get_name() . ' removed from favorites by ' . SPC()->customer->get_id() );
 			} else {
 				$count  = SPC()->customer->add_favorite( $image_id );
 				$action = 'ADD';
-				SPC()->log( $image->get_name() . ' in ' . $image->get_gallery()->get_name() . ' added to favorites by ' . SPC()->customer->get_name() );
+				SPC()->log( $image->get_name() . ' in ' . $image->get_gallery()->get_name() . ' added to favorites by ' . SPC()->customer->get_id() );
 			}
 			wp_send_json_success(
 				array(
@@ -108,9 +108,9 @@ function sunshine_admin_user_show_favorites( $user ) {
 	if ( current_user_can( 'manage_options' ) ) {
 		$favorites = get_user_meta( $user->ID, 'sunshine_favorite' );
 		if ( $favorites ) {
-			echo '<h3 id="sunshine--favorites">' . __( 'Sunshine Favorites', 'sunshine-photo-cart' ) . ' (' . count( $favorites ) . ')</h3>';
+			echo '<h3 id="sunshine--favorites">' . esc_html__( 'Sunshine Favorites', 'sunshine-photo-cart' ) . ' (' . count( $favorites ) . ')</h3>';
 			?>
-				<p><a href="#sunshine--favorites-file-list" id="sunshine--favorites-file-list-link"><?php _e( 'Image File List', 'sunshine-photo-cart' ); ?></a></p>
+				<p><a href="#sunshine--favorites-file-list" id="sunshine--favorites-file-list-link"><?php esc_html_e( 'Image File List', 'sunshine-photo-cart' ); ?></a></p>
 				<div id="sunshine--favorites-file-list" style="display: none;">
 				<?php
 				foreach ( $favorites as $image_id ) {
@@ -121,7 +121,7 @@ function sunshine_admin_user_show_favorites( $user ) {
 				}
 				?>
 					<textarea rows="4" cols="50" onclick="this.focus();this.select()" readonly="readonly"><?php echo esc_textarea( join( ', ', $image_file_list ) ); ?></textarea>
-					<p><?php _e( 'Copy and paste the file names above into Lightroom\'s search feature (Library filter) to quickly find and create a new collection to make processing this order easier. Make sure you are using the "Contains" (and not "Contains All") search parameter.', 'sunshine-photo-cart' ); ?></p>
+					<p><?php esc_html_e( 'Copy and paste the file names above into Lightroom\'s search feature (Library filter) to quickly find and create a new collection to make processing this order easier. Make sure you are using the "Contains" (and not "Contains All") search parameter.', 'sunshine-photo-cart' ); ?></p>
 				</div>
 				<script>
 				jQuery(document).ready(function($){
@@ -140,8 +140,8 @@ function sunshine_admin_user_show_favorites( $user ) {
 				$url        = get_permalink( $attachment->ID );
 				?>
 			<li style="list-style: none; float: left; margin: 0 20px 20px 0;">
-				<a href="<?php echo $url; ?>"><img src="<?php echo $image[0]; ?>" height="100" alt="" /></a><br />
-				<?php echo get_the_title( $attachment->ID ); ?>
+				<a href="<?php echo esc_url( $url ); ?>"><img src="<?php echo esc_url( $image[0] ); ?>" height="100" alt="" /></a><br />
+				<?php echo esc_html( get_the_title( $attachment->ID ) ); ?>
 			</li>
 				<?php
 			}

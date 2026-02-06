@@ -248,10 +248,10 @@ function sunshine_galleries_columns( $columns ) {
 	unset( $columns['date'] );
 	unset( $columns['title'] );
 	$columns['featured_image'] = '';
-	$columns['title']          = __( 'Title' );
+	$columns['title']          = __( 'Title', 'sunshine-photo-cart' );
 	$columns['expires']        = __( 'Expires', 'sunshine-photo-cart' );
 	$columns['images']         = __( 'Images', 'sunshine-photo-cart' );
-	$columns['date']           = __( 'Date' );
+	$columns['date']           = __( 'Date', 'sunshine-photo-cart' );
 	return $columns;
 }
 
@@ -264,12 +264,12 @@ function sunshine_galleries_columns_content( $column, $post_id ) {
 			$gallery->featured_image();
 			break;
 		case 'images':
-			echo $gallery->get_image_count();
+			echo esc_html( $gallery->get_image_count() );
 			break;
 		case 'expires':
-			echo $gallery->get_expiration_date_formatted();
+			echo wp_kses_post( $gallery->get_expiration_date_formatted() );
 			if ( $gallery->is_expired() ) {
-				echo ' - <em>' . __( 'Expired', 'sunshine-photo-cart' ) . '</em>';
+				echo ' - <em>' . esc_html__( 'Expired', 'sunshine-photo-cart' ) . '</em>';
 			}
 			break;
 		case 'gallery_date':
@@ -337,17 +337,20 @@ function sunshine_meta_gallery_images_display() {
 	?>
 <div id="sunshine-gallery-images-processing"><div class="status"></div></div>
 
-<input type="hidden" name="selected_images" value="<?php echo join( ',', $image_ids ); ?>" />
+<input type="hidden" name="selected_images" value="<?php echo esc_attr( join( ',', $image_ids ) ); ?>" />
 
 <div id="sunshine-gallery-upload-container">
 
 	<div id="plupload-upload-ui" class="hide-if-no-js">
 		<div id="drag-drop-area">
 			<div class="sunshine-drag-drop-inside">
-				<p class="drag-drop-info">
-					<span class="no-drag-drop"><?php _e( 'Drop files here', 'sunshine-photo-cart' ); ?> or </span><input id="plupload-browse-button" type="button" value="<?php esc_attr_e( 'Select Files from Computer', 'sunshine-photo-cart' ); ?>" class="button" />
-					<br /><span class="recommend-size">
-						<?php echo sprintf( __( 'Images must be larger than %s', 'sunshine-photo-cart' ), sunshine_get_large_dimension( 'w' ) . ' &times; ' . sunshine_get_large_dimension( 'h' ) ); ?>
+			<p class="drag-drop-info">
+				<span class="no-drag-drop"><?php esc_html_e( 'Drop files here', 'sunshine-photo-cart' ); ?> or </span><input id="plupload-browse-button" type="button" value="<?php esc_attr_e( 'Select Files from Computer', 'sunshine-photo-cart' ); ?>" class="button" />
+				<br /><span class="recommend-size">
+					<?php
+					/* translators: %s is the minimum image dimensions in width x height format */
+					echo esc_html( sprintf( __( 'Images must be larger than %s', 'sunshine-photo-cart' ), sunshine_get_large_dimension( 'w' ) . ' &times; ' . sunshine_get_large_dimension( 'h' ) ) );
+					?>
 					<?php if ( SPC()->get_option( 'watermark_image' ) ) { ?>
 						<br />
 						<label class="sunshine-switch small">
@@ -360,21 +363,21 @@ function sunshine_meta_gallery_images_display() {
 				</p>
 				<hr />
 				<?php
-				$import_label = __( 'Import', 'sunshine-photo-cart' );
+				$import_label = esc_html__( 'Import', 'sunshine-photo-cart' );
 				if ( $selected_dir ) {
 					// Count number of items in this directory and compare to how many are in the folder now.
 					$folder_count  = sunshine_image_folder_count( sunshine_get_import_directory() . '/' . $selected_dir );
 					$current_count = $gallery->get_image_count();
 					if ( $folder_count > $current_count ) {
-						$import_label = __( 'Update from folder', 'sunshine-photo-cart' );
-						echo '<p id="sunshine-ftp-new-images" style="background: orange; color: #FFF; padding: 5px 20px;"><strong>' . __( 'New images are available in your FTP folder', 'sunshine-photo-cart' ) . '</strong></p>';
+						$import_label = esc_html__( 'Update from folder', 'sunshine-photo-cart' );
+						echo '<p id="sunshine-ftp-new-images" style="background: orange; color: #FFF; padding: 5px 20px;"><strong>' . esc_html__( 'New images are available in your FTP folder', 'sunshine-photo-cart' ) . '</strong></p>';
 					}
 				}
 				?>
 				<p class="import-info">
-					<?php _e( 'FTP Folders', 'sunshine-photo-cart' ); ?>
+					<?php esc_html_e( 'FTP Folders', 'sunshine-photo-cart' ); ?>
 					<select name="images_directory">
-						<option value=""><?php _e( 'Select folder', 'sunshine-photo-cart' ); ?></option>
+						<option value=""><?php esc_html_e( 'Select folder', 'sunshine-photo-cart' ); ?></option>
 						<?php
 						sunshine_directory_to_options( sunshine_get_import_directory(), $selected_dir );
 						?>
@@ -387,7 +390,7 @@ function sunshine_meta_gallery_images_display() {
 				Just MUCH better to simply re-upload to this gallery than trying to move it over and have it work in original spot
 				<hr />
 				<p>
-					<button class="button" id="media-browse-button"><?php _e( 'Choose from Media Library', 'sunshine-photo-cart' ); ?></button></a>
+					<button class="button" id="media-browse-button"><?php esc_html_e( 'Choose from Media Library', 'sunshine-photo-cart' ); ?></button></a>
 				</p>
 				-->
 			</div>
@@ -406,18 +409,20 @@ function sunshine_meta_gallery_images_display() {
 			?>
 		</ul>
 		<div id="sunshine-gallery-image-actions">
-			<div id="sunshine-gallery-select-all"><a class="button" data-action="all"><?php _e( 'Select all images', 'sunshine-photo-cart' ); ?></a></div>
-			<div id="sunshine-gallery-delete-images" style="display: none;"><a class="button delete"><?php _e( 'Delete selected images', 'sunshine-photo-cart' ); ?></a><span class="spinner"></span></div>
-			<?php
-			if ( $total_images > 20 ) {
-				echo '<div id="sunshine-gallery-load-more">';
-				echo sprintf( __( 'Showing %1$s of %2$s images', 'sunshine-photo-cart' ), '<span id="sunshine-gallery-images-loaded">20</span>', '<span class="sunshine-gallery-image-count">' . $total_images . '</span>' );
-				echo ' &mdash; ';
-				echo sprintf( __( 'Load %s more images', 'sunshine-photo-cart' ), '<select name="count"><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="999999999">All</option></select>' );
-				echo ' <input type="button" name="loadmorego" id="sunshine-load-more-go" value="' . __( 'GO', 'sunshine-photo-cart' ) . '" class="button" /> &nbsp;&nbsp;&nbsp; ';
-				echo '</div>';
-			}
-			?>
+			<div id="sunshine-gallery-select-all"><a class="button" data-action="all"><?php esc_html_e( 'Select all images', 'sunshine-photo-cart' ); ?></a></div>
+			<div id="sunshine-gallery-delete-images" style="display: none;"><a class="button delete"><?php esc_html_e( 'Delete selected images', 'sunshine-photo-cart' ); ?></a><span class="spinner"></span></div>
+		<?php
+		if ( $total_images > 20 ) {
+			echo '<div id="sunshine-gallery-load-more">';
+			/* translators: %1$s is the number of images currently loaded, %2$s is the total number of images */
+			echo sprintf( esc_html__( 'Showing %1$s of %2$s images', 'sunshine-photo-cart' ), '<span id="sunshine-gallery-images-loaded">20</span>', '<span class="sunshine-gallery-image-count">' . esc_html( $total_images ) . '</span>' );
+			echo ' &mdash; ';
+			/* translators: %s is a select dropdown with options for number of images to load */
+			echo sprintf( esc_html__( 'Load %s more images', 'sunshine-photo-cart' ), '<select name="count"><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="999999999">All</option></select>' );
+			echo ' <input type="button" name="loadmorego" id="sunshine-load-more-go" value="' . esc_attr__( 'GO', 'sunshine-photo-cart' ) . '" class="button" /> &nbsp;&nbsp;&nbsp; ';
+			echo '</div>';
+		}
+		?>
 		</div>
 	</div>
 	<script>
@@ -427,60 +432,6 @@ function sunshine_meta_gallery_images_display() {
 		var image_ids = $( 'input[name="selected_images"]' ).val().split(',');
 		var offset = 20;
 		var count = 20;
-
-		/*
-		NOT USED
-		$( '#media-browse-button' ).click(function(e) {
-
-			   e.preventDefault();
-
-			   // Define image_frame as wp.media object
-			   gallery_images = wp.media({
-				 title: 'Select Images for Gallery',
-				 multiple : true,
-				 library : {
-					  type : 'image',
-				  }
-			 });
-
-			 gallery_images.on( 'close', function() {
-				var selection = gallery_images.state().get( 'selection' );
-				image_ids = new Array(); // Reset image id array first
-				selection.each(function(attachment) {
-				   image_ids.push( attachment['id'] );
-				});
-				var data = {
-					action: 'sunshine_gallery_add_media_images',
-					gallery_id: '<?php echo esc_js( $gallery->get_id() ); ?>',
-					image_ids: image_ids,
-					security: '<?php echo wp_create_nonce( 'sunshine_gallery_add_media_images' ); ?>'
-				};
-				$.post(ajaxurl, data, function(response) {
-					if ( response.success ) {
-						total_images = image_ids.length;
-						$( '#sunshine-gallery-image-list' ).html( response.data.image_html );
-						$( document ).trigger( 'refresh_images' );
-					}
-				});
-			 });
-
-			gallery_images.on( 'open', function() {
-				  var selection = gallery_images.state().get( 'selection' );
-				  image_ids.forEach(function(id) {
-					var attachment = wp.media.attachment( parseInt( id ) );
-					attachment.fetch();
-					selection.add( attachment ? [ attachment ] : [] );
-				  });
-
-			});
-
-			gallery_images.open();
-
-		  });
-
-		/**********
-		IMAGE ACTIONS
-		**********/
 
 		// Function to open the Edit Image modal for a specific attachment ID
 		function openEditImageModal(attachmentId) {
@@ -518,7 +469,7 @@ function sunshine_meta_gallery_images_display() {
 
 					// Append the modal to the body
 					$( 'body' ).append( modalHtml );
-					$( 'td.savesend' ).html( '<p><input type="submit" class="button button-primary button-large" value="<?php echo esc_js( 'Update' ); ?>"></p>' );
+					$( 'td.savesend' ).html( '<p><input type="submit" class="button button-primary button-large" value="<?php echo esc_js( __( 'Update', 'sunshine-photo-cart' ) ); ?>"></p>' );
 
 					// Close modal on click of the close button
 					$('.media-modal-close').on('click', function() {
@@ -574,7 +525,7 @@ function sunshine_meta_gallery_images_display() {
 				gallery_id: '<?php echo esc_js( $post->ID ); ?>',
 				offset: offset,
 				count: count,
-				security: '<?php echo wp_create_nonce( 'sunshine_gallery_load_more' ); ?>'
+				security: '<?php echo esc_js( wp_create_nonce( 'sunshine_gallery_load_more' ) ); ?>'
 			};
 			$.post(ajaxurl, data, function( response ) {
 				if ( response.success ) {
@@ -607,7 +558,7 @@ function sunshine_meta_gallery_images_display() {
 							action: 'sunshine_gallery_image_sort',
 							images: images,
 							gallery_id: '<?php echo esc_js( $gallery->get_id() ); ?>',
-							security: '<?php echo wp_create_nonce( 'sunshine_gallery_image_sort' ); ?>'
+							security: '<?php echo esc_js( wp_create_nonce( 'sunshine_gallery_image_sort' ) ); ?>'
 						},
 						success: function(response) {
 							$('#sunshine-gallery-images-processing').hide();
@@ -629,7 +580,7 @@ function sunshine_meta_gallery_images_display() {
 				action: 'sunshine_gallery_image_delete',
 				image_id: image_id,
 				gallery_id: '<?php echo esc_js( $gallery->get_id() ); ?>',
-				security: '<?php echo wp_create_nonce( 'sunshine_gallery_image_delete' ); ?>'
+				security: '<?php echo esc_js( wp_create_nonce( 'sunshine_gallery_image_delete' ) ); ?>'
 			};
 			$.postq( 'sunshinedeleteimage', ajaxurl, data, function(response) {
 				if ( response.success ) {
@@ -657,7 +608,7 @@ function sunshine_meta_gallery_images_display() {
 				action: 'sunshine_gallery_image_featured',
 				gallery_id: '<?php echo esc_js( $post->ID ); ?>',
 				image_id: image_id,
-				security: '<?php echo wp_create_nonce( 'sunshine_gallery_image_featured' ); ?>'
+				security: '<?php echo esc_js( wp_create_nonce( 'sunshine_gallery_image_featured' ) ); ?>'
 			};
 			$.post( ajaxurl, data, function(response) {
 				if ( response.success ) {
@@ -719,7 +670,7 @@ function sunshine_meta_gallery_images_display() {
 						action: 'sunshine_gallery_image_delete',
 						image_id: image_id,
 						gallery_id: '<?php echo esc_js( $gallery->get_id() ); ?>',
-						security: '<?php echo wp_create_nonce( 'sunshine_gallery_image_delete' ); ?>'
+						security: '<?php echo esc_js( wp_create_nonce( 'sunshine_gallery_image_delete' ) ); ?>'
 					};
 					$.postq( 'sunshinedeleteimages', ajaxurl, data, function( response ) {
 						processed_delete_count++;
@@ -757,7 +708,7 @@ function sunshine_meta_gallery_images_display() {
 			// 'silverlight_xap_url' => includes_url( 'js/plupload/plupload.silverlight.xap' ),
 			'filters'          => array(
 				array(
-					'title'      => __( 'Allowed Files' ),
+					'title'      => __( 'Allowed Files', 'sunshine-photo-cart' ),
 					'extensions' => join( ',', sunshine_allowed_file_extensions() ),
 				),
 			),
@@ -853,7 +804,7 @@ function sunshine_meta_gallery_images_display() {
 					);
 				}
 			} else {
-				$( '#sunshine-gallery-image-errors' ).append( '<li>' + result.data.file + ' could not be uploadeed: ' + result.data.error + '</li>' );
+				$( '#sunshine-gallery-image-errors' ).append( '<li>' + result.data.file + ' could not be uploaded: ' + result.data.error + '</li>' );
 			}
 		});
 
@@ -874,59 +825,93 @@ function sunshine_meta_gallery_images_display() {
 		IMPORTING FOLDER
 		**********/
 		$( document ).on( 'click', '#import', function(){
-			var images_to_upload = $( 'select[name="images_directory"] option:selected' ).data( 'count' );
-			if ( !images_to_upload ) {
+			var $directoryOption = $( 'select[name="images_directory"] option:selected' );
+			var selected_directory = $directoryOption.val();
+			if ( ! selected_directory ) {
 				return false;
 			}
 			var processed_images = 0;
 			$( '#sunshine-gallery-images-processing').removeClass( 'success' );
-			$( '#sunshine-gallery-images-processing div.status' ).html( 'Uploading <span class="processed">0</span> of <span class="total-files">' + images_to_upload + '</span> files...<span class="current-file"></span>' );
+			$( '#sunshine-gallery-image-errors' ).html( '' );
+			$( '#sunshine-gallery-images-processing div.status' ).html( 'Uploading <span class="processed">0</span> of <span class="total-files">0</span> files...<span class="current-file"></span>' );
 			$( '#sunshine-gallery-images-processing' ).show();
 
 			var watermark = $( 'input[name="watermark"]' ).prop( 'checked' );
 
-			for ( i = 1; i <= images_to_upload; i++ ) {
-				var data = {
-					'action': 'sunshine_gallery_import',
-					'gallery_id': <?php echo esc_js( $post->ID ); ?>,
-					'dir': $( 'select[name="images_directory"] option:selected' ).val(),
-					'item_number': i,
-					'watermark': ( watermark ) ? 1 : 0
-				};
-				$.postq( 'sunshinegalleryimport', ajaxurl, data, function(response) {
-					if ( response.success === true ) {
-						$( '#sunshine-gallery-images-processing div.status span.current-file' ).html( response.data.file_name + ' uploaded' );
-						if ( response.data.image_html ) {
-							$( '#sunshine-gallery-image-list' ).append( response.data.image_html );
-						} else {
-							$( '#sunshine-gallery-images ul#files' ).append(
-								$('<li/>', {
-									'id': 'image-' + response.data.image_id,
-									html: response.data.file_name
-								})
-							);
-						}
-					} else {
-						$( '#sunshine-gallery-images-processing div.status span.current-file' ).html( response.data.file_name + ' not uploaded: ' + response.data.error );
-					}
-				}).fail( function( jqXHR ) {
-					if ( jqXHR.status == 500 || jqXHR.status == 0 ){
-						$( '#sunshine-gallery-image-errors' ).append( '<li><strong><?php echo esc_js( __( 'An image did not fully upload because it is too large for your server to handle. Thumbnails and watermarks may not have been applied.', 'sunshine-photo-cart' ) ); ?></strong></li>' );
+			var request_data = {
+				'action': 'sunshine_gallery_import_list',
+				'gallery_id': <?php echo esc_js( $post->ID ); ?>,
+				'dir': selected_directory
+			};
+
+			$.post( ajaxurl, request_data )
+				.done( function( response ) {
+					if ( response.success !== true || ! response.data || ! response.data.files || ! response.data.files.length ) {
+						$( '#sunshine-gallery-image-errors' ).append( '<li><?php echo esc_js( __( 'No importable images were found in the selected folder.', 'sunshine-photo-cart' ) ); ?></li>' );
 						$( '#sunshine-gallery-images-processing div.status span.current-file' ).html( 'ERROR' );
+						return;
 					}
-				}).always(function(){
-					processed_images++;
-					total_images++;
-					$( '#sunshine-gallery-images-processing span.processed' ).html( processed_images );
-					if ( processed_images >= images_to_upload ) {
-						// When done
-						$( '#sunshine-ftp-new-images' ).hide();
-						$( '#sunshine-gallery-images-processing div.status' ).html( 'Image import complete!' );
-						$( '#sunshine-gallery-images-processing' ).addClass( 'success' ).delay( 2000 ).fadeOut( 400 );
+
+					var import_files = response.data.files;
+					var images_to_upload = import_files.length;
+					$( '#sunshine-gallery-images-processing div.status span.total-files' ).html( images_to_upload );
+
+					for ( let import_index = 0; import_index < import_files.length; import_index++ ) {
+						const item_number = import_index + 1;
+						const file_name = import_files[ import_index ];
+						var data = {
+							'action': 'sunshine_gallery_import',
+							'gallery_id': <?php echo esc_js( $post->ID ); ?>,
+							'dir': selected_directory,
+							'item_number': item_number,
+							'watermark': ( watermark ) ? 1 : 0
+						};
+
+						$.postq( 'sunshinegalleryimport', ajaxurl, data, function( response ) {
+							if ( response.success === true ) {
+								$( '#sunshine-gallery-images-processing div.status span.current-file' ).html( response.data.file_name + ' uploaded' );
+								if ( response.data.image_html ) {
+									$( '#sunshine-gallery-image-list' ).append( response.data.image_html );
+								} else {
+									$( '#sunshine-gallery-images ul#files' ).append(
+										$('<li/>', {
+											'id': 'image-' + response.data.image_id,
+											html: response.data.file_name
+										})
+									);
+								}
+								total_images++;
+							} else {
+								$( '#sunshine-gallery-image-errors' ).append( '<li>' + response.data.file + ' could not be imported: ' + response.data.error + '</li>' );
+								$( '#sunshine-gallery-images-processing div.status span.current-file' ).html( response.data.file + ' not imported: ' + response.data.error );
+							}
+						}).fail( function( jqXHR ) {
+							var $error_item = $( '<li/>' );
+							$error_item.append( $( '<strong/>' ).text( file_name ) );
+							if ( jqXHR.status === 500 || jqXHR.status === 0 ) {
+								$error_item.append( document.createTextNode( ': <?php echo esc_js( __( 'The image did not fully upload because it is too large for your server to handle. Thumbnails and watermarks may not have been applied.', 'sunshine-photo-cart' ) ); ?>' ) );
+							} else {
+								$error_item.append( document.createTextNode( ': ' + jqXHR.status + ' ' + jqXHR.statusText ) );
+							}
+							$( '#sunshine-gallery-image-errors' ).append( $error_item );
+							$( '#sunshine-gallery-images-processing div.status span.current-file' ).html( file_name + ' failed' );
+						}).always(function(){
+							processed_images++;
+							$( '#sunshine-gallery-images-processing span.processed' ).html( processed_images );
+							if ( processed_images >= images_to_upload ) {
+								// When done
+								$( '#sunshine-ftp-new-images' ).hide();
+								$( '#sunshine-gallery-images-processing div.status' ).html( 'Image import complete!' );
+								$( '#sunshine-gallery-images-processing' ).addClass( 'success' ).delay( 2000 ).fadeOut( 400 );
+							}
+							$( document ).trigger( 'refresh_images' );
+						});
 					}
-					$( document ).trigger( 'refresh_images' );
-				});
-			}
+				} )
+				.fail( function() {
+					$( '#sunshine-gallery-image-errors' ).append( '<li><?php echo esc_js( __( 'Unable to inspect the selected directory before import. Please try again.', 'sunshine-photo-cart' ) ); ?></li>' );
+					$( '#sunshine-gallery-images-processing div.status span.current-file' ).html( 'ERROR' );
+				} );
 
 			return false;
 		});
@@ -973,7 +958,7 @@ function sunshine_admin_gallery_image_thumbnail( $image, $echo = true ) {
 	$html .= '</li>';
 
 	if ( $echo ) {
-		echo $html;
+		echo wp_kses_post( $html );
 		return;
 	}
 	return $html;
@@ -1038,36 +1023,160 @@ function sunshine_gallery_admin_ajax_upload() {
 
 	check_ajax_referer( 'sunshine_gallery_upload', 'security' );
 
-	$file           = $_FILES['sunshine_gallery_image'];
+	// Log the start of upload process
+	SPC()->log( 'Starting image upload process' );
+
+	if ( ! isset( $_FILES['sunshine_gallery_image'] ) ) {
+		SPC()->log( 'Error: No file uploaded' );
+		wp_send_json_error(
+			array(
+				'error' => __( 'No file was uploaded', 'sunshine-photo-cart' ),
+			)
+		);
+		return;
+	}
+
+	$file = $_FILES['sunshine_gallery_image'];
+
+	// Log file details
+	SPC()->log(
+		sprintf(
+			'Uploading file: %s, Size: %s, Type: %s',
+			$file['name'],
+			size_format( $file['size'] ),
+			$file['type']
+		)
+	);
+
 	$result         = array();
 	$result['file'] = sanitize_file_name( $file['name'] );
 
 	$file_info               = wp_check_filetype( basename( $_FILES['sunshine_gallery_image']['name'] ) );
 	$allowed_file_extensions = sunshine_allowed_file_extensions();
+
 	if ( empty( $file_info['ext'] ) || ! in_array( strtolower( $file_info['ext'] ), $allowed_file_extensions ) ) {
+		SPC()->log( sprintf( 'Error: Invalid file type - %s', $file_info['ext'] ) );
 		$result['error'] = __( 'Invalid file type', 'sunshine-photo-cart' );
 		wp_send_json_error( $result );
-		exit;
+		return;
 	}
 
 	$gallery_id = intval( $_POST['gallery_id'] );
 
 	sunshine_doing_upload( $gallery_id );
 
-	$file_upload    = wp_handle_upload(
-		$file,
-		array(
-			'test_form' => true,
-			'action'    => 'sunshine_gallery_upload',
-		)
-	);
-	$post_parent_id = $gallery_id;
-
-	// Only add images to the gallery as attachment, otherwise we just upload the file into the folder.
-	if ( strpos( $file_upload['type'], 'image' ) !== false ) {
-		sunshine_insert_gallery_image( $file_upload['file'], $post_parent_id, 'json', intval( $_POST['watermark'] ) );
+	// Check upload directory permissions
+	$upload_dir = wp_upload_dir();
+	if ( ! wp_is_writable( $upload_dir['path'] ) ) {
+		SPC()->log( sprintf( 'Error: Upload directory not writable - %s', $upload_dir['path'] ) );
+		wp_send_json_error(
+			array(
+				'error' => __( 'Upload directory is not writable', 'sunshine-photo-cart' ),
+				'file'  => $file['name'],
+			)
+		);
+		return;
 	}
 
+	// Log memory usage
+	SPC()->log( sprintf( 'Memory usage before upload: %s', size_format( memory_get_usage( true ) ) ) );
+
+	try {
+		$file_upload = wp_handle_upload(
+			$file,
+			array(
+				'test_form' => false,
+				'action'    => 'sunshine_gallery_upload',
+			)
+		);
+
+		if ( isset( $file_upload['error'] ) ) {
+			SPC()->log( sprintf( 'Upload error: %s', $file_upload['error'] ) );
+			wp_send_json_error( array( 'error' => $file_upload['error'] ) );
+			return;
+		}
+
+		// Check image dimensions against minimum size requirements
+		$large_size = SPC()->get_option( 'large_size' );
+		if ( isset( $large_size['w'] ) && isset( $large_size['h'] ) ) {
+			$image_info = getimagesize( $file_upload['file'] );
+			if ( $image_info === false ) {
+				SPC()->log( 'Error: Could not get image dimensions' );
+				wp_send_json_error(
+					array(
+						'error' => __( 'Could not read image dimensions', 'sunshine-photo-cart' ),
+						'file'  => $file['name'],
+					)
+				);
+				return;
+			}
+
+			$image_width  = $image_info[0];
+			$image_height = $image_info[1];
+			$min_width    = intval( $large_size['w'] );
+			$min_height   = intval( $large_size['h'] );
+
+			if ( $image_width < $min_width || $image_height < $min_height ) {
+				SPC()->log(
+					sprintf(
+						'Error: Image too small. Required: %dx%d, Actual: %dx%d',
+						$min_width,
+						$min_height,
+						$image_width,
+						$image_height
+					)
+				);
+				wp_send_json_error(
+					array(
+						'error' => sprintf(
+							/* translators: %1$d is minimum width, %2$d is minimum height, %3$d is actual image width, %4$d is actual image height */
+							__( 'Image is too small. Image must be larger than: %1$dx%2$d pixels. Your image: %3$dx%4$d pixels', 'sunshine-photo-cart' ),
+							$min_width,
+							$min_height,
+							$image_width,
+							$image_height
+						),
+						'file'  => $file['name'],
+					)
+				);
+				return;
+			}
+
+			SPC()->log(
+				sprintf(
+					'Image size validation passed. Required: %dx%d, Actual: %dx%d',
+					$min_width,
+					$min_height,
+					$image_width,
+					$image_height
+				)
+			);
+		}
+
+		SPC()->log( 'File upload successful' );
+
+		$post_parent_id = intval( $_POST['gallery_id'] );
+
+		// Only add images to the gallery as attachment
+		if ( strpos( $file_upload['type'], 'image' ) !== false ) {
+			try {
+				sunshine_insert_gallery_image( $file_upload['file'], $post_parent_id, 'json', intval( $_POST['watermark'] ) );
+				SPC()->log( 'Image successfully added to gallery' );
+			} catch ( Exception $e ) {
+				SPC()->log( sprintf( 'Error adding image to gallery: %s', $e->getMessage() ) );
+				wp_send_json_error( array( 'error' => $e->getMessage() ) );
+				return;
+			}
+		}
+
+		// Log final memory usage
+		SPC()->log( sprintf( 'Memory usage after upload: %s', size_format( memory_get_usage( true ) ) ) );
+
+	} catch ( Exception $e ) {
+		SPC()->log( sprintf( 'Unexpected error during upload: %s', $e->getMessage() ) );
+		wp_send_json_error( array( 'error' => $e->getMessage() ) );
+		return;
+	}
 }
 
 function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json', $watermark = true ) {
@@ -1110,8 +1219,7 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 	if ( ! is_wp_error( $attachment_id ) ) {
 
 		// Use meta value to store all image IDs for gallery
-		$gallery   = sunshine_get_gallery( $gallery_id );
-		$image_ids = $gallery->add_image_id( $attachment_id );
+		$gallery = sunshine_get_gallery( $gallery_id );
 
 		$attachment_image_meta = wp_generate_attachment_metadata( $attachment_id, $file_path );
 
@@ -1122,7 +1230,6 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 
 			// Modify the filenames in metadata for each intermediate size
 			if ( ! empty( $attachment_image_meta['sizes'] ) ) {
-				SPC()->log( $attachment_image_meta );
 				foreach ( $attachment_image_meta['sizes'] as $size => &$size_data ) {
 					// Use the same random string for all intermediate sizes
 					$size_info          = pathinfo( $size_data['file'] );
@@ -1159,18 +1266,22 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 			wp_update_post( $update_args );
 		}
 
-		$created_timestamp = current_time( 'timestamp' );
 		if ( ! empty( $image_meta['created_timestamp'] ) ) {
 			$created_timestamp = $image_meta['created_timestamp'];
+		} else {
+			$created_timestamp = current_time( 'timestamp' );
 		}
+
 		add_post_meta( $attachment_id, 'created_timestamp', $created_timestamp );
 		add_post_meta( $attachment_id, 'sunshine_file_name', $file_name );
-		$apply_watermark = ( ! empty( $watermark ) ) ? 1 : 0;
+		$apply_watermark = ( ! empty( $watermark ) ) ? SPC()->get_option( 'watermark_image' ) : 0;
 		add_post_meta( $attachment_id, 'sunshine_watermark', $apply_watermark );
 
 		$attachment_meta_data = wp_update_attachment_metadata( $attachment_id, $attachment_image_meta );
 
 		do_action( 'sunshine_after_image_process', $attachment_id, $file_path, $apply_watermark );
+
+		$image_ids = $gallery->add_image_id( $attachment_id );
 
 		$return = array(
 			'image_id'   => $attachment_id,
@@ -1398,10 +1509,6 @@ function sunshine_featured_image_upload_situation( $data, $postarr ) {
 /*************
 IMPORTING FROM FTP FOLDER
  **************/
-function sunshine_get_import_directory() {
-	$upload_dir = wp_upload_dir();
-	return apply_filters( 'sunshine_import_directory', $upload_dir['basedir'] . '/sunshine/upload' );
-}
 
 function sunshine_directory_to_options( $path = __DIR__, $selected_dir = '', $level = 0 ) {
 	$items = scandir( $path );
@@ -1421,12 +1528,64 @@ function sunshine_directory_to_options( $path = __DIR__, $selected_dir = '', $le
 					$path_array             = array_reverse( explode( '/', $fullpath ) );
 					$this_folder_path_array = array_slice( $path_array, 0, $level + 1 );
 					$value                  = join( '/', array_reverse( $this_folder_path_array ) );
-					echo '<option value="' . esc_attr( $value ) . '" data-count="' . intval( $count ) . '" ' . selected( $selected_dir, $value, 0 ) . '>' . esc_html( $name ) . ' (' . $count . ' ' . __( 'images', 'sunshine-photo-cart' ) . ')</option>';
+					echo '<option value="' . esc_attr( $value ) . '" data-count="' . intval( $count ) . '" ' . selected( $selected_dir, $value, 0 ) . '>' . esc_html( $name ) . ' (' . esc_html( $count ) . ' ' . esc_html__( 'images', 'sunshine-photo-cart' ) . ')</option>';
 				// }
 				sunshine_directory_to_options( $fullpath, $selected_dir, $level + 1 );
 			}
 		}
 	}
+}
+
+add_action( 'wp_ajax_sunshine_gallery_import_list', 'sunshine_ajax_gallery_import_list' );
+/**
+ * Return the list of files available for import within a directory.
+ *
+ * @since 3.0
+ * @return void
+ */
+function sunshine_ajax_gallery_import_list() {
+	if ( ! current_user_can( 'upload_files' ) ) {
+		wp_send_json_error(
+			array(
+				'message' => __( 'You do not have permission to import images.', 'sunshine-photo-cart' ),
+			)
+		);
+	}
+
+	$dir = ! empty( $_POST['dir'] ) ? sanitize_text_field( wp_unslash( $_POST['dir'] ) ) : '';
+	if ( '' === $dir ) {
+		wp_send_json_error(
+			array(
+				'message' => __( 'A directory must be selected before importing.', 'sunshine-photo-cart' ),
+			)
+		);
+	}
+
+	$folder = sunshine_get_import_directory() . '/' . $dir;
+	if ( ! is_dir( $folder ) ) {
+		wp_send_json_error(
+			array(
+				'message' => __( 'The selected directory is not available.', 'sunshine-photo-cart' ),
+			)
+		);
+	}
+
+	$images = sunshine_get_images_in_folder( $folder );
+	if ( empty( $images ) ) {
+		wp_send_json_success(
+			array(
+				'files' => array(),
+			)
+		);
+	}
+
+	$files = array_map( 'basename', $images );
+
+	wp_send_json_success(
+		array(
+			'files' => array_values( $files ),
+		)
+	);
 }
 
 add_action( 'wp_ajax_sunshine_gallery_import', 'sunshine_ajax_gallery_import' );
@@ -1443,7 +1602,7 @@ function sunshine_ajax_gallery_import() {
 	$existing_image_ids  = $gallery->get_image_ids();
 	if ( ! empty( $existing_image_ids ) ) {
 		foreach ( $existing_image_ids as $existing_image_id ) {
-			$existing_file_names[] = get_post_meta( $existing_image_id, 'sunshine_file_name', true );
+			$existing_file_names[] = strtolower( get_post_meta( $existing_image_id, 'sunshine_file_name', true ) );
 		}
 	}
 
@@ -1453,11 +1612,11 @@ function sunshine_ajax_gallery_import() {
 	$file_path = $images[ $item_number - 1 ];
 	$file_name = basename( $file_path );
 
-	if ( is_array( $existing_file_names ) && in_array( $file_name, $existing_file_names ) ) {
+	if ( is_array( $existing_file_names ) && in_array( strtolower( $file_name ), $existing_file_names ) ) {
 		wp_send_json_error(
 			array(
-				'file_name' => $file_name,
-				'error'     => __( 'Already uploaded to gallery', 'sunshine-photo-cart' ),
+				'file'  => $file_name,
+				'error' => __( 'Already uploaded to gallery', 'sunshine-photo-cart' ),
 			)
 		);
 	}
@@ -1476,6 +1635,7 @@ function sunshine_ajax_gallery_import() {
 		wp_send_json_error(
 			array(
 				'file'  => $file_name,
+				/* translators: %s is the upload directory */
 				'error' => new WP_Error( 'upload_error', sprintf( __( 'The selected file could not be copied to %s.', 'sunshine-photo-cart' ), $upload_dir['path'] ) ),
 			)
 		);
@@ -1487,13 +1647,69 @@ function sunshine_ajax_gallery_import() {
 	@ chmod( $new_file_path, $perms );
 	$url = $upload_dir['url'] . '/' . $new_file_name;
 
+	// Check image dimensions against minimum size requirements
+	$large_size = SPC()->get_option( 'large_size' );
+	if ( isset( $large_size['w'] ) && isset( $large_size['h'] ) ) {
+		$image_info = getimagesize( $new_file_path );
+		if ( $image_info === false ) {
+			SPC()->log( 'Error: Could not get image dimensions for import' );
+			wp_send_json_error(
+				array(
+					'error' => __( 'Could not read image dimensions', 'sunshine-photo-cart' ),
+					'file'  => $file_name,
+				)
+			);
+			return;
+		}
+
+		$image_width  = $image_info[0];
+		$image_height = $image_info[1];
+		$min_width    = intval( $large_size['w'] );
+		$min_height   = intval( $large_size['h'] );
+
+		if ( $image_width < $min_width || $image_height < $min_height ) {
+			SPC()->log(
+				sprintf(
+					'Error: Imported image too small. Required: %dx%d, Actual: %dx%d',
+					$min_width,
+					$min_height,
+					$image_width,
+					$image_height
+				)
+			);
+			wp_send_json_error(
+				array(
+					'error' => sprintf(
+						/* translators: %1$d is minimum width, %2$d is minimum height, %3$d is actual image width, %4$d is actual image height */
+						__( 'Image is too small. Image must be larger than: %1$dx%2$d pixels. Your image: %3$dx%4$d pixels', 'sunshine-photo-cart' ),
+						$min_width,
+						$min_height,
+						$image_width,
+						$image_height
+					),
+					'file'  => $file_name,
+				)
+			);
+			return;
+		}
+
+		SPC()->log(
+			sprintf(
+				'Image size validation passed for import. Required: %dx%d, Actual: %dx%d',
+				$min_width,
+				$min_height,
+				$image_width,
+				$image_height
+			)
+		);
+	}
+
 	$data = sunshine_insert_gallery_image( $new_file_path, $gallery_id, 'data', $watermark );
 
 	if ( ! empty( $data ) && SPC()->get_option( 'delete_images_folder' ) && $file_path === end( $images ) ) {
 
 		foreach ( $images as $image_file_path ) {
 			@unlink( $image_file_path ); // Delete the file
-			sunshine_log( 'Deleting image after successful import from FTP folder: ' . $image_file_path );
 			SPC()->log( 'Deleting image after successful import from FTP folder: ' . $image_file_path );
 		}
 
@@ -1514,9 +1730,9 @@ function sunshine_meta_gallery_emails_display() {
 	$gallery = sunshine_get_gallery( $post->ID );
 	$emails  = $gallery->get_emails();
 	if ( ! empty( $emails ) && is_array( $emails ) ) {
-		echo join( '<br />', $emails );
+		echo wp_kses_post( join( '<br />', $emails ) );
 	} else {
-		_e( 'No emails collected yet', 'sunshine-photo-cart' );
+		esc_html_e( 'No emails collected yet', 'sunshine-photo-cart' );
 	}
 }
 
@@ -1640,4 +1856,17 @@ function sunshine_s3_offload_pre_upload_attachment( $abort, $post_id, $metadata 
 
 	// If not, return the original value of $abort
 	return $abort;
+}
+
+add_filter( 'wp_read_image_metadata', 'sunshine_enhance_image_metadata', 10, 5 );
+function sunshine_enhance_image_metadata( $meta, $file, $image_type, $iptc, $exif ) {
+	if ( ! empty( $exif['EXIF']['DateTimeOriginal'] ) ) {
+		$photo_time = $exif['EXIF']['DateTimeOriginal'];
+		$timestamp  = strtotime( str_replace( ':', '-', substr( $photo_time, 0, 10 ) ) . substr( $photo_time, 10 ) );
+		if ( $timestamp ) {
+			$meta['created_timestamp'] = $timestamp;
+			SPC()->log( 'Found EXIF DateTimeOriginal for ' . basename( $file ) . ': ' . date( 'Y-m-d H:i:s', $timestamp ) );
+		}
+	}
+	return $meta;
 }

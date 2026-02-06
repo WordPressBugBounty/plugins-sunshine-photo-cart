@@ -40,6 +40,21 @@ class SPC_Tool {
 
 	function pre_process() { }
 
-	function process() { }
+	function process() {
+		// Verify nonce for security
+		if ( ! isset( $_REQUEST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ), 'sunshine_tool_' . $this->get_key() ) ) {
+			wp_die( esc_html__( 'Security check failed', 'sunshine-photo-cart' ) );
+		}
+
+		// Verify user capabilities
+		if ( ! current_user_can( 'sunshine_manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to access this tool', 'sunshine-photo-cart' ) );
+		}
+
+		// Call the child class's implementation
+		$this->do_process();
+	}
+
+	protected function do_process() { }
 
 }

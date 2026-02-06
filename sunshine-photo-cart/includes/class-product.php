@@ -220,7 +220,7 @@ class SPC_Product extends Sunshine_Data {
 		}
 		$output_safe = '<img src="' . esc_url( $this->get_image_url( $size ) ) . '" alt="' . esc_attr( $this->get_name() ) . '" />';
 		if ( $echo ) {
-			echo $output_safe;
+			echo wp_kses_post( $output_safe );
 			return;
 		}
 		return $output_safe;
@@ -310,6 +310,11 @@ class SPC_Product extends Sunshine_Data {
 		return $needs_shipping;
 	}
 
+	public function needs_delivery() {
+		$needs_delivery = apply_filters( 'sunshine_product_' . $this->product_type . '_needs_delivery', true, $this );
+		return $needs_delivery;
+	}
+
 	public function needs_account() {
 		return false;
 	}
@@ -345,7 +350,7 @@ class SPC_Product extends Sunshine_Data {
 		$classes[] = 'sunshine--product-' . $this->get_id();
 		$classes[] = 'sunshine--product-' . $this->get_type();
 		$classes   = apply_filters( 'sunshine_product_class', $classes, $this );
-		echo join( ' ', $classes );
+		echo esc_attr( join( ' ', $classes ) );
 	}
 
 	public function get_options( $price_level_id = '' ) {
@@ -376,7 +381,7 @@ class SPC_Product extends Sunshine_Data {
 						$available_options[ $option_id ] = new SPC_Product_Option( $option_id, $this->get_id(), $price_level_id );
 					}
 				}
-			} else { // Single checkbox
+			} else { // Single checkbox or text field
 				if ( isset( $option_data[ $price_level_id ] ) && $option_data[ $price_level_id ] !== '' ) {
 					$available_options[ $option_id ] = new SPC_Product_Option( $option_id, $this->get_id(), $price_level_id );
 				}

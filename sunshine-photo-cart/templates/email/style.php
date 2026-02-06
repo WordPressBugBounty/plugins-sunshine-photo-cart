@@ -92,7 +92,7 @@ table {
 #dyk p { font-size: 15px; }
 #dyk p a.button { font-size: 14px; padding: 5px 10px; }
 
-#celebrate { background: url(<?php echo SUNSHINE_PHOTO_CART_URL; ?>assets/images/confetti.gif) center / contain no-repeat; padding: 40px 20px; text-align: center; border: 1px solid #EFEFEF; border-radius: 5px; }
+#celebrate { background: url(<?php echo esc_url( SUNSHINE_PHOTO_CART_URL . 'assets/images/confetti.gif' ); ?>) center / contain no-repeat; padding: 40px 20px; text-align: center; border: 1px solid #EFEFEF; border-radius: 5px; }
 #celebrate h2 { font-size: 17px; font-weight: bold; }
 #celebrate p { font-size: 18px; }
 #celebrate p a.button { font-size: 14px; padding: 5px 10px; }

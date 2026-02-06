@@ -17,20 +17,24 @@ class SPC_Cart_Item {
 	public $gallery;
 	protected $qty = 0;
 	protected $price_level;
-	protected $price = 0.00;
-	protected $options;
-	protected $options_total;
-	protected $discount       = 0.00;
-	protected $discount_price = 0.00;
-	protected $taxable        = false;
-	protected $tax            = 0.00;
-	protected $taxable_total  = 0.00;
-	protected $tax_total      = 0.00;
-	protected $subtotal       = 0.00;
-	protected $total          = 0.00;
-	protected $comments       = '';
-	protected $meta           = array();
+	protected $price         = 0.00;
+	protected $options       = array();
+	protected $options_total = 0.00;
+	protected $discount      = 0.00;
+	protected $taxable       = false;
+	protected $tax           = 0.00;
+	protected $taxable_total = 0.00;
+	protected $tax_total     = 0.00;
+	protected $subtotal      = 0.00;
+	protected $total         = 0.00;
+	protected $comments      = '';
+	protected $meta          = array();
 	protected $hash;
+
+	// Store original values before discount for display.
+	protected $original_subtotal  = 0.00;
+	protected $original_tax_total = 0.00;
+	protected $discount_per_item  = 0.00;
 
 	function __construct( $item = array() ) {
 
@@ -109,9 +113,13 @@ class SPC_Cart_Item {
 		} else {
 			$discount = apply_filters( 'sunshine_cart_item_discount', $this->discount, $this );
 			if ( $discount ) {
-				$this->discount       = floatval( $discount );
-				$this->discount_price = floatval( $this->price - $this->discount );
+				$this->discount = floatval( $discount );
 			}
+		}
+
+		// Calculate per-item discount for consistent display.
+		if ( $this->discount > 0 && $this->qty > 0 ) {
+			$this->discount_per_item = $this->discount / $this->qty;
 		}
 
 		if ( ! empty( $item['meta'] ) ) {
@@ -133,31 +141,63 @@ class SPC_Cart_Item {
 			if ( $this->price && $this->taxable && ! empty( $tax_rate ) ) {
 				$price_has_tax = SPC()->get_option( 'price_has_tax' );
 				if ( 'yes' === $price_has_tax ) {
-					// Take out tax from current price and lower price adjusting for tax amount.
-					$new_price       = $this->price / ( $tax_rate['rate'] + 1 );
-					$new_price       = number_format( ceil( $new_price * 100 ) / 100, 2 );
-					$this->tax       = $this->price - $new_price;
-					$this->tax_total = $this->tax * $this->qty;
-					$this->price     = $new_price;
+					// When prices include tax, extract base amounts for all storage/calculations.
+					$price_with_tax         = $this->price;
+					$options_total_with_tax = $this->options_total;
 
-					if ( $this->options_total ) {
-						$new_options_total   = $this->options_total / ( $tax_rate['rate'] + 1 );
-						$new_price           = number_format( ceil( $new_options_total * 100 ) / 100, 2 );
-						$this->tax          += $this->options_total - $new_options_total;
-						$this->tax_total     = $this->tax * $this->qty;
-						$this->options_total = $new_options_total;
+					// Extract base price and tax per item.
+					// Round base, then tax is exact difference to ensure they sum to original.
+					$this->price = round( $price_with_tax / ( $tax_rate['rate'] + 1 ), 2 );
+					$this->tax   = $price_with_tax - $this->price; // Exact difference, no rounding.
+
+					// Extract options base price and add its tax.
+					if ( $options_total_with_tax ) {
+						$this->options_total = round( $options_total_with_tax / ( $tax_rate['rate'] + 1 ), 2 );
+						$this->tax          += $options_total_with_tax - $this->options_total; // Exact difference.
 					}
 
-					$this->taxable_total = ( $this->price + $this->options_total - $this->discount ) * $this->qty;
-					$this->total         = ( ( $this->price + $this->options_total - $this->discount ) * $this->qty );
-					$this->subtotal      = ( $this->price + $this->options_total ) * $this->qty;
+					// Calculate base subtotal (without tax) - this is for internal calculations.
+					$this->subtotal = ( $this->price + $this->options_total ) * $this->qty;
 
+					// Store original values WITH tax (what user entered) before discount calculations.
+					$this->original_subtotal  = ( $price_with_tax + $options_total_with_tax ) * $this->qty;
+					$this->original_tax_total = 0; // Tax already included in original_subtotal.
+
+					// For line item discounts, apply discount to price with tax, then extract base/tax.
+					if ( $this->discount > 0 ) {
+						$subtotal_with_tax = ( $price_with_tax + $options_total_with_tax ) * $this->qty;
+						$total_with_tax    = $subtotal_with_tax - $this->discount;
+
+						// Extract base and tax from the discounted total.
+						// Round base, then tax is exact difference to ensure they sum to discounted total.
+						$this->taxable_total = round( $total_with_tax / ( $tax_rate['rate'] + 1 ), 2 );
+						$this->tax_total     = $total_with_tax - $this->taxable_total; // Exact difference.
+						$this->total         = $this->taxable_total;
+					} else {
+						// No discount at line item level.
+						// When prices include tax, use already-extracted per-item tax to avoid rounding errors.
+						$this->taxable_total = $this->subtotal;
+						$this->tax_total     = $this->tax * $this->qty; // Use extracted tax, don't recalculate.
+						$this->total         = $this->taxable_total;
+					}
 				} else {
-					// Need to calculate from price whenever tax is not included
-					$this->tax           = ( $this->price + $this->options_total ) * $tax_rate['rate'];
-					$this->tax_total     = $this->tax * $this->qty;
-					$this->taxable_total = ( $this->price + $this->options_total - $this->discount ) * $this->qty;
+					// Need to calculate from price whenever tax is not included.
+					// Store original values before discount calculations.
+					$this->original_subtotal  = ( $this->price + $this->options_total ) * $this->qty;
+					$this->original_tax_total = round( $this->original_subtotal * $tax_rate['rate'], 2 );
+
+					// Calculate taxable amount after discount.
+					$this->taxable_total = ( ( $this->price + $this->options_total ) * $this->qty ) - $this->discount;
+
+					// Calculate tax on the discounted amount.
+					$this->tax_total = round( $this->taxable_total * $tax_rate['rate'], 2 );
+					$this->tax       = round( $this->tax_total / $this->qty, 2 );
+					$this->total     = $this->taxable_total;
 				}
+			} else {
+				// No tax calculations needed, but still store original values.
+				$this->original_subtotal  = $this->subtotal;
+				$this->original_tax_total = 0;
 			}
 		}
 
@@ -188,7 +228,7 @@ class SPC_Cart_Item {
 
 	public function set_total() {
 		$this->subtotal = max( 0, ( floatval( $this->price ) + floatval( $this->options_total ) ) * $this->qty );
-		$this->total    = max( 0, floatval( $this->subtotal - ( $this->discount * $this->qty ) ) );
+		$this->total    = max( 0, floatval( $this->subtotal - $this->discount ) );
 	}
 
 	public function get_image_id() {
@@ -344,18 +384,14 @@ class SPC_Cart_Item {
 	}
 
 	public function get_price() {
-		$price = $this->price + $this->options_total;
-		if ( $this->discount > 0 ) {
-			$price = max( 0, $price - $this->discount );
-		}
+		$price = (float) $this->price + (float) ( $this->options_total ?? 0 );
 		return $price;
 	}
 
 	public function get_price_formatted() {
-		$reg_price = $this->get_regular_price();
-		$price     = $this->get_price();
-		if ( $this->discount > 0 ) {
-			$price_formatted = '<s>' . sunshine_price( $reg_price ) . '</s> ' . sunshine_get_price_to_display( $price, $this->tax );
+		$price = $this->get_price();
+		if ( $this->discount_per_item > 0 ) {
+			$price_formatted = '<s>' . sunshine_get_price_to_display( $price, $this->tax ) . '</s> ' . sunshine_get_price_to_display( $price - $this->discount_per_item, $this->tax );
 		} else {
 			$price_formatted = sunshine_get_price_to_display( $price, $this->tax );
 		}
@@ -405,7 +441,12 @@ class SPC_Cart_Item {
 	}
 
 	public function get_discount_total() {
-		return $this->discount * $this->qty;
+		// return $this->discount * $this->qty;
+		return $this->get_discount();
+	}
+
+	public function get_discount_per_item() {
+		return $this->discount_per_item;
 	}
 
 	public function get_comments() {
@@ -421,11 +462,12 @@ class SPC_Cart_Item {
 	}
 
 	public function get_subtotal_formatted() {
-		$reg_subtotal = $this->get_regular_price() * $this->qty;
-		$subtotal     = $this->get_subtotal();
 		if ( $this->discount > 0 ) {
-			$price_formatted = '<s>' . sunshine_price( $reg_subtotal ) . '</s> ' . sunshine_get_price_to_display( $subtotal - $this->get_discount_total() );
+			// Show original price with strikethrough, then discounted price.
+			$price_formatted = '<s>' . sunshine_get_price_to_display( $this->original_subtotal, $this->original_tax_total ) . '</s> ' . sunshine_get_price_to_display( $this->total, $this->tax_total );
 		} else {
+			// No discount, show regular price.
+			$subtotal        = $this->get_subtotal();
 			$price_formatted = sunshine_get_price_to_display( $subtotal, $this->tax_total );
 		}
 		return $price_formatted;
@@ -479,7 +521,7 @@ class SPC_Cart_Item {
 	}
 
 	public function get_remove_url() {
-		$url = SPC()->get_option( 'page_cart' );
+		$url = sunshine_get_page_permalink( 'cart' );
 		$url = add_query_arg( 'delete_cart_item', $this->get_hash(), $url );
 		$url = add_query_arg( 'nonce', wp_create_nonce( 'sunshine_delete_cart_item' ), $url );
 		return $url;

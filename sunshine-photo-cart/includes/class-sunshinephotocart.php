@@ -23,6 +23,7 @@ final class Sunshine_Photo_Cart {
 	public $plans = array();
 	public $plan;
 	public $frontend;
+	public $active_addons = array();
 
 	public static function instance() {
 		if ( is_null( self::$_instance ) ) {
@@ -51,6 +52,9 @@ final class Sunshine_Photo_Cart {
 		}
 		$log_message .= "\n";
 		$fp           = fopen( $this->log_file, 'a' );
+		if ( ! $fp ) {
+			return;
+		}
 		fwrite( $fp, $log_message );
 		fclose( $fp );
 
@@ -230,6 +234,8 @@ final class Sunshine_Photo_Cart {
 
 		do_action( 'sunshine_before_init' );
 
+		$this->active_addons = apply_filters( 'sunshine_active_addons', array() );
+
 		$this->session = new SPC_Session();
 		$this->version = $this->get_option( 'version' );
 
@@ -394,7 +400,7 @@ final class Sunshine_Photo_Cart {
 			'not_found'          => __( 'No products found', 'sunshine-photo-cart' ),
 			'not_found_in_trash' => __( 'No products found in trash', 'sunshine-photo-cart' ),
 			'parent_item_colon'  => '',
-			'menu_name'          => __( 'Products' ),
+			'menu_name'          => __( 'Products', 'sunshine-photo-cart' ),
 		);
 		$args   = array(
 			'labels'              => $labels,

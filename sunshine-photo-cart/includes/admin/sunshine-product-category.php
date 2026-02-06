@@ -5,11 +5,11 @@ function sunshine_product_category_add_form_fields( $taxonomy ) {
 	wp_enqueue_media();
 	?>
 		<div class="form-field">
-			<label><?php _e( 'Image', 'sunshine-photo-cart' ); ?></label>
-			<button id="image-upload" class="button" style="display: inline-block;"><?php _e( 'Upload Image', 'sunshine-photo-cart' ); ?></button>
+			<label><?php esc_html_e( 'Image', 'sunshine-photo-cart' ); ?></label>
+			<button id="image-upload" class="button" style="display: inline-block;"><?php esc_html_e( 'Upload Image', 'sunshine-photo-cart' ); ?></button>
 			<div id="image"></div>
 			<input type="hidden" name="image" value="" />
-			<button id="image-delete" class="button" style="display: none;"><?php _e( 'Remove image', 'sunshine-photo-cart' ); ?></button>
+			<button id="image-delete" class="button" style="display: none;"><?php esc_html_e( 'Remove image', 'sunshine-photo-cart' ); ?></button>
 		</div>
 		<script>
 		jQuery(document).ready(function($) {
@@ -20,9 +20,9 @@ function sunshine_product_category_add_form_fields( $taxonomy ) {
 
 				event.preventDefault();
 				file_frame = wp.media.frames.file_frame = wp.media({
-					title: '<?php echo esc_js( __( 'Select image to upload', 'sunshine' ) ); ?>',
+					title: '<?php echo esc_js( __( 'Select image to upload', 'sunshine-photo-cart' ) ); ?>',
 					button: {
-						text: '<?php echo esc_js( __( 'Use this image', 'sunshine' ) ); ?>',
+						text: '<?php echo esc_js( __( 'Use this image', 'sunshine-photo-cart' ) ); ?>',
 					},
 					multiple: false
 				});
@@ -90,9 +90,9 @@ function sunshine_product_category_edit_form_fields( $term, $taxonomy ) {
 	$image_id = get_term_meta( $term->term_id, 'image', true );
 	?>
 		<tr class="form-field sunshine-product-category-image">
-			<th scope="row"><label><?php _e( 'Image', 'sunshine-photo-cart' ); ?></label></th>
+			<th scope="row"><label><?php esc_html_e( 'Image', 'sunshine-photo-cart' ); ?></label></th>
 			<td>
-				<button id="image-upload" class="button" style="display: <?php echo ( ! empty( $image_id ) ) ? 'none' : 'inline-block'; ?>;"><?php _e( 'Upload Image', 'sunshine-photo-cart' ); ?></button>
+				<button id="image-upload" class="button" style="display: <?php echo ( ! empty( $image_id ) ) ? 'none' : 'inline-block'; ?>;"><?php esc_html_e( 'Upload Image', 'sunshine-photo-cart' ); ?></button>
 				<div id="image">
 				<?php
 				if ( $image_id ) {
@@ -101,7 +101,7 @@ function sunshine_product_category_edit_form_fields( $term, $taxonomy ) {
 				?>
 				</div>
 				<input type="hidden" name="image" value="<?php echo esc_attr( $image_id ); ?>" />
-				<button id="image-delete" class="button" style="display: <?php echo ( ! empty( $image_id ) ) ? 'inline-block' : 'none'; ?>;"><?php _e( 'Remove image', 'sunshine-photo-cart' ); ?></button>
+				<button id="image-delete" class="button" style="display: <?php echo ( ! empty( $image_id ) ) ? 'inline-block' : 'none'; ?>;"><?php esc_html_e( 'Remove image', 'sunshine-photo-cart' ); ?></button>
 			</td>
 		</tr>
 
@@ -113,9 +113,9 @@ function sunshine_product_category_edit_form_fields( $term, $taxonomy ) {
 			$( document ).on( "click", "#image-upload", function( event ){
 				event.preventDefault();
 				file_frame = wp.media.frames.file_frame = wp.media({
-					title: '<?php echo esc_js( __( 'Select image to upload', 'sunshine' ) ); ?>',
+					title: '<?php echo esc_js( __( 'Select image to upload', 'sunshine-photo-cart' ) ); ?>',
 					button: {
-						text: '<?php echo esc_js( __( 'Use this image', 'sunshine' ) ); ?>',
+						text: '<?php echo esc_js( __( 'Use this image', 'sunshine-photo-cart' ) ); ?>',
 					},
 					multiple: false
 				});
@@ -163,7 +163,7 @@ add_filter( 'manage_edit-sunshine-product-category_columns', 'sunshine_product_c
 function sunshine_product_category_columns( $columns ) {
 	$new_columns = array(
 		'cb'          => '<input type="checkbox" />',
-		'name'        => __( 'Name' ),
+		'name'        => __( 'Name', 'sunshine-photo-cart' ),
 		'description' => __( 'Description', 'sunshine-photo-cart' ),
 		'image'       => __( 'Image', 'sunshine-photo-cart' ),
 		'posts'       => __( 'Products', 'sunshine-photo-cart' ),

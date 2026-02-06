@@ -1,5 +1,5 @@
 <?php
-$max_qty = $product->get_max_qty();
+$max_qty      = $product->get_max_qty();
 $can_purchase = $product->can_purchase();
 ?>
 <div id="sunshine--image--cart-review">
@@ -9,8 +9,8 @@ $can_purchase = $product->can_purchase();
 	<div id="sunshine--store--product-details--header">
 		<div id="sunshine--store--product-details--header--product">
 			<?php $product->get_image_html( 'large' ); ?>
-			<div id="sunshine--store--product-details--header--product--title"><?php echo $product->get_name(); ?></div>
-			<div id="sunshine--store--product-details--header--product--description"><?php echo $product->get_description(); ?></div>
+			<div id="sunshine--store--product-details--header--product--title"><?php echo esc_html( $product->get_name() ); ?></div>
+			<div id="sunshine--store--product-details--header--product--description"><?php echo wp_kses_post( $product->get_description() ); ?></div>
 		</div>
 	</div>
 	<div id="sunshine--store--product-details--content">
@@ -18,7 +18,7 @@ $can_purchase = $product->can_purchase();
 		<?php if ( $product->allow_store_image_select() && $can_purchase ) { ?>
 		<div class="sunshine--product-options--item sunshine--product-options--item--select" id="sunshine--product-options--image-select">
 			<div class="sunshine--product-options--item--name">
-				<?php _e( 'Images', 'sunshine-photo-cart' ); ?> <?php echo sunshine_get_required_notice(); ?>
+				<?php esc_html_e( 'Images', 'sunshine-photo-cart' ); ?> <?php echo wp_kses_post( sunshine_get_required_notice() ); ?>
 			</div>
 			<button
 				class="sunshine--multi-image-select--open sunshine--button-link"
@@ -31,7 +31,7 @@ $can_purchase = $product->can_purchase();
 				data-selected-target="sunshine--multi-image-select--selected-images"
 				data-product-id="<?php echo esc_attr( $product->get_id() ); ?>"
 				data-gallery-id="<?php echo esc_attr( $gallery->get_id() ); ?>">
-					<?php _e( 'Select Images', 'sunshine-photo-cart' ); ?>
+					<?php esc_html_e( 'Select Images', 'sunshine-photo-cart' ); ?>
 				</button>
 			<input type="hidden" name="images" value="" required="required" />
 			<div class="sunshine--multi-image-select--selected-images" id="sunshine--multi-image-select--selected-images--<?php echo esc_attr( $key ); ?>">
@@ -49,13 +49,14 @@ $can_purchase = $product->can_purchase();
 
 		<div id="sunshine--product--details--price">
 			<?php if ( $product->allow_store_image_select() ) { ?>
-				<?php echo sprintf( __( '%s/each', 'sunshine-photo-cart' ), $product->get_price_formatted() ); ?>
+				<?php /* translators: %s is the price */ ?>
+				<?php echo wp_kses_post( sprintf( __( '%s/each', 'sunshine-photo-cart' ), $product->get_price_formatted() ) ); ?>
 			<?php } else { ?>
-				<?php echo $product->get_price_formatted(); ?>
+				<?php echo wp_kses_post( $product->get_price_formatted() ); ?>
 			<?php } ?>
 		</div>
 
-		<?php echo sunshine_get_template_html( 'quantity-discount/prices', array( 'product' => $product ) ); ?>
+		<?php do_action( 'sunshine_store_product_details_after_price', $product ); ?>
 
 		<?php if ( $can_purchase ) { ?>
 
@@ -74,13 +75,14 @@ $can_purchase = $product->can_purchase();
 			<?php } ?>
 
 			<div id="sunshine--product--details--action">
-				<button class="sunshine--button button" data-product-id="<?php echo esc_attr( $product->get_id() ); ?>" data-gallery-id="<?php echo esc_attr( $gallery->get_id() ); ?>"><?php _e( 'Add to cart', 'sunshine-photo-cart' ); ?></button>
+				<button class="sunshine--button button" data-product-id="<?php echo esc_attr( $product->get_id() ); ?>" data-gallery-id="<?php echo esc_attr( $gallery->get_id() ); ?>"><?php esc_html_e( 'Add to cart', 'sunshine-photo-cart' ); ?></button>
 			</div>
 
 		<?php } ?>
 
 		<?php if ( $can_purchase && $max_qty ) { ?>
-			<div id="sunshine--product--details--cart-qty"><?php echo sprintf( __( 'You can only add (%s) %s to cart', 'sunshine-photo-cart' ), $product->get_max_qty(), $product->get_name() ); ?></div>
+			<?php /* translators: %1$s is the maximum quantity, %2$s is the product name */ ?>
+			<div id="sunshine--product--details--cart-qty"><?php echo wp_kses_post( sprintf( __( 'You can only add (%1$s) %2$s to cart', 'sunshine-photo-cart' ), $product->get_max_qty(), $product->get_name() ) ); ?></div>
 		<?php } ?>
 
 	</div>

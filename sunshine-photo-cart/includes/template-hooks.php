@@ -173,7 +173,7 @@ function sunshine_single_gallery_display( $gallery = '' ) {
 	remove_filter( 'the_content', array( SPC()->frontend, 'the_content' ) );
 	$content = apply_filters( 'the_content', $content );
 	if ( ! empty( $content ) ) {
-		echo '<div id="sunshine--content">' . $content . '</div>';
+		echo '<div id="sunshine--content">' . wp_kses_post( $content ) . '</div>';
 	}
 	add_filter( 'the_content', array( SPC()->frontend, 'the_content' ) );
 
@@ -463,7 +463,7 @@ function sunshine_display_account_login() {
 		sunshine_get_template( 'account/login' );
 		return;
 	}
-	_e( 'You are already logged in', 'sunshine-photo-cart' );
+	esc_html_e( 'You are already logged in', 'sunshine-photo-cart' );
 }
 
 add_action( 'sunshine_account_reset-password', 'sunshine_display_reset_password' );
@@ -486,14 +486,14 @@ function sunshine_display_reset_password() {
 			return;
 		}
 	}
-	_e( 'Invalid reset password URL', 'sunshine-photo-cart' );
+	esc_html_e( 'Invalid reset password URL', 'sunshine-photo-cart' );
 }
 
 add_action( 'sunshine_search_results', 'sunshine_display_search_results' );
 function sunshine_display_search_results() {
 
 	if ( empty( $_GET['sunshine_search'] ) ) {
-		_e( 'Sorry, invalid search', 'sunshine-photo-cart' );
+		esc_html_e( 'Sorry, invalid search', 'sunshine-photo-cart' );
 		return;
 	}
 
@@ -505,6 +505,6 @@ add_action( 'sunshine_invoice_after_data', 'sunshine_invoice_custom_content' );
 function sunshine_invoice_custom_content( $order ) {
 	$custom_content = SPC()->get_option( 'invoice' );
 	if ( $custom_content ) {
-		echo '<div id="invoice-custom-content">' . wpautop( wp_kses_post( $custom_content ) ) . '</div>';
+		echo '<div id="invoice-custom-content">' . wp_kses_post( wpautop( $custom_content ) ) . '</div>';
 	}
 }

@@ -3,18 +3,19 @@ class SPC_Email_Image_Comment extends SPC_Email {
 
 	function init() {
 
-		$this->id                = 'image-comment';
-		$this->class             = get_class( $this );
-		$this->name              = __( 'Image Comment (Admin)', 'sunshine-photo-cart' );
-		$this->description       = __( 'Comment notification to admin', 'sunshine-photo-cart' );
-		$this->subject           = sprintf( __( 'A new comment by %s on %s', 'sunshine-photo-cart' ), '[name]', '[sitename]' );
+		$this->id          = 'image-comment';
+		$this->class       = get_class( $this );
+		$this->name        = __( 'Image Comment (Admin)', 'sunshine-photo-cart' );
+		$this->description = __( 'Comment notification to admin', 'sunshine-photo-cart' );
+		/* translators: %1$s is the customer name, %2$s is the site name */
+		$this->subject           = sprintf( __( 'A new comment by %1$s on %2$s', 'sunshine-photo-cart' ), '[name]', '[sitename]' );
 		$this->custom_recipients = true;
 
 		$this->add_search_replace(
 			array(
-				'name' => '',
-				'image_name' => '',
-				'gallery_name'  => '',
+				'name'         => '',
+				'image_name'   => '',
+				'gallery_name' => '',
 			)
 		);
 
@@ -29,7 +30,7 @@ class SPC_Email_Image_Comment extends SPC_Email {
 
 		$args = array(
 			'comment' => $comment,
-			'image' => $image,
+			'image'   => $image,
 		);
 		$this->add_args( $args );
 

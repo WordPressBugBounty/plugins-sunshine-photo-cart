@@ -9,6 +9,8 @@ function sunshine_watermark_image( $attachment_id, $metadata = array(), $passed_
 
 		if ( file_exists( $watermark_image ) && $watermark_file_type['ext'] == 'png' ) {
 
+			SPC()->log( 'Watermark image found: ' . $watermark_image );
+
 			$image = get_attached_file( $attachment_id );
 			if ( ! empty( $passed_image_size ) ) {
 				$image_size = $passed_image_size;

@@ -3,10 +3,11 @@ class SPC_Email_Admin_Receipt extends SPC_Email {
 
 	function init() {
 
-		$this->id                = 'admin-receipt';
-		$this->class             = get_class( $this );
-		$this->name              = __( 'Admin Order Receipt', 'sunshine-photo-cart' );
-		$this->description       = __( 'Email receipt sent to admins after successful order', 'sunshine-photo-cart' );
+		$this->id          = 'admin-receipt';
+		$this->class       = get_class( $this );
+		$this->name        = __( 'Admin Order Receipt', 'sunshine-photo-cart' );
+		$this->description = __( 'Email receipt sent to admins after successful order', 'sunshine-photo-cart' );
+		/* translators: %1$s is the order name, %2$s is the site name */
 		$this->subject           = sprintf( __( 'New order: %1$s from %2$s', 'sunshine-photo-cart' ), '[order_name]', '[sitename]' );
 		$this->custom_recipients = true;
 
@@ -53,6 +54,9 @@ class SPC_Email_Admin_Receipt extends SPC_Email {
 
 		// Send email
 		$result = $this->send();
+		if ( $result ) {
+			$order->add_log( 'Email sent to admin: ' . $this->name );
+		}
 
 	}
 

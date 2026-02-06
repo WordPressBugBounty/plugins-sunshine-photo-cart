@@ -51,7 +51,8 @@ class SPC_Email {
 		);
 		$search_replace_keys = $this->get_search_replace_keys();
 		if ( ! empty( $search_replace_keys ) ) {
-			$search_replace                = '[' . join( '], [', $search_replace_keys ) . ']';
+			$search_replace = '[' . join( '], [', $search_replace_keys ) . ']';
+			/* translators: %s is the list of available template tags */
 			$fields['1000']['description'] = sprintf( __( 'Available template tags: %s', 'sunshine-photo-cart' ), $search_replace );
 		}
 		$fields['1001'] = array(
@@ -107,7 +108,11 @@ class SPC_Email {
 		if ( empty( $base_path ) ) {
 			$base_path = SUNSHINE_PHOTO_CART_PATH . 'templates/email/';
 		}
-		$template_path = trailingslashit( $base_path ) . $template . '.php';
+		if ( file_exists( TEMPLATEPATH . '/sunshine/email/' . $template . '.php' ) ) {
+			$template_path = TEMPLATEPATH . '/sunshine/email/' . $template . '.php';
+		} else {
+			$template_path = trailingslashit( $base_path ) . $template . '.php';
+		}
 		if ( file_exists( $template_path ) ) {
 			$this->template = $template_path;
 		}
@@ -219,8 +224,8 @@ class SPC_Email {
 
 		// Check if we are passing a simple template name like "header", if so get it from main email template directory.
 		if ( basename( $template, '.php' ) == $template ) {
-			if ( file_exists( TEMPLATEPATH . '/sunshine/templates/email/' . $template . '.php' ) ) {
-				$template_path = TEMPLATEPATH . '/sunshine/templates/email/' . $template . '.php';
+			if ( file_exists( TEMPLATEPATH . '/sunshine/email/' . $template . '.php' ) ) {
+				$template_path = TEMPLATEPATH . '/sunshine/email/' . $template . '.php';
 			} else {
 				$template_path = SUNSHINE_PHOTO_CART_PATH . 'templates/email/' . $template . '.php';
 			}
@@ -337,6 +342,7 @@ class SPC_Email {
 			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/class-emogrifier.php';
 		}
 		$css        = $this->get_template_content( 'style' );
+		$css       .= SPC()->get_option( 'css_email' );
 		$emogrifier = new Sunshine_Emogrifier( $content, $css );
 		$content    = $emogrifier->emogrify();
 

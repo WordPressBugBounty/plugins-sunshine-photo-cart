@@ -66,8 +66,26 @@ function maybe_sunshine_create_custom_tables() {
 add_action( 'admin_init', 'sunshine_install_redirect' );
 function sunshine_install_redirect() {
 	if ( get_option( 'sunshine_install_redirect', false ) ) {
+		// Check user capabilities - require either capability.
+		if ( ! ( current_user_can( 'sunshine_manage_options' ) || current_user_can( 'manage_options' ) ) ) {
+			return;
+		}
 		sunshine_base_install();
 		delete_option( 'sunshine_install_redirect' );
+		wp_redirect( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install' ) );
+		exit;
+	}
+}
+
+add_action( 'admin_init', 'sunshine_force_base_install' );
+function sunshine_force_base_install() {
+	if ( isset( $_GET['sunshine_force_base_install'] ) ) {
+		// Check user capabilities - require either capability.
+		if ( ! ( current_user_can( 'sunshine_manage_options' ) || current_user_can( 'manage_options' ) ) ) {
+			wp_die( esc_html__( 'You do not have permission to perform this action.', 'sunshine-photo-cart' ), 403 );
+		}
+
+		sunshine_base_install();
 		wp_redirect( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install' ) );
 		exit;
 	}
@@ -76,7 +94,11 @@ function sunshine_install_redirect() {
 // On install, flush rewrite rules.
 add_action( 'admin_init', 'sunshine_flush_rewrite_rules', 100 );
 function sunshine_flush_rewrite_rules() {
-	if ( is_admin() && isset( $_GET['page'] ) && $_GET['page'] == 'sunshine-install' ) {
+	if ( is_admin() && isset( $_GET['page'] ) && sanitize_text_field( wp_unslash( $_GET['page'] ) ) === 'sunshine-install' ) {
+		// Check user capabilities - require either capability.
+		if ( ! ( current_user_can( 'sunshine_manage_options' ) || current_user_can( 'manage_options' ) ) ) {
+			return;
+		}
 		flush_rewrite_rules();
 	}
 }
@@ -92,6 +114,7 @@ function sunshine_deactivation() {
 function sunshine_base_install() {
 	global $wpdb;
 
+	SPC()->log( 'Sunshine Photo Cart base install...' );
 	update_option( 'sunshine_version', SUNSHINE_PHOTO_CART_VERSION, false );
 
 	sunshine_set_roles();
@@ -111,6 +134,7 @@ function sunshine_base_install() {
 		'currency_thousands_separator'    => ',',
 		'currency_decimal_separator'      => '.',
 		'currency_decimals'               => '2',
+		'currency_show_code'              => false,
 
 		'endpoint_gallery'                => 'gallery',
 		'endpoint_order_received'         => 'receipt',
@@ -258,7 +282,7 @@ function sunshine_base_install() {
 
 	if ( ! term_exists( 'pending', 'sunshine-order-status' ) ) {
 		wp_insert_term(
-			__( 'Pending', 'sunshine-photo-cart' ),
+			__( 'Pending Payment', 'sunshine-photo-cart' ),
 			'sunshine-order-status',
 			array(
 				'slug'        => 'pending',
@@ -347,6 +371,19 @@ function sunshine_base_install() {
 			)
 		);
 	}
+	if ( ! term_exists( 'failed', 'sunshine-order-status' ) ) {
+		wp_insert_term(
+			__( 'Failed', 'sunshine-photo-cart' ),
+			'sunshine-order-status',
+			array(
+				'slug'        => 'failed',
+				'description' => __(
+					'Payment failed',
+					'sunshine-photo-cart'
+				),
+			)
+		);
+	}
 
 	$terms = get_terms( 'sunshine-product-price-level', array( 'hide_empty' => 0 ) );
 	if ( empty( $terms ) ) {
@@ -354,6 +391,7 @@ function sunshine_base_install() {
 		if ( ! is_wp_error( $result ) ) {
 			add_term_meta( $result['term_id'], 'default', true );
 		}
+		SPC()->log( 'Creating default price level' );
 	}
 
 	$terms = get_terms( 'sunshine-product-category', array( 'hide_empty' => 0 ) );
@@ -362,7 +400,10 @@ function sunshine_base_install() {
 		if ( ! is_wp_error( $result ) ) {
 			add_term_meta( $result['term_id'], 'default', true );
 		}
+		SPC()->log( 'Creating default product category' );
 	}
+
+	SPC()->log( 'Setting up scheduled events' );
 
 	if ( ! wp_next_scheduled( 'sunshine_addon_check' ) ) {
 		wp_schedule_event( time(), 'weekly', 'sunshine_addon_check' );
@@ -390,6 +431,7 @@ function sunshine_base_install() {
 	if ( ! is_dir( $upload_dir['basedir'] . '/sunshine' ) ) {
 		wp_mkdir_p( $upload_dir['basedir'] . '/sunshine' );
 		wp_mkdir_p( $upload_dir['basedir'] . '/sunshine/upload' );
+		SPC()->log( 'Creating default upload directory' );
 	}
 
 	// Enable all emails and set default for them.
@@ -401,6 +443,7 @@ function sunshine_base_install() {
 		}
 	}
 
+	SPC()->log( 'Setting default options' );
 	foreach ( $options as $key => $value ) {
 		update_option( 'sunshine_' . $key, $value, false );
 	}
@@ -413,6 +456,7 @@ function sunshine_base_install() {
 
 function sunshine_set_roles() {
 
+	SPC()->log( 'Setting up roles' );
 	add_role( 'sunshine_customer', 'Sunshine Customer' );
 	add_role( 'sunshine_manager', 'Sunshine Manager' );
 	$manager = get_role( 'sunshine_manager' );
@@ -506,7 +550,7 @@ function sunshine_install_page( $step = '' ) {
 	$step = ( isset( $_GET['step'] ) ) ? sanitize_text_field( $_GET['step'] ) : $step;
 	?>
 	<div id="sunshine-install" class="wrap">
-		<p><img src="<?php echo SUNSHINE_PHOTO_CART_URL; ?>assets/images/logo.svg" alt="Sunshine Photo Cart" width="300" /></p>
+		<p><img src="<?php echo esc_url( SUNSHINE_PHOTO_CART_URL ); ?>assets/images/logo.svg" alt="Sunshine Photo Cart" width="300" /></p>
 
 		<?php
 		add_thickbox();
@@ -632,10 +676,12 @@ function sunshine_install_process_data() {
 function sunshine_updated_page() {
 	?>
 <div id="sunshine-header">
-	<h1><?php printf( __( 'Welcome to Sunshine Photo Cart %s', 'sunshine-photo-cart' ), SPC()->version ); ?></h1>
+	<?php /* translators: %s is the plugin version number */ ?>
+	<h1><?php printf( esc_html__( 'Welcome to Sunshine Photo Cart %s', 'sunshine-photo-cart' ), esc_html( SPC()->version ) ); ?></h1>
 	<p>
 		<?php
-		printf( __( '<strong>Thank you for updating to the latest version!</strong> Sunshine %1$s is the most comprehensive client proofing and photo cart plugin for WordPress. We hope you enjoy greater selling success!', 'sunshine-photo-cart' ), SPC()->version );
+		/* translators: %1$s is the plugin version number */
+		printf( esc_html__( '<strong>Thank you for updating to the latest version!</strong> Sunshine %1$s is the most comprehensive client proofing and photo cart plugin for WordPress. We hope you enjoy greater selling success!', 'sunshine-photo-cart' ), esc_html( SPC()->version ) );
 		?>
 	</p>
 </div>
@@ -655,9 +701,9 @@ function sunshine_updated_page() {
 					$changelog = substr( $changelog, 0, $nth );
 				}
 				?>
-				<h2><?php _e( 'Recent Improvements', 'sunshine-photo-cart' ); ?></h2>
-				<div class="changelog"><?php echo $changelog; ?></div>
-				<p><a href="https://wordpress.org/plugins/sunshine-photo-cart/#developers" target="_blank"><?php _e( 'See the full Changelog', 'sunshine-photo-cart' ); ?></a></p>
+				<h2><?php esc_html_e( 'Recent Improvements', 'sunshine-photo-cart' ); ?></h2>
+				<div class="changelog"><?php echo wp_kses_post( $changelog ); ?></div>
+				<p><a href="https://wordpress.org/plugins/sunshine-photo-cart/#developers" target="_blank"><?php esc_html_e( 'See the full Changelog', 'sunshine-photo-cart' ); ?></a></p>
 			</div>
 
 	</div>

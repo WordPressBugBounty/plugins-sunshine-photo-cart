@@ -3,10 +3,10 @@
 class SPC_Shipping_Method_Local extends SPC_Shipping_Method {
 
 	public function init() {
-		$this->id            = 'local';
-		$this->name          = __( 'Local Delivery', 'sunshine-photo-cart' );
-		$this->class         = 'SPC_Shipping_Method_Local';
-		//$this->description   = __( 'We personally deliver your order', 'sunshine-photo-cart' );
+		$this->id    = 'local';
+		$this->name  = __( 'Local Delivery', 'sunshine-photo-cart' );
+		$this->class = 'SPC_Shipping_Method_Local';
+		// $this->description   = __( 'We personally deliver your order', 'sunshine-photo-cart' );
 		$this->can_be_cloned = true;
 	}
 
@@ -43,7 +43,6 @@ class SPC_Shipping_Method_Local extends SPC_Shipping_Method {
 			if ( ! in_array( $customer_postcode, $postcodes ) ) {
 				return false;
 			}
-
 		}
 
 		$allowed = apply_filters( 'sunshine_shipping_local_allowed', $allowed, $this );
@@ -52,12 +51,28 @@ class SPC_Shipping_Method_Local extends SPC_Shipping_Method {
 
 	}
 
-	public function get_price() {
-		if ( ! empty( $this->instance_id ) ) {
-			$price = floatval( SPC()->get_option( $this->id . '_price_' . $this->instance_id ) );
-			return $price;
+	public function set_price() {
+
+		if ( empty( $this->instance_id ) ) {
+			return;
 		}
-		return 0;
+
+		$price_has_tax = SPC()->get_option( 'price_has_tax' );
+		$tax_rate      = SPC()->cart->get_tax_rate();
+
+		// Get configured price and extract tax if needed.
+		$this->price = floatval( SPC()->get_option( $this->id . '_price_' . $this->instance_id ) );
+
+		if ( 'yes' === $price_has_tax && $this->is_taxable() && $tax_rate ) {
+			// Extract tax from configured price.
+			$base_price  = round( $this->price / ( $tax_rate['rate'] + 1 ), 2 );
+			$this->tax   = round( $this->price - $base_price, 2 );
+			$this->price = $base_price;
+		} elseif ( $this->price && $this->is_taxable() && $tax_rate ) {
+			// Calculate tax on price when tax not included.
+			$this->tax = round( $this->price * $tax_rate['rate'], 2 );
+		}
+
 	}
 
 }

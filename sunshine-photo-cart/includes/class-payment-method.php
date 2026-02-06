@@ -61,10 +61,10 @@ class SPC_Payment_Method {
 			'id'          => $this->id . '_fee',
 			'type'        => 'radio',
 			'description' => __( 'Fees added to the order for using this payment method', 'sunshine-photo-cart' ),
-			'options' => array(
-				'none' => __( 'No added fees', 'sunshine-photo-cart' ),
+			'options'     => array(
+				'none'    => __( 'No added fees', 'sunshine-photo-cart' ),
 				'percent' => __( 'Percentage of total order', 'sunshine-photo-cart' ),
-				'amount' => __( 'Fixed amount', 'sunshine-photo-cart' ),
+				'amount'  => __( 'Fixed amount', 'sunshine-photo-cart' ),
 			),
 		);
 		$fields[41] = array(
@@ -72,20 +72,20 @@ class SPC_Payment_Method {
 			'id'          => $this->id . '_fee_name',
 			'type'        => 'text',
 			'description' => __( 'What description shown to customer at checkout', 'sunshine-photo-cart' ),
-			'conditions' => array(
+			'conditions'  => array(
 				array(
 					'compare' => '==',
 					'value'   => 'none',
 					'field'   => $this->id . '_fee',
 					'action'  => 'hide',
 				),
-			)
+			),
 		);
 		$fields[42] = array(
-			'name'        => __( 'Fee Amount', 'sunshine-photo-cart' ),
-			'id'          => $this->id . '_fee_amount',
-			'type'        => 'number',
-			'step' => '.01',
+			'name'       => __( 'Fee Amount', 'sunshine-photo-cart' ),
+			'id'         => $this->id . '_fee_amount',
+			'type'       => 'number',
+			'step'       => '.01',
 			'conditions' => array(
 				array(
 					'compare' => '==',
@@ -93,7 +93,7 @@ class SPC_Payment_Method {
 					'field'   => $this->id . '_fee',
 					'action'  => 'hide',
 				),
-			)
+			),
 		);
 		return $fields;
 	}
@@ -154,6 +154,14 @@ class SPC_Payment_Method {
 		return false;
 	}
 
+	private function get_mode() {
+		return $this->get_option( 'mode' );
+	}
+
+	public function get_mode_value() {
+		return ( $this->get_mode() == 'live' ) ? 'live' : 'test';
+	}
+
 	public function is_allowed() {
 		return $this->is_active();
 	}
@@ -183,28 +191,30 @@ class SPC_Payment_Method {
 	}
 
 	public function get_submit_label() {
+		/* translators: %s is the order total amount formatted as price */
 		return sprintf( __( 'Submit Order & Pay %s', 'sunshine-photo-cart' ), '<span class="sunshine-total">' . SPC()->cart->get_total_formatted() . '</span>' );
 	}
 
 	public function get_fee() {
-		$fee = array();
+		$fee      = array();
 		$fee_type = $this->get_option( 'fee' );
 		if ( $fee_type && $fee_type != 'none' ) {
 			$fee_amount = $this->get_option( 'fee_amount' );
 			if ( ! empty( $fee_amount ) ) {
 				if ( $fee_type == 'percent' ) {
 					$cart_total = SPC()->cart->get_total( array( 'fees' ) );
-					$amount = ( $fee_amount / 100 ) * $cart_total;
+					$amount     = ( $fee_amount / 100 ) * $cart_total;
 				} elseif ( $fee_type == 'amount' ) {
 					$amount = $fee_amount;
 				}
 				$name = $this->get_option( 'fee_name' );
 				if ( empty( $name ) ) {
+					/* translators: %s is the payment method name */
 					$name = sprintf( __( '%s fee', 'sunshine-photo-cart' ), $this->get_name() );
 				}
 				$fee = array(
 					'amount' => $amount,
-					'name' => $name,
+					'name'   => $name,
 				);
 			}
 		}

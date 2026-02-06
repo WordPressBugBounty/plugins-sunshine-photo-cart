@@ -27,14 +27,30 @@ class SPC_Tool_Regenerate extends SPC_Tool {
 	}
 
 
-	function process() {
+	protected function do_process() {
 		global $wpdb;
 
-		$gallery_id = ( isset( $_GET['sunshine_gallery'] ) ) ? intval( $_GET['sunshine_gallery'] ) : '';
-		if ( isset( $_GET['sunshine_gallery'] ) ) {
-			$gallery = sunshine_get_gallery( intval( $_GET['sunshine_gallery'] ) );
-			$title   = sprintf( __( 'Regenerating images for "%s"', 'sunshine-photo-cart' ), get_the_title( $_GET['sunshine_gallery'] ) );
-			$count   = $gallery->get_image_count();
+		$gallery_id               = ( isset( $_GET['sunshine_gallery'] ) ) ? intval( wp_unslash( $_GET['sunshine_gallery'] ) ) : '';
+		$watermark_image          = SPC()->get_option( 'watermark_image' );
+		$apply_watermark          = isset( $_GET['apply_watermark'] ) ? sanitize_text_field( wp_unslash( $_GET['apply_watermark'] ) ) : null;
+		$images_without_watermark = 0;
+
+		if ( ! empty( $gallery_id ) ) {
+			$gallery = sunshine_get_gallery( $gallery_id );
+			/* translators: %s is the gallery title */
+			$title = sprintf( __( 'Regenerating images for "%s"', 'sunshine-photo-cart' ), $gallery->get_name() );
+			$count = $gallery->get_image_count();
+
+			// Check for images without watermark in this gallery.
+			if ( ! empty( $watermark_image ) && null === $apply_watermark ) {
+				$image_ids = $gallery->get_image_ids();
+				foreach ( $image_ids as $image_id ) {
+					$watermark_meta = get_post_meta( $image_id, 'sunshine_watermark', true );
+					if ( '0' === $watermark_meta || 0 === $watermark_meta ) {
+						$images_without_watermark++;
+					}
+				}
+			}
 		} else {
 			$title = __( 'Regenerating images', 'sunshine-photo-cart' );
 			$args  = array(
@@ -45,17 +61,46 @@ class SPC_Tool_Regenerate extends SPC_Tool {
 			);
 			$query = new WP_Query( $args );
 			$count = $query->found_posts;
+
+			// Check for images without watermark.
+			if ( ! empty( $watermark_image ) && null === $apply_watermark ) {
+				$args_no_watermark        = array(
+					'post_type'   => 'attachment',
+					'post_status' => 'any',
+					'nopaging'    => true,
+					'meta_query'  => array(
+						'relation' => 'AND',
+						array(
+							'key'     => 'sunshine_file_name',
+							'compare' => 'EXISTS',
+						),
+						array(
+							'key'     => 'sunshine_watermark',
+							'value'   => '0',
+							'compare' => '=',
+						),
+					),
+				);
+				$query_no_watermark       = new WP_Query( $args_no_watermark );
+				$images_without_watermark = $query_no_watermark->found_posts;
+			}
+		}
+
+		// Show watermark options if needed.
+		if ( ! empty( $watermark_image ) && null === $apply_watermark && $images_without_watermark > 0 ) {
+			$this->show_watermark_options( $images_without_watermark, $gallery_id );
+			return;
 		}
 
 		?>
-		<h3><?php echo $title; ?>...</h3>
+		<h3><?php echo esc_html( $title ); ?>...</h3>
 		<div id="sunshine-progress-bar" style="">
 			<div id="sunshine-percentage" style=""></div>
 			<div id="sunshine-processed" style="">
-				<span id="sunshine-processed-count">0</span> / <span id="processed-total"><?php echo $count; ?></span>
+				<span id="sunshine-processed-count">0</span> / <span id="processed-total"><?php echo esc_html( $count ); ?></span>
 			</div>
 		</div>
-		<p align="center" id="abort"><a href="<?php echo admin_url( 'admin.php?page=sunshine-tools' ); ?>"><?php _e( 'Abort', 'sunshine-photo-cart' ); ?></a></p>
+		<p align="center" id="abort"><a href="<?php echo esc_url( admin_url( 'admin.php?page=sunshine-tools' ) ); ?>"><?php esc_html_e( 'Abort', 'sunshine-photo-cart' ); ?></a></p>
 		<ul id="results"></ul>
 		<script type="text/javascript">
 		jQuery(document).ready(function($) {
@@ -67,7 +112,8 @@ class SPC_Tool_Regenerate extends SPC_Tool {
 					'action': 'sunshine_regenerate_image',
 					'gallery': '<?php echo esc_js( $gallery_id ); ?>',
 					'item_number': item_number,
-					'security': "<?php echo wp_create_nonce( 'sunshine_regenerate_image' ); ?>"
+					'security': "<?php echo esc_js( wp_create_nonce( 'sunshine_regenerate_image' ) ); ?>",
+					'apply_watermark': "<?php echo esc_js( $apply_watermark ); ?>"
 				};
 				$.postq( 'sunshineimageregenerate', ajaxurl, data, function(response) {
 					if ( response.error ) {
@@ -100,6 +146,55 @@ class SPC_Tool_Regenerate extends SPC_Tool {
 
 		<?php
 
+	}
+
+	/**
+	 * Show watermark options before regeneration.
+	 *
+	 * @param int    $images_without_watermark Number of images without watermark.
+	 * @param string $gallery_id               Optional gallery ID.
+	 */
+	private function show_watermark_options( $images_without_watermark, $gallery_id = '' ) {
+		$base_url = admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-tools&tool=regenerate-images' );
+		$base_url = wp_nonce_url( $base_url, 'sunshine_tool_' . $this->get_key() );
+
+		if ( ! empty( $gallery_id ) ) {
+			$base_url = add_query_arg( 'sunshine_gallery', $gallery_id, $base_url );
+		}
+
+		$apply_watermark_url = add_query_arg( 'apply_watermark', '1', $base_url );
+		$keep_settings_url   = add_query_arg( 'apply_watermark', '0', $base_url );
+
+		?>
+		<div class="sunshine-watermark-notice" style="background: #fff; border: 1px solid #c3c4c7; border-left: 4px solid #dba617; padding: 12px; margin: 20px 0;">
+			<h3 style="margin-top: 0;"><?php esc_html_e( 'Watermark Settings Detected', 'sunshine-photo-cart' ); ?></h3>
+			<p>
+				<?php
+				echo esc_html(
+					sprintf(
+						/* translators: %d is the number of images without watermark */
+						_n(
+							'You have %d image that does not have watermark enabled, but you have a watermark set in your general settings.',
+							'You have %d images that do not have watermark enabled, but you have a watermark set in your general settings.',
+							$images_without_watermark,
+							'sunshine-photo-cart'
+						),
+						$images_without_watermark
+					)
+				);
+				?>
+			</p>
+			<p><?php esc_html_e( 'How would you like to proceed?', 'sunshine-photo-cart' ); ?></p>
+			<p>
+				<a href="<?php echo esc_url( $apply_watermark_url ); ?>" class="button button-primary">
+					<?php esc_html_e( 'Apply watermark to all images', 'sunshine-photo-cart' ); ?>
+				</a>
+				<a href="<?php echo esc_url( $keep_settings_url ); ?>" class="button">
+					<?php esc_html_e( 'Keep current image watermark settings', 'sunshine-photo-cart' ); ?>
+				</a>
+			</p>
+		</div>
+		<?php
 	}
 
 	function regenerate_image() {
@@ -183,17 +278,44 @@ class SPC_Tool_Regenerate extends SPC_Tool {
 			}
 		}
 
+		$created_timestamp = '';
+		if ( file_exists( $file_path ) && is_readable( $file_path ) ) {
+			$exif_data = @exif_read_data( $file_path, 'EXIF', true );
+
+			if ( ! empty( $exif_data['EXIF']['DateTimeOriginal'] ) ) {
+				$photo_time = $exif_data['EXIF']['DateTimeOriginal'];
+
+				// Convert from format "YYYY:MM:DD HH:MM:SS" to timestamp
+				$timestamp = strtotime( str_replace( ':', '-', substr( $photo_time, 0, 10 ) ) . substr( $photo_time, 10 ) );
+
+				if ( $timestamp ) {
+					$created_timestamp          = $timestamp;
+					$readable_created_timestamp = gmdate( 'Y-m-d H:i:s', $created_timestamp );
+					SPC()->log( 'Found EXIF DateTimeOriginal for ' . basename( $file_path ) . ': ' . $readable_created_timestamp );
+				}
+			}
+		}
+
 		// Regenerate everything.
 		$new_metadata = wp_generate_attachment_metadata( $image_id, $file_path );
 		$image_meta   = $new_metadata['image_meta'];
-		if ( ! empty( $image_meta['created_timestamp'] ) ) {
+		if ( empty( $created_timestamp ) && ! empty( $image_meta['created_timestamp'] ) ) {
 			$created_timestamp = $image_meta['created_timestamp'];
+		}
+		if ( ! empty( $created_timestamp ) ) {
 			update_post_meta( $image_id, 'created_timestamp', $created_timestamp );
 		}
 
-		$watermark = get_post_meta( $image_id, 'sunshine_watermark', true );
-		if ( $watermark === '' ) {
-			$watermark = 1; // If no watermark setting is there, assume we want it to be watermarked and current settings will dictate if that happens.
+		$apply_watermark = isset( $_POST['apply_watermark'] ) ? sanitize_text_field( wp_unslash( $_POST['apply_watermark'] ) ) : '';
+
+		// If user chose to apply watermark to all, force watermark on.
+		if ( '1' === $apply_watermark ) {
+			$watermark = 1;
+		} else {
+			$watermark = get_post_meta( $image_id, 'sunshine_watermark', true );
+			if ( $watermark === '' ) {
+				$watermark = 1; // If no watermark setting is there, assume we want it to be watermarked and current settings will dictate if that happens.
+			}
 		}
 
 		do_action( 'sunshine_after_image_process', $image_id, $file_path, $watermark );

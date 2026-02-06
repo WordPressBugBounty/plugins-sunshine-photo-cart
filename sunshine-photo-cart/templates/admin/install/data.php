@@ -5,8 +5,8 @@
 <?php } ?>
 
 <div id="sunshine-install--data" class="sunshine-install--step">
-	<form method="post" action="<?php echo admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install&step=data' ); ?>">
-		<?php echo wp_nonce_field( 'sunshine_install_data', 'sunshine_install_data' ); ?>
+	<form method="post" action="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install&step=data' ) ); ?>">
+		<?php echo wp_nonce_field( 'sunshine_install_data', 'sunshine_install_data' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
 		<h2>Analytics & Data</h2>
 		<p>By opting-in, you allow some basic data about how you use Sunshine Photo Cart to help improve the plugin for you and others.  If you skip this step, that's okay! Sunshine Photo Cart will still be set up for you no problem.</p>
@@ -17,7 +17,7 @@
 
 		<div class="sunshine-install--step--actions">
 			<p><button class="button-primary large" type="submit">Accept & Continue</button></p>
-			<p style="font-size:16px;"><a href="<?php echo admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install&step=updates' ); ?>" class="sunshine-install--continue">Skip this step</a></p>
+			<p style="font-size:16px;"><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install&step=updates' ) ); ?>" class="sunshine-install--continue">Skip this step</a></p>
 		</div>
 
 	</form>

@@ -2,7 +2,7 @@
 // TODO: Admin notices: Ability to close out a notice and not show any more
 class SPC_Notices {
 
-	private $notices = array();
+	private $notices       = array();
 	private $admin_notices = array();
 
 	public function __construct() {
@@ -133,7 +133,7 @@ class SPC_Notices {
 		foreach ( $this->admin_notices as $key => $notice ) {
 			if ( $dismiss_notice_key == $key ) {
 				$this->admin_notices[ $key ]['dismissed'] = true;
-				$result = update_user_meta( get_current_user_id(), 'sunshine_admin_notices', $this->admin_notices );
+				$result                                   = update_user_meta( get_current_user_id(), 'sunshine_admin_notices', $this->admin_notices );
 			}
 		}
 

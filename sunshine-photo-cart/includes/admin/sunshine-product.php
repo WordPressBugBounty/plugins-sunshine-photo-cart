@@ -111,10 +111,10 @@ function sunshine_products_columns_content( $column, $post_id ) {
 	$product = sunshine_get_product( $post_id );
 	switch ( $column ) {
 		case 'price':
-			echo apply_filters( 'sunshine_admin_product_price_column', $product->get_price_formatted(), $product );
+			echo wp_kses_post( apply_filters( 'sunshine_admin_product_price_column', $product->get_price_formatted(), $product ) );
 			break;
 		case 'category':
-			echo '<a href="' . admin_url( 'term.php?taxonomy=sunshine-product-category&tag_ID=' . $product->get_category_id() . '&post_type=sunshine-product' ) . '">' . $product->get_category_name() . '</a>';
+			echo '<a href="' . esc_url( admin_url( 'term.php?taxonomy=sunshine-product-category&tag_ID=' . esc_attr( $product->get_category_id() ) . '&post_type=sunshine-product' ) ) . '">' . esc_html( $product->get_category_name() ) . '</a>';
 			break;
 		default:
 			break;
@@ -136,7 +136,7 @@ function sunshine_product_filter_by_category() {
 		if ( ! empty( $categories ) ) {
 			?>
 		<select name="category">
-			<option value=""><?php _e( 'All categories', 'sunshine-photo-cart' ); ?></option>
+			<option value=""><?php esc_html_e( 'All categories', 'sunshine-photo-cart' ); ?></option>
 			<?php foreach ( $categories as $category ) { ?>
 				<option value="<?php echo esc_attr( $category->get_id() ); ?>" 
 										  <?php
@@ -153,7 +153,7 @@ function sunshine_product_filter_by_category() {
 		if ( ! empty( $types ) ) {
 			?>
 		<select name="type">
-			<option value=""><?php _e( 'All types', 'sunshine-photo-cart' ); ?></option>
+			<option value=""><?php esc_html_e( 'All types', 'sunshine-photo-cart' ); ?></option>
 			<?php foreach ( $types as $key => $type ) { ?>
 				<option value="<?php echo esc_attr( $key ); ?>" 
 										  <?php

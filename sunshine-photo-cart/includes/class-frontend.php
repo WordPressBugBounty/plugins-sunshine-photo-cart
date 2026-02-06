@@ -24,7 +24,8 @@ class SPC_Frontend {
 		add_filter( 'sunshine_main_menu', array( $this, 'build_main_menu' ), 10 );
 		add_filter( 'sunshine_image_menu', array( $this, 'build_image_menu' ), 10, 2 );
 		add_filter( 'sunshine_action_menu', array( $this, 'build_action_menu' ), 10 );
-		add_action( 'wp_head', array( $this, 'head' ), 1 );
+		add_action( 'wp_head', array( $this, 'meta' ), 1 );
+		add_action( 'wp_head', array( $this, 'head' ), 2 );
 		add_action( 'wp_head', array( $this, 'custom_css' ), 999 );
 		add_action( 'wp_footer', array( $this, 'protection' ) );
 		add_action( 'wp_footer', array( $this, 'version_output' ), 9999 );
@@ -83,7 +84,7 @@ class SPC_Frontend {
 			}
 		}
 
-		if ( isset( $_GET['sunshine_search'] ) ) {
+		if ( $this->is_search() ) {
 			// Overall search results.
 			$template = sunshine_locate_template( 'search' );
 		} elseif ( $this->is_image() ) {
@@ -107,7 +108,7 @@ class SPC_Frontend {
 
 	public function the_content( $content ) {
 
-		if ( isset( $_GET['sunshine_search'] ) ) {
+		if ( $this->is_search() ) {
 			$content = sunshine_get_template_html( 'search/search' );
 		} elseif ( $this->is_image() ) {
 			$content = sunshine_get_template_html( 'image/single' );
@@ -122,7 +123,7 @@ class SPC_Frontend {
 
 	function get_page_title() {
 
-		if ( isset( $_GET['sunshine_search'] ) ) {
+		if ( $this->is_search() ) {
 			$template = __( 'Search results', 'sunshine-photo-cart' );
 		} elseif ( $this->is_image() ) {
 			$this->page_title = $this->current_image->get_name();
@@ -220,7 +221,7 @@ class SPC_Frontend {
 		if ( empty( $message ) ) {
 			$message = __( 'Sorry, you do not have permission to view this page', 'sunshine-photo-cart' );
 		}
-		wp_die( $message );
+		wp_die( esc_html( $message ) );
 	}
 
 	/*
@@ -267,7 +268,7 @@ class SPC_Frontend {
 	}
 
 	public function is_search() {
-		if ( isset( $_GET['sunshine_search'] ) ) {
+		if ( isset( $_GET['sunshine_search'] ) && wp_verify_nonce( $_GET['sunshine_search_nonce'], 'sunshine_search' ) ) {
 			return true;
 		}
 		return false;
@@ -363,7 +364,7 @@ class SPC_Frontend {
 
 	public function enqueue_scripts() {
 
-		wp_register_style( 'sunshine-photo-cart', SUNSHINE_PHOTO_CART_URL . 'assets/css/sunshine.css', '', SUNSHINE_PHOTO_CART_VERSION . time() );
+		wp_register_style( 'sunshine-photo-cart', SUNSHINE_PHOTO_CART_URL . 'assets/css/sunshine.css', '', SUNSHINE_PHOTO_CART_VERSION );
 		wp_register_style( 'sunshine-photo-cart-icons', SUNSHINE_PHOTO_CART_URL . 'assets/css/icons.css', '', SUNSHINE_PHOTO_CART_VERSION );
 
 		if ( is_sunshine() ) {
@@ -387,15 +388,19 @@ class SPC_Frontend {
 				'sunshine-photo-cart',
 				'sunshine_photo_cart',
 				array(
-					'ajax_url' => admin_url( 'admin-ajax.php' ),
-					'security' => wp_create_nonce( 'sunshinephotocart' ),
-					'lang'     => array(
+					'ajax_url'     => admin_url( 'admin-ajax.php' ),
+					'security'     => wp_create_nonce( 'sunshinephotocart' ),
+					'cart_url'     => sunshine_get_page_permalink( 'cart' ),
+					'checkout_url' => sunshine_get_page_permalink( 'checkout' ),
+					'lang'         => array(
 						'error'      => __( 'Sorry, there was an error with your request', 'sunshine-photo-cart' ),
 						'max_images' => __( 'You have already selected the maximum number of photos allowed', 'sunshine-photo-cart' ),
+						'view_cart'  => __( 'View Cart', 'sunshine-photo-cart' ),
 					),
 				)
 			);
 
+			/*
 			if ( is_sunshine_page( 'checkout' ) ) {
 				wp_enqueue_script( 'sunshine-photo-cart-checkout', SUNSHINE_PHOTO_CART_URL . 'assets/js/checkout.js', array( 'jquery' ), SUNSHINE_PHOTO_CART_VERSION, true );
 				wp_localize_script(
@@ -407,6 +412,7 @@ class SPC_Frontend {
 					)
 				);
 			}
+			*/
 
 			// Load masonry if needed
 			if ( is_sunshine() && ( SPC()->get_option( 'gallery_layout' ) == 'masonry' || SPC()->get_option( 'image_layout' ) == 'masonry' ) ) {
@@ -689,10 +695,11 @@ class SPC_Frontend {
 
 		}
 
-		if ( $this->is_gallery() && $this->current_gallery->get_parent_gallery_id() ) {
+		if ( $this->is_gallery() && $this->current_gallery->get_parent_gallery_id() && ! SPC()->get_option( 'hide_galleries_link' ) ) {
 			$parent_gallery = $this->current_gallery->get_parent_gallery();
 			if ( $parent_gallery->can_access() ) {
 				$menu[2] = array(
+					/* translators: %s is the parent gallery name */
 					'name'  => sprintf( __( 'Return to %s', 'sunshine-photo-cart' ), $parent_gallery->get_name() ),
 					'class' => 'sunshine--gallery-return',
 					'url'   => $parent_gallery->get_permalink(),
@@ -702,6 +709,7 @@ class SPC_Frontend {
 
 		if ( $this->is_search() && $this->is_gallery() ) {
 			$menu[2] = array(
+				/* translators: %s is the gallery name */
 				'name'  => sprintf( __( 'Return to %s', 'sunshine-photo-cart' ), $this->current_gallery->get_name() ),
 				'class' => 'sunshine--gallery-return',
 				'url'   => $this->current_gallery->get_permalink(),
@@ -743,6 +751,7 @@ class SPC_Frontend {
 					$url = add_query_arg( 'pagination', $current_gallery_page[1], $url );
 				}
 				$menu[12] = array(
+					/* translators: %s is the gallery name */
 					'name'  => sprintf( __( 'Return to gallery "%s"', 'sunshine-photo-cart' ), esc_html( $gallery->get_name() ) ),
 					'class' => 'sunshine--gallery-return',
 					'url'   => $url,
@@ -751,7 +760,7 @@ class SPC_Frontend {
 			}
 		}
 
-		if ( $this->is_order() ) {
+		if ( $this->is_order() && ! SPC()->get_option( 'disable_invoice' ) ) {
 			$menu[20] = array(
 				'name'  => __( 'View invoice', 'sunshine-photo-cart' ),
 				'class' => 'sunshine--icon--purchase-order',
@@ -764,51 +773,54 @@ class SPC_Frontend {
 
 	function meta() {
 
+		if ( ! SPC()->get_option( 'open_graph', false ) ) {
+			return;
+		}
+
 		// TODO: Is this required now that we are using default attachment URL by WordPress? Can SEO plugins handle this?
 		// Image page
-		if ( $this->is_image() ) {
+		if ( $this->is_image() && ! $this->current_gallery->password_required() ) {
 
-			if ( ! $this->current_gallery->password_required() ) {
+			$image           = wp_get_attachment_image_src( $this->current_image->get_id(), apply_filters( 'sunshine_image_size', 'full' ) );
+			$image_mime_type = get_post_mime_type( $this->current_image->get_id() );
 
-				$image = wp_get_attachment_image_src( $this->current_image->get_id(), apply_filters( 'sunshine_image_size', 'full' ) );
-
-				echo '<meta property="og:title" content="' . apply_filters( 'sunshine_open_graph_image_title', $this->current_image->get_name() . ' by ' . get_bloginfo( 'name' ) ) . '"/>
-			    <meta property="og:type" content="website"/>
-			    <meta property="og:url" content="' . trailingslashit( get_permalink( $this->current_image->ID ) ) . '"/>
-			    <meta property="og:site_name" content="' . get_bloginfo( 'name' ) . '"/>
-			    <meta property="og:description" content="' . sprintf( __( 'A photo from the gallery %1$s by %2$s', 'sunshine-photo-cart' ), strip_tags( $this->current_image->gallery->get_name() ), get_bloginfo( 'name' ) ) . '"/>';
-				if ( is_ssl() ) {
-					$http_url = str_replace( 'https', 'http', $image[0] );
-					echo '<meta property="og:image" content="' . esc_url( $http_url ) . '"/>
-					<meta property="og:image:url" content="' . esc_url( $http_url ) . '"/>
-					<meta property="og:image:secure_url" content="' . esc_url( $image[0] ) . '"/>';
-				} else {
-					echo '<meta property="og:image" content="' . esc_url( $image[0] ) . '"/>
-					<meta property="og:image:url" content="' . esc_url( $image[0] ) . '"/>';
-				}
-				echo '<meta property="og:image:type" content="image/jpeg" />
-				<meta property="og:image:height" content="' . esc_url( $image[2] ) . '"/>
-			    <meta property="og:image:width" content="' . esc_url( $image[1] ) . '"/>';
-
+				/* translators: %1$s is the image name, %2$s is the site name */
+			echo '<meta property="og:title" content="' . esc_attr( apply_filters( 'sunshine_open_graph_image_title', $this->current_image->get_name() . ' by ' . get_bloginfo( 'name' ) ) ) . '"/>';
+			echo '<meta property="og:type" content="website"/>';
+			echo '<meta property="og:url" content="' . esc_url( trailingslashit( get_permalink( $this->current_image->ID ) ) ) . '"/>';
+			echo '<meta property="og:site_name" content="' . esc_attr( get_bloginfo( 'name' ) ) . '"/>';
+			/* translators: %1$s is the gallery name, %2$s is the site name */
+			echo '<meta property="og:description" content="' . esc_attr( sprintf( __( 'A photo from the gallery %1$s by %2$s', 'sunshine-photo-cart' ), wp_strip_all_tags( $this->current_image->gallery->get_name() ), get_bloginfo( 'name' ) ) ) . '"/>';
+			if ( is_ssl() ) {
+				$http_url = str_replace( 'https', 'http', $image[0] );
+				echo '<meta property="og:image" content="' . esc_attr( $http_url ) . '"/>';
+				echo '<meta property="og:image:url" content="' . esc_attr( $http_url ) . '"/>';
+				echo '<meta property="og:image:secure_url" content="' . esc_attr( $image[0] ) . '"/>';
 			} else {
-
-				echo '<meta name="robots" content="noindex" />';
-
+				echo '<meta property="og:image" content="' . esc_attr( $image[0] ) . '"/>';
+				echo '<meta property="og:image:url" content="' . esc_attr( $image[0] ) . '"/>';
 			}
+			echo '<meta property="og:image:type" content="' . esc_attr( $image_mime_type ) . '" />';
+			echo '<meta property="og:image:height" content="' . esc_attr( $image[2] ) . '"/>';
+			echo '<meta property="og:image:width" content="' . esc_attr( $image[1] ) . '"/>';
+
 		} elseif ( $this->is_gallery() ) {
 
 			$image_id = $this->current_gallery->get_featured_image_id();
 			if ( $image_id ) {
 				$image = wp_get_attachment_image_src( $image_id, apply_filters( 'sunshine_image_size', 'full' ) );
 				if ( $image ) {
-					echo '<meta property="og:title" content="' . esc_attr( apply_filters( 'sunshine_open_graph_gallery_title', $this->current_gallery->get_name() . ' by ' . get_bloginfo( 'name' ) ) ) . '"/>
-				    <meta property="og:type" content="website"/>
-				    <meta property="og:url" content="' . esc_url( trailingslashit( $this->current_gallery->get_permalink() ) ) . '"/>
-				    <meta property="og:image" content="' . esc_url( $image[0] ) . '"/>
-					<meta property="og:image:height" content="' . esc_url( $image[2] ) . '"/>
-					<meta property="og:image:width" content="' . esc_url( $image[1] ) . '"/>
-				    <meta property="og:site_name" content="' . esc_attr( get_bloginfo( 'name' ) ) . '"/>
-				    <meta property="og:description" content="' . esc_attr( sprintf( __( 'Photo gallery %1$s by %2$s', 'sunshine-photo-cart' ), get_the_title( $this->current_gallery->post_parent ), get_bloginfo( 'name' ) ) ) . '"/>';
+					$image_mime_type = get_post_mime_type( $image_id );
+					echo '<meta property="og:title" content="' . esc_attr( apply_filters( 'sunshine_open_graph_gallery_title', $this->current_gallery->get_name() . ' by ' . get_bloginfo( 'name' ) ) ) . '"/>';
+					echo '<meta property="og:type" content="website"/>';
+					echo '<meta property="og:url" content="' . esc_attr( trailingslashit( $this->current_gallery->get_permalink() ) ) . '"/>';
+					echo '<meta property="og:image" content="' . esc_attr( $image[0] ) . '"/>';
+					echo '<meta property="og:image:height" content="' . esc_attr( $image[2] ) . '"/>';
+					echo '<meta property="og:image:width" content="' . esc_attr( $image[1] ) . '"/>';
+					echo '<meta property="og:image:type" content="' . esc_attr( $image_mime_type ) . '" />';
+					echo '<meta property="og:site_name" content="' . esc_attr( get_bloginfo( 'name' ) ) . '"/>';
+					/* translators: %1$s is the gallery name, %2$s is the site name */
+					echo '<meta property="og:description" content="' . esc_attr( sprintf( __( 'Photo gallery %1$s by %2$s', 'sunshine-photo-cart' ), get_the_title( $this->current_gallery->post_parent ), get_bloginfo( 'name' ) ) ) . '"/>';
 				}
 			}
 		}
@@ -832,7 +844,8 @@ class SPC_Frontend {
 		$css = SPC()->get_option( 'css' );
 		if ( $css && is_sunshine() ) {
 			echo '<style id="sunshine--custom-css">';
-			echo wp_strip_all_tags( $css );
+			$css = wp_strip_all_tags( $css );
+			echo esc_attr( $css );
 			echo '</style>';
 		}
 	}
@@ -855,7 +868,7 @@ class SPC_Frontend {
 
 	public function version_output() {
 		if ( is_sunshine() ) {
-			echo '<!-- Powered by Sunshine Photo Cart ' . SUNSHINE_PHOTO_CART_VERSION . ' -->';
+			echo '<!-- Powered by Sunshine Photo Cart ' . esc_attr( SUNSHINE_PHOTO_CART_VERSION ) . ' -->';
 		}
 	}
 
@@ -875,7 +888,7 @@ class SPC_Frontend {
 
 	function can_view_image() {
 		if ( $this->is_image() && ! $this->current_image->can_view() ) {
-			wp_die( __( 'Sorry, you are not allowed to view this image', 'sunshine-photo-cart' ), __( 'Access denied', 'sunshine-photo-cart' ), array( 'back_link' => true ) );
+			wp_die( esc_html__( 'Sorry, you are not allowed to view this image', 'sunshine-photo-cart' ), esc_html__( 'Access denied', 'sunshine-photo-cart' ), array( 'back_link' => true ) );
 			exit;
 		}
 	}
@@ -975,9 +988,10 @@ class SPC_Frontend {
 
 	function order_invoice_pdf() {
 
-		if ( $this->is_order() && isset( $_GET['order_invoice'] ) && wp_verify_nonce( $_GET['order_invoice'], 'order_invoice_' . $this->current_order->get_id() ) ) {
+		if ( $this->is_order() && isset( $_GET['order_invoice'] ) && wp_verify_nonce( $_GET['order_invoice'], 'order_invoice_' . $this->current_order->get_id() ) && ! SPC()->get_option( 'disable_invoice' ) ) {
 
-			echo sunshine_get_template( 'invoice/order', array( 'order' => $this->current_order ) );
+			// Template has been fully escaped by the previous functions used to build this massive HTML string.
+			echo sunshine_get_template( 'invoice/order', array( 'order' => $this->current_order ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			exit;
 
 		}
@@ -1014,7 +1028,7 @@ class SPC_Frontend {
 				$password_galleries = array( $gallery->get_id() );
 			}
 			SPC()->session->set( 'gallery_passwords', $password_galleries );
-			SPC()->log( __( 'Password access granted for ' . $gallery->get_name(), 'sunshine-photo-cart' ) );
+			SPC()->log( 'Password access granted for ' . $gallery->get_name() );
 			$redirect_url = $gallery->get_permalink();
 			$redirect_url = add_query_arg( 'access', time(), $redirect_url );
 			wp_safe_redirect( $redirect_url );
@@ -1038,7 +1052,7 @@ class SPC_Frontend {
 		// Verify nonce
 		if ( ! wp_verify_nonce( $_POST['sunshine_gallery_access'], 'sunshine_gallery_access' ) ) {
 			SPC()->notices->add( __( 'Invalid submission', 'sunshine-photo-cart' ), 'error' );
-			SPC()->log( __( 'Invalid gallery password submission', 'sunshine-photo-cart' ) );
+			SPC()->log( 'Invalid gallery password submission' );
 			return;
 		}
 
@@ -1051,14 +1065,14 @@ class SPC_Frontend {
 			// Check password against gallery
 			if ( empty( $gallery ) ) {
 				SPC()->notices->add( __( 'Invalid gallery', 'sunshine-photo-cart' ), 'error' );
-				SPC()->log( __( 'Invalid gallery password submission: gallery not found', 'sunshine-photo-cart' ) );
+				SPC()->log( 'Invalid gallery password submission: gallery not found' );
 				return;
 			}
 
 			// Throw error if it does not match
 			if ( $gallery->get_password() != stripslashes( $_POST['sunshine_gallery_password'] ) ) {
 				SPC()->notices->add( __( 'Gallery access code is incorrect, please try again', 'sunshine-photo-cart' ), 'error' );
-				SPC()->log( __( 'Invalid gallery password submission for ' . $gallery->get_name() . ': wrong password', 'sunshine-photo-cart' ) );
+				SPC()->log( 'Invalid gallery password submission for ' . $gallery->get_name() . ': wrong password' );
 				return;
 			}
 
@@ -1070,7 +1084,7 @@ class SPC_Frontend {
 				$password_galleries = array( $gallery_id );
 			}
 			SPC()->session->set( 'gallery_passwords', $password_galleries );
-			SPC()->log( __( 'Password access granted for ' . $gallery->get_name(), 'sunshine-photo-cart' ) );
+			SPC()->log( 'Password access granted for ' . $gallery->get_name() );
 			$redirect = true;
 
 		}
@@ -1089,13 +1103,13 @@ class SPC_Frontend {
 				$existing_emails = $gallery->get_emails();
 				if ( ! is_array( $existing_emails ) || ! in_array( $email, $existing_emails ) ) {
 					$gallery->add_email( $email );
-					SPC()->log( __( 'Email address provided for ' . $gallery->get_name() . ': ' . $email, 'sunshine-photo-cart' ) );
+					SPC()->log( 'Email address provided for ' . $gallery->get_name() . ': ' . $email );
 					do_action( 'sunshine_gallery_email', $email, $gallery_id );
 					$redirect = true;
 				}
 			} else {
 				SPC()->notices->add( __( 'Not a valid email address', 'sunshine-photo-cart' ), 'error' );
-				SPC()->log( __( 'Invalid email address provided for ' . $gallery->get_name() . ': ' . $email, 'sunshine-photo-cart' ) );
+				SPC()->log( 'Invalid email address provided for ' . $gallery->get_name() . ': ' . $email );
 			}
 		}
 

@@ -7,7 +7,7 @@
 	<div id="reload" style="position: absolute; z-index: 10000; top:0;left:0;right:0;bottom:0; background: rgba(255,255,255,.95);display:none;">
 		<div style="position: relative; top: 50%; transform:translateY(-50%);font-size: 22px; text-align: center;">
 			<p style="font-size:24px; color:red;font-weight:bold;">An error occured. Try reloading the page to restart the update process.</p>
-			<p><a href="<?php echo admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-update' ); ?>" class="button-primary">Reload</a></p>
+			<p><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-update' ) ); ?>" class="button-primary">Reload</a></p>
 			<p style="color: #666;">If you are seeing this message repeatedly, <a href="https://www.sunshinephotocart.com/support" target="_blank">contact support</a></p>
 		</div>
 	</div>
@@ -112,7 +112,7 @@
 <div style="display: none;" id="sunshine-update-3-complete" class="sunshine-install--step">
 	<p style="font-size: 20px; font-weight: bold;">Update is complete - You can now enjoy Sunshine 3!</p>
 	<ul id="sunshine-3-update-notices" style="list-style: disc; margin-left: 25px; color: blue;"></ul>
-	<p>Optionally, you may clean up any old data from Sunshine 2 and other data used to perform this update process. It is recommended to verify everything looks accurate and works well before performing this clean up action as it cannot be undone. You can find this clean up in the <a href="<?php echo admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-tools' ); ?>">Tools section</a> and perform it later if you wish.</p>
+	<p>Optionally, you may clean up any old data from Sunshine 2 and other data used to perform this update process. It is recommended to verify everything looks accurate and works well before performing this clean up action as it cannot be undone. You can find this clean up in the <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-tools' ) ); ?>">Tools section</a> and perform it later if you wish.</p>
 	<button class="button" type="button" onclick="sunshine_update_3_cleanup();" id="sunshine-update-3-cleanup">Clean up old data</button>
 </div>
 
@@ -164,15 +164,15 @@ var totalCustomersProcessed = 0;
 
 function updateCustomerData() {
 
-    jQuery.ajax({
-      url: ajaxurl,
-      type: 'POST',
-      data: {
-        action: 'sunshine_update_3_customers_update',
+	jQuery.ajax({
+	  url: ajaxurl,
+	  type: 'POST',
+	  data: {
+		action: 'sunshine_update_3_customers_update',
 		batch: batch,
 		security: '<?php echo esc_js( $nonce ); ?>',
-      },
-      success: (response) => {
+	  },
+	  success: (response) => {
 		  if ( response.success ) {
 			  console.log( response );
 			  if ( response.data && response.data.updated ) {
@@ -190,11 +190,11 @@ function updateCustomerData() {
 			  show_error();
 		  }
 
-      },
-      error: (jqXHR, textStatus, errorThrown) => {
+	  },
+	  error: (jqXHR, textStatus, errorThrown) => {
 		  show_error();
-      }
-    });
+	  }
+	});
 
 }
 
@@ -211,14 +211,14 @@ var totalProductsProcessed = 0;
 function updateProductData() {
 
 	jQuery.ajax({
-      url: ajaxurl,
-      type: 'POST',
-      data: {
-        action: 'sunshine_update_3_products_update',
+	  url: ajaxurl,
+	  type: 'POST',
+	  data: {
+		action: 'sunshine_update_3_products_update',
 		batch: batch,
 		security: '<?php echo esc_js( $nonce ); ?>',
-      },
-      success: (response) => {
+	  },
+	  success: (response) => {
 		  if ( response.success ) {
 			  if ( response.data && response.data.updated ) {
 				  console.log( 'Product ID: ' + response.data.updated );
@@ -235,11 +235,11 @@ function updateProductData() {
 			  show_error();
 		  }
 
-      },
-      error: (jqXHR, textStatus, errorThrown) => {
+	  },
+	  error: (jqXHR, textStatus, errorThrown) => {
 		  show_error();
-      }
-    });
+	  }
+	});
 
 }
 
@@ -256,14 +256,14 @@ var totalDiscountsProcessed = 0;
 function updateDiscountData() {
 
 	jQuery.ajax({
-      url: ajaxurl,
-      type: 'POST',
-      data: {
-        action: 'sunshine_update_3_discounts_update',
+	  url: ajaxurl,
+	  type: 'POST',
+	  data: {
+		action: 'sunshine_update_3_discounts_update',
 		batch: batch,
 		security: '<?php echo esc_js( $nonce ); ?>',
-      },
-      success: (response) => {
+	  },
+	  success: (response) => {
 		  if ( response.success ) {
 			  if ( response.data && response.data.updated ) {
 				  console.log( 'Discount ID: ' + response.data.updated );
@@ -280,11 +280,11 @@ function updateDiscountData() {
 			  show_error();
 		  }
 
-      },
-      error: (jqXHR, textStatus, errorThrown) => {
+	  },
+	  error: (jqXHR, textStatus, errorThrown) => {
 		  show_error();
-      }
-    });
+	  }
+	});
 
 }
 
@@ -301,14 +301,14 @@ var totalEmailsProcessed = 0;
 function updateEmailData() {
 
 	jQuery.ajax({
-      url: ajaxurl,
-      type: 'POST',
-      data: {
-        action: 'sunshine_update_3_emails_update',
+	  url: ajaxurl,
+	  type: 'POST',
+	  data: {
+		action: 'sunshine_update_3_emails_update',
 		batch: batch,
 		security: '<?php echo esc_js( $nonce ); ?>',
-      },
-      success: (response) => {
+	  },
+	  success: (response) => {
 		  if ( response.success ) {
 			  if ( response.data && response.data.updated ) {
 				  console.log( 'Email ID: ' + response.data.updated );
@@ -325,11 +325,11 @@ function updateEmailData() {
 			  show_error();
 		  }
 
-      },
-      error: (jqXHR, textStatus, errorThrown) => {
+	  },
+	  error: (jqXHR, textStatus, errorThrown) => {
 		  show_error();
-      }
-    });
+	  }
+	});
 
 }
 
@@ -346,14 +346,14 @@ var totalOrdersProcessed = 0;
 function updateOrderData() {
 
 	jQuery.ajax({
-      url: ajaxurl,
-      type: 'POST',
-      data: {
-        action: 'sunshine_update_3_orders_update',
+	  url: ajaxurl,
+	  type: 'POST',
+	  data: {
+		action: 'sunshine_update_3_orders_update',
 		batch: batch,
 		security: '<?php echo esc_js( $nonce ); ?>',
-      },
-      success: (response) => {
+	  },
+	  success: (response) => {
 		  if ( response.success ) {
 			  if ( response.data && response.data.updated ) {
 				  console.log( 'Order ID: ' + response.data.updated );
@@ -370,11 +370,11 @@ function updateOrderData() {
 			  show_error();
 		  }
 
-      },
-      error: (jqXHR, textStatus, errorThrown) => {
+	  },
+	  error: (jqXHR, textStatus, errorThrown) => {
 		  show_error();
-      }
-    });
+	  }
+	});
 
 }
 
@@ -389,14 +389,14 @@ jQuery( '#galleries-common-start' ).on( 'click', function(){
 function updateGalleryCommonData() {
 
 	jQuery.ajax({
-      url: ajaxurl,
-      type: 'POST',
-      data: {
-        action: 'sunshine_update_3_galleries_common_update',
+	  url: ajaxurl,
+	  type: 'POST',
+	  data: {
+		action: 'sunshine_update_3_galleries_common_update',
 		batch: batch,
 		security: '<?php echo esc_js( $nonce ); ?>',
-      },
-      success: (response) => {
+	  },
+	  success: (response) => {
 		  if ( response.success ) {
 			  if ( response.data && response.data.updated ) {
 				  console.log( 'Common data: ' + response.data.updated );
@@ -412,11 +412,11 @@ function updateGalleryCommonData() {
 			  show_error();
 		  }
 
-      },
-      error: (jqXHR, textStatus, errorThrown) => {
+	  },
+	  error: (jqXHR, textStatus, errorThrown) => {
 		  show_error();
-      }
-    });
+	  }
+	});
 
 }
 
@@ -434,14 +434,14 @@ var totalGalleriesProcessed = 0;
 function updateGalleriesData() {
 
 	jQuery.ajax({
-      url: ajaxurl,
-      type: 'POST',
-      data: {
-        action: 'sunshine_update_3_galleries_update',
+	  url: ajaxurl,
+	  type: 'POST',
+	  data: {
+		action: 'sunshine_update_3_galleries_update',
 		batch: batch,
 		security: '<?php echo esc_js( $nonce ); ?>',
-      },
-      success: (response) => {
+	  },
+	  success: (response) => {
 		  if ( response.success ) {
 			  if ( response.data && response.data.updated ) {
 				  console.log( 'Order ID: ' + response.data.updated );
@@ -458,11 +458,11 @@ function updateGalleriesData() {
 			  show_error();
 		  }
 
-      },
-      error: (jqXHR, textStatus, errorThrown) => {
+	  },
+	  error: (jqXHR, textStatus, errorThrown) => {
 		  show_error();
-      }
-    });
+	  }
+	});
 
 }
 
@@ -481,14 +481,14 @@ function updateImagesData() {
 
 
 	jQuery.ajax({
-      url: ajaxurl,
-      type: 'POST',
-      data: {
-        action: 'sunshine_update_3_images_update',
+	  url: ajaxurl,
+	  type: 'POST',
+	  data: {
+		action: 'sunshine_update_3_images_update',
 		batch: batch,
 		security: '<?php echo esc_js( $nonce ); ?>',
-      },
-      success: (response) => {
+	  },
+	  success: (response) => {
 		  if ( response.success ) {
 			  if ( response.data && response.data.updated && response.data.updated >= batch ) {
 				  console.log( 'Images updated: ' + response.data.updated );
@@ -506,11 +506,11 @@ function updateImagesData() {
 			  // Failure somehow, stop here.
 			  show_error();
 		  }
-      },
-      error: (jqXHR, textStatus, errorThrown) => {
+	  },
+	  error: (jqXHR, textStatus, errorThrown) => {
 		  show_error();
-      }
-    });
+	  }
+	});
 
 }
 
@@ -527,14 +527,14 @@ var totalGalleriesMetaProcessed = 0;
 function updateGalleriesMetaData() {
 
 	jQuery.ajax({
-      url: ajaxurl,
-      type: 'POST',
-      data: {
-        action: 'sunshine_update_3_galleries_duplicate_meta',
+	  url: ajaxurl,
+	  type: 'POST',
+	  data: {
+		action: 'sunshine_update_3_galleries_duplicate_meta',
 		batch: batch,
 		security: '<?php echo esc_js( $nonce ); ?>',
-      },
-      success: (response) => {
+	  },
+	  success: (response) => {
 		  if ( response.success ) {
 			  if ( response.data && response.data.updated ) {
 				  console.log( 'Gallery ID: ' + response.data.updated );
@@ -551,11 +551,11 @@ function updateGalleriesMetaData() {
 			  show_error();
 		  }
 
-      },
-      error: (jqXHR, textStatus, errorThrown) => {
+	  },
+	  error: (jqXHR, textStatus, errorThrown) => {
 		  show_error();
-      }
-    });
+	  }
+	});
 
 }
 
@@ -570,7 +570,7 @@ function updateComplete() {
 	  },
 	  success: (response) => {
 		jQuery( '#sunshine-update-3' ).hide();
-  		jQuery( '#sunshine-update-3-complete' ).show();
+		  jQuery( '#sunshine-update-3-complete' ).show();
 		$notices = jQuery( '#sunshine-3-update-notices' );
 		if ( response.notices ) {
 			jQuery.each(response.notices, function(index, item) {
@@ -585,20 +585,20 @@ function updateComplete() {
 }
 
 function sunshine_update_3_cleanup() {
-    jQuery.ajax({
-      url: ajaxurl,
-      type: 'POST',
-      data: {
-        action: 'sunshine_update_3_cleanup',
+	jQuery.ajax({
+	  url: ajaxurl,
+	  type: 'POST',
+	  data: {
+		action: 'sunshine_update_3_cleanup',
 		security: '<?php echo esc_js( $nonce ); ?>',
-      },
-      success: (response) => {
+	  },
+	  success: (response) => {
 		jQuery( '#sunshine-update-3-start' ).replaceWith( '<strong>Clean up complete</strong>' );
-      },
-      error: (jqXHR, textStatus, errorThrown) => {
-        reject(new Error(`Error updating settings`));
-      }
-    });
+	  },
+	  error: (jqXHR, textStatus, errorThrown) => {
+		reject(new Error(`Error updating settings`));
+	  }
+	});
 }
 
 

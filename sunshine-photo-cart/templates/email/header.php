@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<td id="logo">
 						<?php
 						if ( $attachment_id = SPC()->get_option( 'email_logo' ) ) {
-							echo '<img src="' . esc_url( wp_get_attachment_image_url( $attachment_id, 'medium' ) ) . '" alt="' . get_bloginfo( 'name', 'display' ) . '" />';
+							echo '<img src="' . esc_url( wp_get_attachment_image_url( $attachment_id, 'medium' ) ) . '" alt="' . esc_attr( get_bloginfo( 'name', 'display' ) ) . '" />';
 						} else {
 							bloginfo( 'name' );
 						}
@@ -36,7 +36,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 									<table border="0" cellpadding="0" cellspacing="0" width="100%" id="header">
 										<tr>
 											<td>
-												<h1><?php echo $heading; ?></h1>
+												<h1><?php echo esc_html( $heading ); ?></h1>
 											</td>
 										</tr>
 									</table>

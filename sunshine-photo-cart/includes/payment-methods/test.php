@@ -12,6 +12,7 @@ class SPC_Payment_Method_Test extends SPC_Payment_Method {
 
 	public function create_order_status( $status, $order ) {
 		if ( $order->get_payment_method() == $this->id ) {
+			SPC()->log( 'Setting order status to new for test payment' );
 			return 'new'; // Straight to new, no payment needed
 		}
 		return $status;

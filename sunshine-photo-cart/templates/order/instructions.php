@@ -1,3 +1,3 @@
 <div id="sunshine--order--instructions">
-	<?php echo wpautop( $instructions ); ?>
+	<?php echo wp_kses_post( wpautop( $instructions ) ); ?>
 </div>

@@ -1,6 +1,6 @@
 <?php if ( empty( $galleries ) ) { ?>
 
-	<p><?php _e( 'You have no galleries assigned to your user account', 'sunshine-photo-cart' ); ?></p>
+	<p><?php esc_html_e( 'You have no galleries assigned to your user account', 'sunshine-photo-cart' ); ?></p>
 
 <?php } else { ?>
 

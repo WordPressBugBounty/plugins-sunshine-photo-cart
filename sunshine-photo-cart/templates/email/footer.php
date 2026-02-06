@@ -10,7 +10,7 @@
 			?>
 		<table id="signature">
 			<tr>
-				<td><?php echo wpautop( wp_kses_post( $signature ) ); ?></td>
+				<td><?php echo wp_kses_post( wpautop( $signature ) ); ?></td>
 			</tr>
 		</table>
 		<?php } ?>

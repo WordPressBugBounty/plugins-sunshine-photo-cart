@@ -163,7 +163,7 @@ class Sunshine_Emogrifier {
 	private function clearCache( $key ) {
 		$allowedCacheKeys = array( self::CACHE_KEY_CSS, self::CACHE_KEY_SELECTOR, self::CACHE_KEY_XPATH, self::CACHE_KEY_CSS_DECLARATION_BLOCK );
 		if ( ! in_array( $key, $allowedCacheKeys, true ) ) {
-			throw new InvalidArgumentException( 'Invalid cache key: ' . $key, 1391822035 );
+			throw new InvalidArgumentException( 'Invalid cache key: ' . esc_html( $key ), 1391822035 );
 		}
 
 		$this->caches[ $key ] = array();

@@ -74,12 +74,8 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 		return SPC()->get_option( $this->id . '_' . $key );
 	}
 
-	public function get_mode() {
-		return $this->get_option( 'mode' );
-	}
-
 	public function get_email() {
-		return ( $this->get_mode() != 'live' ) ? $this->get_option( 'email_test' ) : $this->get_option( 'email_live' );
+		return ( $this->get_mode_value() != 'live' ) ? $this->get_option( 'email_test' ) : $this->get_option( 'email_live' );
 	}
 
 	public function is_active() {
@@ -91,21 +87,21 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 	}
 
 	public function process_payment( $order ) {
-		$paypal_url            = ( $this->get_mode() != 'live' ) ? 'https://www.sandbox.paypal.com/cgi-bin/webscr' : 'https://www.paypal.com/cgi-bin/webscr';
+		$paypal_url            = ( $this->get_mode_value() != 'live' ) ? 'https://www.sandbox.paypal.com/cgi-bin/webscr' : 'https://www.paypal.com/cgi-bin/webscr';
 		$paypal_args           = array();
 		$paypal_args['custom'] = $order->get_id();
 		?>
 
 		<html>
 	<head>
-		<title><?php echo sprintf( __( 'Redirecting to %s', 'sunshine-photo-cart' ), 'PayPal' ); ?>...</title>
+		<title><?php esc_html_e( 'Redirecting to PayPal', 'sunshine-photo-cart' ); ?>...</title>
 		<style type="text/css">
 		body, html { margin: 0; padding: 50px; background: #FFF; }
 		h1 { color: #000; text-align: center; font-family: Arial; font-size: 24px; }
 		</style>
 	</head>
 	<body>
-		<h1><?php echo sprintf( __( 'Redirecting to %s', 'sunshine-photo-cart' ), 'PayPal' ); ?>...</h1>
+		<h1><?php esc_html_e( 'Redirecting to PayPal', 'sunshine-photo-cart' ); ?>...</h1>
 		<form method="post" action="<?php echo esc_url( $paypal_url ); ?>" id="paypal" style="display: none;">
 
 		<?php
@@ -116,7 +112,7 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 			$amount_key                   = 'amount_' . $i;
 			$paypal_args[ $name_key ]     = $item->get_name_raw();
 			$paypal_args[ $quantity_key ] = $item->get_qty();
-			$paypal_args[ $amount_key ]   = $item->get_price();
+			$paypal_args[ $amount_key ]   = $item->get_price() - $item->get_discount_per_item();
 			$i++;
 		}
 		if ( $order->get_shipping() > 0 ) {
@@ -176,10 +172,10 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 		foreach ( $paypal_args as $key => $value ) {
 			$paypal_args_array_escaped[] = '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" />';
 		}
-		echo implode( "\r\n", $paypal_args_array_escaped );
+		echo implode( "\r\n", $paypal_args_array_escaped ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		?>
 
-		<input type="submit" value="<?php echo sprintf( __( 'Submit payment via %s', 'sunshine-photo-cart' ), 'PayPal' ); ?>" />
+		<input type="submit" value="<?php esc_html_e( 'Submit payment via PayPal', 'sunshine-photo-cart' ); ?>" />
 	</form>
 	<script>
 		document.getElementById("paypal").submit();
@@ -203,7 +199,7 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 		if ( $order->get_payment_method() == $this->id ) {
 			$transaction_id = $this->get_transaction_id( $order );
 			if ( $transaction_id ) {
-				$transaction_url  = ( $order->get_mode() != 'live' ) ? 'https://www.sandbox.paypal.com/activity/payment/' : 'https://www.paypal.com/activity/payment/';
+				$transaction_url  = ( $this->get_mode_value() != 'live' ) ? 'https://www.sandbox.paypal.com/activity/payment/' : 'https://www.paypal.com/activity/payment/';
 				$transaction_url .= $transaction_id;
 				return $transaction_url;
 			}
@@ -221,17 +217,17 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 	public function admin_order_tab_content_paypal_legacy( $order ) {
 		echo '<table class="sunshine-data">';
 		if ( $order->get_meta_value( 'paypal_txn_id' ) ) {
-			echo '<tr><th>' . __( 'Transaction ID', 'sunshine-photo-cart' ) . '</th><td><a href="' . $this->get_transaction_url( $order ) . '" target="_blank">' . $order->get_meta_value( 'paypal_txn_id' ) . '</a></td></tr>';
+			echo '<tr><th>' . esc_html__( 'Transaction ID', 'sunshine-photo-cart' ) . '</th><td><a href="' . esc_url( $this->get_transaction_url( $order ) ) . '" target="_blank">' . esc_html( $order->get_meta_value( 'paypal_txn_id' ) ) . '</a></td></tr>';
 		}
 		if ( $order->get_meta_value( 'paypal_payment_fee' ) ) {
-			echo '<tr><th>' . __( 'Transaction fees', 'sunshine-photo-cart' ) . '</th><td>' . sunshine_price( $order->get_meta_value( 'paypal_payment_fee' ), true ) . '</td></tr>';
+			echo '<tr><th>' . esc_html__( 'Transaction fees', 'sunshine-photo-cart' ) . '</th><td>' . wp_kses_post( sunshine_price( $order->get_meta_value( 'paypal_payment_fee' ), true ) ) . '</td></tr>';
 		}
 		echo '</table>';
 	}
 
 	public function mode( $mode, $order ) {
 		if ( $order->get_payment_method() == $this->id ) {
-			return ( $this->get_mode() == 'live' ) ? 'live' : 'test';
+			return $this->get_mode_value();
 		}
 		return $mode;
 	}
@@ -271,7 +267,7 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 				$req .= "&$key=$value";
 			}
 
-			$paypal_url = ( $this->get_mode() != 'live' ) ? 'https://www.sandbox.paypal.com/cgi-bin/webscr' : 'https://www.paypal.com/cgi-bin/webscr';
+			$paypal_url = ( $this->get_mode_value() != 'live' ) ? 'https://www.sandbox.paypal.com/cgi-bin/webscr' : 'https://www.paypal.com/cgi-bin/webscr';
 
 			$response = wp_remote_post(
 				$paypal_url,
@@ -305,17 +301,23 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 
 			SPC()->log( 'Updating ' . $order->get_name() . ' from PayPal IPN' );
 
-			$order->set_status( 'new' );
 			foreach ( $myPost as $key => $value ) {
 				$order->update_meta_value( 'paypal_' . sanitize_key( $key ), sanitize_text_field( $value ) );
 			}
 
-			$order->notify();
+			SPC()->cart->post_process_order( $order );
 
 			exit;
 		}
 	}
 
+	public function create_order_status( $status, $order ) {
+		if ( $order->get_payment_method() == $this->id ) {
+			SPC()->log( 'Setting order status to new for PayPal Legacy payment' );
+			return 'new';
+		}
+		return $status;
+	}
 
 	function clear_cart() {
 		global $sunshine;
@@ -332,11 +334,19 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 
 	function cancel_order() {
 		if ( isset( $_GET['paypal_cancel'] ) && wp_verify_nonce( $_GET['paypal_cancel'], 'paypal_cancel' ) && isset( $_GET['order_id'] ) ) {
-			$order = sunshine_get_order( intval( $_GET['order_id'] ) );
-			SPC()->cart->add_error( __( 'PayPal payment has been cancelled', 'sunshine' ) );
+			$order_id = intval( $_GET['order_id'] );
+			$order    = sunshine_get_order( $order_id );
+			if ( $order->exists() ) {
+				$order->delete( true );
+			}
+			SPC()->cart->add_error( __( 'PayPal payment has been cancelled', 'sunshine-photo-cart' ) );
 			wp_safe_redirect( sunshine_get_page_url( 'checkout' ) );
 			exit;
 		}
+	}
+
+	public function get_submit_label() {
+		return __( 'Continue to PayPal', 'sunshine-photo-cart' );
 	}
 
 }

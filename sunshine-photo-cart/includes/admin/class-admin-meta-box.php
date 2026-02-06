@@ -9,8 +9,6 @@ class Sunshine_Admin_Meta_Boxes {
 	public function __construct() {
 
 		add_action( 'current_screen', array( $this, 'init' ) );
-		add_action( 'add_meta_boxes', array( $this, 'remove_meta_boxes' ), 10 );
-		add_action( 'add_meta_boxes', array( $this, 'rename_meta_boxes' ), 20 );
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 30 );
 		add_action( 'save_post', array( $this, 'pre_save_meta_boxes' ), 1, 2 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
@@ -91,14 +89,6 @@ class Sunshine_Admin_Meta_Boxes {
 
 	}
 
-	public function remove_meta_boxes() {
-
-	}
-
-	public function rename_meta_boxes() {
-
-	}
-
 	public function show_meta_box( $post, $args ) {
 		if ( empty( $this->options[ $args['id'] ] ) ) {
 			return false;
@@ -116,11 +106,11 @@ class Sunshine_Admin_Meta_Boxes {
 				if ( empty( $tab['fields'] ) ) {
 					continue;
 				}
-				echo '<a href="#sunshine-admin-meta-box-tab-fields-' . $tab['id'] . '" id="sunshine-admin-meta-box-tab-link-' . $tab['id'] . '"' . ( ( $count == 1 ) ? ' class="active"' : '' ) . '>';
+				echo '<a href="#sunshine-admin-meta-box-tab-fields-' . esc_attr( $tab['id'] ) . '" id="sunshine-admin-meta-box-tab-link-' . esc_attr( $tab['id'] ) . '"' . ( ( $count == 1 ) ? ' class="active"' : '' ) . '>';
 				if ( ! empty( $tab['icon'] ) ) {
 					// echo file_get_contents( $tab['icon'] );
 				}
-				echo $tab['name'] . '</a>';
+				echo wp_kses_post( $tab['name'] ) . '</a>';
 				$count++;
 			}
 			echo '</nav>';
@@ -142,7 +132,7 @@ class Sunshine_Admin_Meta_Boxes {
 				echo '<tr id="sunshine-meta-fields-' . esc_attr( $field['id'] ) . '" class="sunshine-meta-field-' . esc_attr( $field['type'] ) . '" data-type="' . esc_attr( $field['type'] ) . '">';
 				if ( ! empty( $field['name'] ) ) {
 					echo '<th>';
-					echo $field['name'];
+					echo esc_html( $field['name'] );
 					if ( ! empty( $field['documentation'] ) ) {
 						echo ' <a href="' . esc_url( $field['documentation'] ) . '" target="_blank" title="' . esc_attr__( 'Documentation', 'sunshine-photo-cart' ) . '" class="sunshine-admin-meta-doc"></a>';
 					}
@@ -156,13 +146,13 @@ class Sunshine_Admin_Meta_Boxes {
 					if ( ! empty( $field['upgrade']['addon'] ) && $field['upgrade']['label'] && ! is_sunshine_addon_active( $field['upgrade']['addon'] ) && ! SPC()->is_pro() ) {
 						echo '<tr class="sunshine-meta-field-upgrade">';
 						echo '<td colspan="2">';
-						esc_html_e( $field['upgrade']['label'] );
+						echo esc_html( $field['upgrade']['label'] );
 						if ( ! empty( $field['upgrade']['url'] ) ) {
 							$url = $field['upgrade']['url'];
 						} else {
 							$url = 'https://www.sunshinephotocart.com/upgrade/';
 						}
-						echo ' <a href="' . esc_url( $url ) . '?utm_source=plugin&utm_medium=link&utm_campaign=upgrade" target="_blank">' . __( 'Learn more', 'sunshine-photo-cart' ) . '</a>';
+						echo ' <a href="' . esc_url( $url ) . '?utm_source=plugin&utm_medium=link&utm_campaign=upgrade" target="_blank">' . esc_html__( 'Learn more', 'sunshine-photo-cart' ) . '</a>';
 						echo '</td>';
 						echo '</tr>';
 					}
@@ -452,23 +442,23 @@ class Sunshine_Admin_Meta_Boxes {
 					$selected = false;
 				}
 
-					$args = array(
-						'name'       => $meta_key,
-						'id'         => $field['id'],
-						'sort_order' => 'ASC',
-						'echo'       => 0,
-						'selected'   => $selected,
-					);
+				$args = array(
+					'name'       => $meta_key,
+					'id'         => $field['id'],
+					'sort_order' => 'ASC',
+					'echo'       => 0,
+					'selected'   => $selected,
+				);
 
-					$html .= str_replace( "'>", "'><option></option>", wp_dropdown_pages( $args ) );
+				$html .= str_replace( "'>", "'><option></option>", wp_dropdown_pages( $args ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
-					if ( $selected ) {
-						$html .= '<a href="' . esc_url( get_permalink( $selected ) ) . '" target="_blank" class="button">' . __( 'View page', 'sunshine-photo-cart' ) . '</a>';
-					}
+				if ( $selected ) {
+					$html .= '<a href="' . esc_url( get_permalink( $selected ) ) . '" target="_blank" class="button">' . esc_html__( 'View page', 'sunshine-photo-cart' ) . '</a>';
+				}
 
-					$html .= '
+				$html .= '
                 <script type="text/javascript">jQuery(function () {
-                        jQuery("#' . esc_js( $field['id'] ) . '").select2({ width: "350px", placeholder: "' . esc_js( __( 'Please select a page', 'sunshine-photo-cart' ) ) . '" });
+                        jQuery("#' . esc_js( $field['id'] ) . '").select2({ width: "350px", placeholder: "' . esc_js( esc_html__( 'Please select a page', 'sunshine-photo-cart' ) ) . '" });
                     });</script>';
 				break;
 
@@ -492,7 +482,7 @@ class Sunshine_Admin_Meta_Boxes {
 				if ( ! empty( $meta_value ) ) {
 					foreach ( $meta_value as $user_id ) {
 						$customer = sunshine_get_customer( $user_id );
-						$html    .= '<option value="' . esc_attr( $user_id ) . '" selected="selected">' . $customer->get_name() . ' (' . $customer->get_email() . ')</option>';
+						$html    .= '<option value="' . esc_attr( $user_id ) . '" selected="selected">' . esc_html( $customer->get_name() ) . ' (' . esc_html( $customer->get_email() ) . ')</option>';
 					}
 				}
 				$html .= '</select> ';
@@ -510,7 +500,7 @@ class Sunshine_Admin_Meta_Boxes {
 					                return {
 					                    action: "sunshine_search_users",
 					                    search: params.term,
-										security: "' . wp_create_nonce( 'sunshine_search_users' ) . '",
+										security: "' . esc_js( wp_create_nonce( 'sunshine_search_users' ) ) . '",
 					                };
 					            },
 					            processResults: function(data) {
@@ -537,15 +527,16 @@ class Sunshine_Admin_Meta_Boxes {
 				if ( ! empty( $meta_value ) ) {
 					foreach ( $meta_value as $gallery_id ) {
 						$gallery = sunshine_get_gallery( $gallery_id );
-						$html   .= '<option value="' . esc_attr( $gallery_id ) . '" selected="selected">' . $gallery->get_name() . '</option>';
+						$html   .= '<option value="' . esc_attr( $gallery_id ) . '" selected="selected">' . esc_html( $gallery->get_name() ) . '</option>';
 					}
 				}
 				$html .= '</select> ';
 				$html .= '
-					<script type="text/javascript">jQuery(function () {
-
+					<script type="text/javascript">
+					jQuery(function () {
 						jQuery("#' . esc_js( $field['id'] ) . '").select2({
 							width: "350px",
+							allowClear: true,
 							placeholder: "' . esc_js( $field['placeholder'] ) . '",
 							ajax: {
 					            url: ajaxurl,
@@ -554,7 +545,7 @@ class Sunshine_Admin_Meta_Boxes {
 					            data: function(params) {
 					                return {
 					                    action: "sunshine_search_galleries",
-										security: "' . wp_create_nonce( 'sunshine_search_galleries' ) . '",
+										security: "' . esc_js( wp_create_nonce( 'sunshine_search_galleries' ) ) . '",
 					                    search: params.term
 					                };
 					            },
@@ -565,8 +556,8 @@ class Sunshine_Admin_Meta_Boxes {
 					            }
 					        },
 					        minimumInputLength: 3
-							});
 						});
+					});
 					</script>';
 				break;
 
@@ -582,7 +573,7 @@ class Sunshine_Admin_Meta_Boxes {
 				if ( ! empty( $meta_value ) ) {
 					foreach ( $meta_value as $post_id ) {
 						$this_post = sunshine_get_product( $post_id );
-						$html     .= '<option value="' . esc_attr( $post_id ) . '" selected="selected">' . $this_post->get_name() . '</option>';
+						$html     .= '<option value="' . esc_attr( $post_id ) . '" selected="selected">' . esc_html( $this_post->get_name() ) . '</option>';
 					}
 				}
 				$html .= '</select> ';
@@ -599,7 +590,7 @@ class Sunshine_Admin_Meta_Boxes {
 					            data: function(params) {
 					                return {
 					                    action: "sunshine_search_products",
-										security: "' . wp_create_nonce( 'sunshine_search_products' ) . '",
+										security: "' . esc_js( wp_create_nonce( 'sunshine_search_products' ) ) . '",
 					                    search: params.term
 					                };
 					            },
@@ -621,8 +612,8 @@ class Sunshine_Admin_Meta_Boxes {
 					$image_thumb = wp_get_attachment_thumb_url( $data );
 				}
 				$html .= '<img id="' . esc_attr( $meta_key ) . '_preview" class="image_preview" src="' . esc_attr( $image_thumb ) . '" /><br/>' . "\n";
-				$html .= '<input id="' . esc_attr( $meta_key ) . '_button" type="button" data-uploader_title="' . __( 'Upload an image', 'sunshine-photo-cart' ) . '" data-uploader_button_text="' . __( 'Use image', 'sunshine-photo-cart' ) . '" class="image_upload_button button" value="' . __( 'Upload new image', 'sunshine-photo-cart' ) . '" />' . "\n";
-				$html .= '<input id="' . esc_attr( $meta_key ) . '_delete" type="button" class="image_delete_button button" value="' . __( 'Remove image', 'sunshine-photo-cart' ) . '" />' . "\n";
+				$html .= '<input id="' . esc_attr( $meta_key ) . '_button" type="button" data-uploader_title="' . esc_html__( 'Upload an image', 'sunshine-photo-cart' ) . '" data-uploader_button_text="' . esc_html__( 'Use image', 'sunshine-photo-cart' ) . '" class="image_upload_button button" value="' . esc_html__( 'Upload new image', 'sunshine-photo-cart' ) . '" />' . "\n";
+				$html .= '<input id="' . esc_attr( $meta_key ) . '_delete" type="button" class="image_delete_button button" value="' . esc_html__( 'Remove image', 'sunshine-photo-cart' ) . '" />' . "\n";
 				$html .= '<input id="' . esc_attr( $meta_key ) . '" class="image_data_field" type="hidden" name="' . esc_attr( $meta_key ) . '" value="' . esc_attr( $meta_value ) . '"/>' . "\n";
 				break;
 
@@ -654,13 +645,13 @@ class Sunshine_Admin_Meta_Boxes {
 				$html .= '<p class="sunshine-meta-field-promo-links">';
 				if ( ! SPC()->has_plan() ) {
 					if ( ! empty( $field['url'] ) ) {
-						$html .= '<a href="' . $field['url'] . '?utm_source=plugin&utm_medium=link&utm_campaign=metapromo" target="_blank" class="button-primary">' . __( 'See upgrade options', 'sunshine-photo-cart' ) . '</a>';
+						$html .= '<a href="' . esc_url( $field['url'] ) . '?utm_source=plugin&utm_medium=link&utm_campaign=metapromo" target="_blank" class="button-primary">' . esc_html__( 'See upgrade options', 'sunshine-photo-cart' ) . '</a>';
 					}
 				} else {
-					$html .= '<a href="' . admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-addons' ) . '" class="button-primary">' . __( 'Activate this add-on', 'sunshine-photo-cart' ) . '</a>';
+					$html .= '<a href="' . esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-addons' ) ) . '" class="button-primary">' . esc_html__( 'Activate this add-on', 'sunshine-photo-cart' ) . '</a>';
 				}
 				if ( ! empty( $field['documentation'] ) ) {
-					$html .= ' <a href="' . esc_url( $field['documentation'] ) . '" target="_blank" class="button">' . __( 'Learn more', 'sunshine-photo-cart' ) . '</a>';
+					$html .= ' <a href="' . esc_url( $field['documentation'] ) . '" target="_blank" class="button">' . esc_html__( 'Learn more', 'sunshine-photo-cart' ) . '</a>';
 				}
 				$html .= '</p>';
 				break;
@@ -677,9 +668,9 @@ class Sunshine_Admin_Meta_Boxes {
 				$html         .= '<input type="number" min="0" name="' . esc_attr( $field['id'] ) . '[time]" step="1" style="width: 60px;" value="' . esc_attr( $time ) . '" />';
 				$html         .= '<select name="' . esc_attr( $field['id'] ) . '[interval]">';
 					$intervals = array(
-						'month' => __( 'Month(s)', 'sunshine-photo-cart' ),
-						'day'   => __( 'Day(s)', 'sunshine-photo-cart' ),
-						'hour'  => __( 'Hour(s)', 'sunshine-photo-cart' ),
+						'month' => esc_html__( 'Month(s)', 'sunshine-photo-cart' ),
+						'day'   => esc_html__( 'Day(s)', 'sunshine-photo-cart' ),
+						'hour'  => esc_html__( 'Hour(s)', 'sunshine-photo-cart' ),
 					);
 					foreach ( $intervals as $key => $label ) {
 						$html .= '<option value="' . esc_attr( $key ) . '" ' . selected( $key, $interval, false ) . '>' . esc_html( $label ) . '</option>';
@@ -711,18 +702,19 @@ class Sunshine_Admin_Meta_Boxes {
 			case 'color':
 			case 'header':
 				if ( ! empty( $field['description'] ) ) {
-					$html_safe .= '<span class="sunshine-settings-description">' . esc_html( $field['description'] ) . '</span>';
+					$html_safe .= '<span class="sunshine-settings-description">' . wp_kses_post( $field['description'] ) . '</span>';
 				}
 				break;
 
 			default:
 				if ( ! empty( $field['description'] ) ) {
-					$html_safe .= '<div class="sunshine-settings-description">' . esc_html( $field['description'] ) . '</div>';
+					$html_safe .= '<div class="sunshine-settings-description">' . wp_kses_post( $field['description'] ) . '</div>';
 				}
 				break;
 		}
 
-		echo $html_safe;
+		// Everything in the html_safe variable is escaped, so we can safely ignore the output not escaped warning.
+		echo $html_safe; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
 	}
 
@@ -757,45 +749,45 @@ class Sunshine_Admin_Meta_Boxes {
 				$i++;
 				?>
 					var condition_field_value_<?php echo esc_attr( $field['id'] ); ?> = sunshine_get_condition_field_value( '<?php echo esc_js( $condition['field'] ); ?>' );
-					function condition_field_action_<?php echo esc_attr( $field['id'] ) . $i; ?>( value ) {
+					function condition_field_action_<?php echo esc_attr( $field['id'] . $i ); ?>( value ) {
 						<?php
-						$action_target     = ( isset( $condition['action_target'] ) ) ? $condition['action_target'] : '#sunshine-meta-fields-' . $field['id'];
-						$true_action       = ( $condition['action'] == 'show' ) ? 'show' : 'hide';
-						$false_action      = ( $condition['action'] == 'show' ) ? 'hide' : 'show';
-						$comparison_string = '';
+						$action_target          = ( isset( $condition['action_target'] ) ) ? $condition['action_target'] : '#sunshine-meta-fields-' . $field['id'];
+						$true_action            = ( $condition['action'] == 'show' ) ? 'show' : 'hide';
+						$false_action           = ( $condition['action'] == 'show' ) ? 'hide' : 'show';
+						$comparison_string_safe = '';
 						if ( is_array( $condition['value'] ) ) { // If value is an array, need to compare against each array value
 							$comparison_strings = array();
 							foreach ( $condition['value'] as $value ) {
 								$comparison_strings[] = '( value ' . esc_js( $condition['compare'] ) . ' "' . esc_js( $value ) . '" )';
 							}
-							$comparison_string = join( ' || ', $comparison_strings );
+							$comparison_string_safe = join( ' || ', $comparison_strings );
 						} else {
-							$comparison_string = 'value ' . esc_js( $condition['compare'] ) . ' "' . esc_js( $condition['value'] ) . '"';
+							$comparison_string_safe = 'value ' . esc_js( $condition['compare'] ) . ' "' . esc_js( $condition['value'] ) . '"';
 						}
 						if ( is_array( $condition['value'] ) ) {
 							?>
-							var possible_values = [ '<?php echo join( "', '", $condition['value'] ); ?>' ];
+							var possible_values = [ '<?php echo esc_js( join( "', '", $condition['value'] ) ); ?>' ];
 							if ( possible_values.includes( value ) ) {
-								$( '<?php echo esc_js( $action_target ); ?>' ).<?php echo $true_action; ?>();
+								$( '<?php echo esc_js( $action_target ); ?>' ).<?php echo esc_js( $true_action ); ?>();
 							} else {
-								$( '<?php echo esc_js( $action_target ); ?>' ).<?php echo $false_action; ?>();
+								$( '<?php echo esc_js( $action_target ); ?>' ).<?php echo esc_js( $false_action ); ?>();
 							}
 						<?php } else { ?>
-							if ( <?php echo $comparison_string; ?> ) {
-								$( '<?php echo esc_js( $action_target ); ?>' ).<?php echo $true_action; ?>();
+							if ( <?php echo $comparison_string_safe; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> ) {
+								$( '<?php echo esc_js( $action_target ); ?>' ).<?php echo esc_js( $true_action ); ?>();
 							} else {
-								$( '<?php echo esc_js( $action_target ); ?>' ).<?php echo $false_action; ?>();
+								$( '<?php echo esc_js( $action_target ); ?>' ).<?php echo esc_js( $false_action ); ?>();
 							}
 						<?php } ?>
 					}
 
 					// Default action
-					condition_field_action_<?php echo esc_attr( $field['id'] ) . $i; ?>( condition_field_value_<?php echo esc_attr( $field['id'] ); ?> );
+					condition_field_action_<?php echo esc_attr( $field['id'] . $i ); ?>( condition_field_value_<?php echo esc_attr( $field['id'] ); ?> );
 
 					// On change action
 					$( '#<?php echo esc_js( $condition['field'] ); ?>, #sunshine-meta-fields-<?php echo esc_js( $condition['field'] ); ?> input[type="radio"], #sunshine-meta-fields-<?php echo esc_js( $condition['field'] ); ?> input[type="checkbox"]' ).on( 'change', function(){
 						condition_field_value_<?php echo esc_attr( $field['id'] ); ?> = sunshine_get_condition_field_value( '<?php echo esc_js( $condition['field'] ); ?>' );
-						condition_field_action_<?php echo esc_attr( $field['id'] ) . $i; ?>( condition_field_value_<?php echo esc_attr( $field['id'] ); ?> );
+						condition_field_action_<?php echo esc_attr( $field['id'] . $i ); ?>( condition_field_value_<?php echo esc_attr( $field['id'] ); ?> );
 					});
 
 				<?php
@@ -856,9 +848,9 @@ class Sunshine_Admin_Meta_Boxes {
 						}
 						?>
 						if ( field_value == "<?php echo esc_js( $condition['value'] ); ?>" ) {
-							jQuery( '#sunshine-meta-fields-<?php echo esc_js( $field['id'] ); ?>').<?php echo $true_action; ?>();
+							jQuery( '#sunshine-meta-fields-<?php echo esc_js( $field['id'] ); ?>').<?php echo esc_js( $true_action ); ?>();
 						} else {
-							jQuery( '#sunshine-meta-fields-<?php echo esc_js( $field['id'] ); ?>').<?php echo $false_action; ?>();
+							jQuery( '#sunshine-meta-fields-<?php echo esc_js( $field['id'] ); ?>').<?php echo esc_js( $false_action ); ?>();
 						}
 					}
 

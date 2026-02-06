@@ -81,7 +81,7 @@ class SPC_Product_Option extends Sunshine_Data {
 		}
 		$product_option_prices_for_this_option = $product_option_prices[ $this->get_id() ];
 
-		if ( $type == 'checkbox' ) {
+		if ( $type == 'checkbox' || $type == 'text' ) {
 			$items[] = array(
 				'name'  => $this->get_name(),
 				'price' => $product_option_prices_for_this_option[ $this->price_level_id ],
@@ -114,6 +114,8 @@ class SPC_Product_Option extends Sunshine_Data {
 	public function get_item_name( $id ) {
 		if ( $this->get_type() == 'checkbox' ) {
 			return $this->get_name();
+		} elseif ( $this->get_type() == 'text' ) {
+			return $id;
 		}
 		$options = $this->get_options();
 		if ( ! empty( $options ) ) {
@@ -149,7 +151,7 @@ class SPC_Product_Option extends Sunshine_Data {
 		}
 		$output = '<img src="' . esc_url( $this->get_item_image_url( $id, $size ) ) . '" alt="' . esc_attr( $this->get_item_name( $id ) ) . '" />';
 		if ( $echo ) {
-			echo $output;
+			echo wp_kses_post( $output );
 			return;
 		}
 		return $output;

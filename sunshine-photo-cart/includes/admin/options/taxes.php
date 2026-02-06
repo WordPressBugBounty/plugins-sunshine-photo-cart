@@ -5,14 +5,14 @@ function sunshine_taxes_display() {
 	$tax_rates = sunshine_get_tax_rates();
 	?>
 	<p id="sunshine-new-tax-rate">
-		<a class="button"><?php _e( 'Add tax rate', 'sunshine-photo-cart' ); ?></a>
+		<a class="button"><?php esc_html_e( 'Add tax rate', 'sunshine-photo-cart' ); ?></a>
 	</p>
 	<table id="sunshine-tax-rates" class="wps-table">
 		<thead>
-			<th><?php _e( 'Country', 'sunshine-photo-cart' ); ?></th>
-			<th><?php _e( 'State/Province', 'sunshine-photo-cart' ); ?></th>
-			<th><?php _e( 'Zip/Postal Code(s)', 'sunshine-photo-cart' ); ?></th>
-			<th><?php _e( 'Tax Rate', 'sunshine-photo-cart' ); ?></th>
+			<th><?php esc_html_e( 'Country', 'sunshine-photo-cart' ); ?></th>
+			<th><?php esc_html_e( 'State/Province', 'sunshine-photo-cart' ); ?></th>
+			<th><?php esc_html_e( 'Zip/Postal Code(s)', 'sunshine-photo-cart' ); ?></th>
+			<th><?php esc_html_e( 'Tax Rate', 'sunshine-photo-cart' ); ?></th>
 			<th></th>
 		</thead>
 		<tbody>
@@ -24,7 +24,7 @@ function sunshine_taxes_display() {
 				<tr id="sunshine-tax-rate-<?php echo esc_attr( $i ); ?>" data-instance="<?php echo esc_attr( $i ); ?>">
 					<td class="tax-country">
 						<select name="sunshine_tax_rates[<?php echo esc_attr( $i ); ?>][country]">
-							<option value="all"><?php _e( 'All countries', 'sunshine-photo-cart' ); ?></option>
+							<option value="all"><?php esc_html_e( 'All countries', 'sunshine-photo-cart' ); ?></option>
 							<?php foreach ( SPC()->countries->get_countries() as $code => $name ) { ?>
 								<option value="<?php echo esc_attr( $code ); ?>" <?php selected( $code, $tax_rate['country'] ); ?>><?php echo wp_kses_post( $name ); ?></option>
 							<?php } ?>
@@ -36,7 +36,7 @@ function sunshine_taxes_display() {
 						if ( $states ) {
 							?>
 						<select name="sunshine_tax_rates[<?php echo esc_attr( $i ); ?>][state]">
-							<option value=""><?php _e( 'Any state/province', 'sunshine-photo-cart' ); ?></option>
+							<option value=""><?php esc_html_e( 'Any state/province', 'sunshine-photo-cart' ); ?></option>
 							<?php foreach ( $states as $code => $name ) { ?>
 								<option value="<?php echo esc_attr( $code ); ?>" <?php selected( $code, $tax_rate['state'] ); ?>><?php echo wp_kses_post( $name ); ?></option>
 							<?php } ?>
@@ -48,7 +48,7 @@ function sunshine_taxes_display() {
 					<td class="tax-postcode"><input type="text" name="sunshine_tax_rates[<?php echo esc_attr( $i ); ?>][postcode]" value="<?php echo ( ! empty( $tax_rate['postcode'] ) ) ? esc_attr( $tax_rate['postcode'] ) : ''; ?>" /></td>
 					<td class="tax-rate"><input type="number" name="sunshine_tax_rates[<?php echo esc_attr( $i ); ?>][rate]" size="6" step=".001" min="0" max="100" value="<?php echo esc_attr( $tax_rate['rate'] ); ?>" />%</td>
 					<td class="tax-actions">
-						<a href="#" class="button delete"><?php _e( 'Delete', 'sunshine-photo-cart' ); ?></a>
+						<a href="#" class="button delete"><?php esc_html_e( 'Delete', 'sunshine-photo-cart' ); ?></a>
 					</td>
 					<td class="tax-sort"><span class="dashicons dashicons-sort"></span></td>
 				</tr>
@@ -61,7 +61,7 @@ function sunshine_taxes_display() {
 			<tr id="sunshine-tax-rate-<?php echo esc_attr( $i ); ?>" data-instance="<?php echo esc_attr( $i ); ?>">
 				<td class="tax-country">
 					<select name="sunshine_tax_rates[<?php echo esc_attr( $i ); ?>][country]">
-						<option value="all"><?php _e( 'All countries', 'sunshine-photo-cart' ); ?></option>
+						<option value="all"><?php esc_html_e( 'All countries', 'sunshine-photo-cart' ); ?></option>
 						<?php foreach ( SPC()->countries->get_countries() as $code => $name ) { ?>
 							<option value="<?php echo esc_attr( $code ); ?>"><?php echo wp_kses_post( $name ); ?></option>
 						<?php } ?>
@@ -71,7 +71,7 @@ function sunshine_taxes_display() {
 				<td class="tax-postcode"><input type="text" name="sunshine_tax_rates[<?php echo esc_attr( $i ); ?>][postcode]" value="" /></td>
 				<td class="tax-rate"><input type="number" name="sunshine_tax_rates[<?php echo esc_attr( $i ); ?>][rate]" step=".001" min="0" max="100" size="6" value="" />%</td>
 				<td class="wps-actions">
-					<a href="#" class="button delete"><?php _e( 'Delete', 'sunshine-photo-cart' ); ?></a>
+					<a href="#" class="button delete"><?php esc_html_e( 'Delete', 'sunshine-photo-cart' ); ?></a>
 				</td>
 				<td><span class="dashicons dashicons-sort"></span></td>
 			</tr>
@@ -85,7 +85,7 @@ function sunshine_taxes_display() {
 	<script>
 	jQuery( document ).ready(function($){
 
-		var sunshine_next_instance = <?php echo $i; ?>;
+		var sunshine_next_instance = <?php echo intval( $i ); ?>;
 
 		$( document ).on( 'click', '#sunshine-new-tax-rate a', function( e ){
 
@@ -121,11 +121,11 @@ function sunshine_taxes_display() {
 				});
 				$.ajax({
 					type: 'POST',
-					url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+					url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 					data: {
 						action: 'sunshine_sort_tax_rates',
 						sorted_instances: sorted_instances,
-						security: "<?php echo wp_create_nonce( 'sunshine-sort-tax-rates' ); ?>"
+						security: "<?php echo esc_js( wp_create_nonce( 'sunshine-sort-tax-rates' ) ); ?>"
 					}
 				});
 			}
@@ -135,11 +135,11 @@ function sunshine_taxes_display() {
 			var data_instance_id = $( this ).closest( 'tr' ).data( 'instance' );
 			$.ajax({
 				type: 'POST',
-				url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+				url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 				data: {
 					action: 'sunshine_delete_tax_rate',
 					instance_id: data_instance_id,
-					security: "<?php echo wp_create_nonce( 'sunshine-delete-tax-rate' ); ?>"
+					security: "<?php echo esc_js( wp_create_nonce( 'sunshine-delete-tax-rate' ) ); ?>"
 				},
 				success: function( data, textStatus, XMLHttpRequest ) {
 					if ( data ) {
@@ -158,11 +158,11 @@ function sunshine_taxes_display() {
 			var selected_country = $( 'option:selected', this ).val();
 			$.ajax({
 				type: 'POST',
-				url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+				url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 				data: {
 					action: 'sunshine_show_tax_states',
 					country: selected_country,
-					security: "<?php echo wp_create_nonce( 'sunshine-show-tax-states' ); ?>"
+					security: "<?php echo esc_js( wp_create_nonce( 'sunshine-show-tax-states' ) ); ?>"
 				},
 				success: function( data, textStatus, XMLHttpRequest ) {
 					$( '#sunshine-tax-rate-' + data_instance_id + ' td.tax-state' ).html( '' );

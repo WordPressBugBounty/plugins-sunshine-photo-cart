@@ -109,7 +109,7 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 		 * @return array        Modified links
 		 */
 		public function add_settings_link( $links ) {
-			$settings_link = '<a href="' . admin_url( 'admin.php?page=' . $this->key ) . '">' . __( 'Settings' ) . '</a>';
+			$settings_link = '<a href="' . esc_url( admin_url( 'admin.php?page=' . $this->key ) ) . '">' . __( 'Settings', 'sunshine-photo-cart' ) . '</a>';
 			array_push( $links, $settings_link );
 			return $links;
 		}
@@ -184,7 +184,7 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 			foreach ( $this->settings as $settings_group ) {
 				if ( $section['id'] == $settings_group['id'] && ! empty( $settings_group['description'] ) ) {
 					$html = '<div class="sunshine-settings-section-description">' . $settings_group['description'] . '</div>' . "\n";
-					echo $html;
+					echo wp_kses_post( $html );
 				}
 			}
 		}
@@ -355,7 +355,7 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 						'selected'   => $selected,
 					);
 
-					$html .= str_replace( "'>", "'><option></option>", wp_dropdown_pages( $args ) );
+					$html .= str_replace( "'>", "'><option></option>", wp_dropdown_pages( $args ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
 					if ( $selected ) {
 						$html .= '<a href="' . esc_url( get_permalink( $selected ) ) . '" target="_blank" class="button">' . __( 'View page', 'sunshine-photo-cart' ) . '</a>';
@@ -398,7 +398,6 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 					$html .= '</select> ';
 					$html .= '
 						<script type="text/javascript">jQuery(function () {
-
 							jQuery("#' . esc_js( $field['id'] ) . '").select2({
 								width: "350px",
 								placeholder: "' . esc_js( $field['placeholder'] ) . '",
@@ -410,7 +409,7 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 						                return {
 						                    action: "sunshine_search_galleries",
 						                    search: params.term,
-											security: "' . wp_create_nonce( 'sunshine_search_galleries' ) . '",
+											security: "' . esc_js( wp_create_nonce( 'sunshine_search_galleries' ) ) . '",
 						                };
 						            },
 						            processResults: function(data) {
@@ -454,7 +453,7 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 						                return {
 						                    action: "sunshine_search_products",
 						                    search: params.term,
-											security: "' . wp_create_nonce( 'sunshine_search_products' ) . '",
+											security: "' . esc_js( wp_create_nonce( 'sunshine_search_products' ) ) . '",
 						                };
 						            },
 						            processResults: function(data) {
@@ -484,8 +483,8 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 						$html           .= '<a href="' . esc_url( $attachment_url ) . '" target="_blank">' . esc_html( $attachment_name ) . '</a>';
 					}
 					$html             .= '</div>';
-					$html             .= '<input id="' . esc_attr( $option_name ) . '_button" type="button" ' . ( ( ! empty( $field['media_type'] ) ) ? 'data-media_type="' . esc_attr( $field['media_type'] ) . '"' : '' ) . ' data-uploader_title="' . __( 'Upload a file', 'sunshine-photo-cart' ) . '" data-uploader_button_text="' . __( 'Select file', 'sunshine-photo-cart' ) . '" class="file_upload_button button" value="' . __( 'Upload new file', 'sunshine-photo-cart' ) . '" />' . "\n";
-					$html             .= '<input id="' . esc_attr( $option_name ) . '_delete" type="button" class="file_delete_button button delete" data-field="' . esc_attr( $option_name ) . '" style="display: ' . ( ( $option_value ) ? 'inline-block' : 'none' ) . '" value="' . __( 'Remove file', 'sunshine-photo-cart' ) . '" />' . "\n";
+					$html             .= '<input id="' . esc_attr( $option_name ) . '_button" type="button" ' . ( ( ! empty( $field['media_type'] ) ) ? 'data-media_type="' . esc_attr( $field['media_type'] ) . '"' : '' ) . ' data-uploader_title="' . esc_attr__( 'Upload a file', 'sunshine-photo-cart' ) . '" data-uploader_button_text="' . esc_attr__( 'Select file', 'sunshine-photo-cart' ) . '" class="file_upload_button button" value="' . esc_attr__( 'Upload new file', 'sunshine-photo-cart' ) . '" />' . "\n";
+					$html             .= '<input id="' . esc_attr( $option_name ) . '_delete" type="button" class="file_delete_button button delete" data-field="' . esc_attr( $option_name ) . '" style="display: ' . ( ( $option_value ) ? 'inline-block' : 'none' ) . '" value="' . esc_attr__( 'Remove file', 'sunshine-photo-cart' ) . '" />' . "\n";
 					$html             .= '<input id="' . esc_attr( $option_name ) . '" class="file_data_field" type="hidden" name="' . esc_attr( $option_name ) . '" value="' . esc_attr( $option_value ) . '"/>' . "\n";
 					$this->show_submit = true;
 					break;
@@ -495,12 +494,12 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 					if ( $option_value ) {
 						$image_thumb = wp_get_attachment_image_src( $option_value, 'medium' );
 						if ( $image_thumb ) {
-							$html .= '<img src="' . $image_thumb[0] . '" />';
+							$html .= '<img src="' . esc_url( $image_thumb[0] ) . '" />';
 						}
 					}
 					$html             .= '</div>' . "\n";
-					$html             .= '<input id="' . esc_attr( $option_name ) . '_button" type="button" ' . ( ( ! empty( $field['media_type'] ) ) ? 'data-media_type="' . esc_attr( $field['media_type'] ) . '"' : '' ) . ' data-uploader_title="' . __( 'Upload an image', 'sunshine-photo-cart' ) . '" data-uploader_button_text="' . __( 'Use image', 'sunshine-photo-cart' ) . '" class="image_upload_button button" value="' . __( 'Upload new image', 'sunshine-photo-cart' ) . '" />' . "\n";
-					$html             .= '<input id="' . esc_attr( $option_name ) . '_delete" type="button" class="image_delete_button button delete" data-field="' . esc_attr( $option_name ) . '" style="display: ' . ( ( $option_value ) ? 'inline-block' : 'none' ) . '" value="' . __( 'Remove image', 'sunshine-photo-cart' ) . '" />' . "\n";
+					$html             .= '<input id="' . esc_attr( $option_name ) . '_button" type="button" ' . ( ( ! empty( $field['media_type'] ) ) ? 'data-media_type="' . esc_attr( $field['media_type'] ) . '"' : '' ) . ' data-uploader_title="' . esc_attr__( 'Upload an image', 'sunshine-photo-cart' ) . '" data-uploader_button_text="' . esc_attr__( 'Use image', 'sunshine-photo-cart' ) . '" class="image_upload_button button" value="' . esc_attr__( 'Upload new image', 'sunshine-photo-cart' ) . '" />' . "\n";
+					$html             .= '<input id="' . esc_attr( $option_name ) . '_delete" type="button" class="image_delete_button button delete" data-field="' . esc_attr( $option_name ) . '" style="display: ' . ( ( $option_value ) ? 'inline-block' : 'none' ) . '" value="' . esc_attr__( 'Remove image', 'sunshine-photo-cart' ) . '" />' . "\n";
 					$html             .= '<input id="' . esc_attr( $option_name ) . '" class="image_data_field" type="hidden" name="' . esc_attr( $option_name ) . '" value="' . esc_attr( $option_value ) . '"/>' . "\n";
 					$this->show_submit = true;
 					break;
@@ -514,12 +513,12 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 
 				case 'header':
 				case 'title':
-					$html .= '<h3>' . $field['name'] . '</h3>';
+					$html .= '<h3>' . wp_kses_post( $field['name'] ) . '</h3>';
 					break;
 
 				case 'html':
 					if ( ! empty( $field['html'] ) ) {
-						$html .= $field['html'];
+						$html .= wp_kses_post( $field['html'] );
 					}
 					break;
 
@@ -529,11 +528,11 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 						$base_url = admin_url( 'admin.php?page=sunshine&section=license' );
 						$url      = wp_nonce_url( $base_url, 'sunshine_addon_deactivate_' . $field['addon'], 'sunshine_addon_deactivate', );
 						$url      = add_query_arg( 'addon', $field['addon'], $url );
-						$html    .= '<a href="' . esc_url( $url ) . '" class="button">' . __( 'Deactivate', 'sunshine-photo-cart' ) . '</a>';
+						$html    .= '<a href="' . esc_url( $url ) . '" class="button">' . esc_html__( 'Deactivate', 'sunshine-photo-cart' ) . '</a>';
 						$url      = add_query_arg( 'check_license', $field['addon'], $base_url );
-						$html    .= ' <a href="' . esc_url( $url ) . '" class="button">' . __( 'Refresh license', 'sunshine-photo-cart' ) . '</a>';
+						$html    .= ' <a href="' . esc_url( $url ) . '" class="button">' . esc_html__( 'Refresh license', 'sunshine-photo-cart' ) . '</a>';
 					} else {
-						$html .= '<button class="button">' . __( 'Activate', 'sunshine-photo-cart' ) . '</button>';
+						$html .= '<button class="button">' . esc_html__( 'Activate', 'sunshine-photo-cart' ) . '</button>';
 					}
 					$this->show_submit = true;
 					break;
@@ -554,18 +553,19 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 				case 'color':
 				case 'header':
 					if ( ! empty( $field['description'] ) ) {
-						$html_safe .= '<span class="sunshine-settings-description">' . $field['description'] . '</span>';
+						$html_safe .= '<span class="sunshine-settings-description">' . wp_kses_post( $field['description'] ) . '</span>';
 					}
 					break;
 
 				default:
 					if ( ! empty( $field['description'] ) ) {
-						$html_safe .= '<div class="sunshine-settings-description">' . $field['description'] . '</div>';
+						$html_safe .= '<div class="sunshine-settings-description">' . wp_kses_post( $field['description'] ) . '</div>';
 					}
 					break;
 			}
 
-			echo $html_safe;
+			// Everything in the html_safe variable is escaped, so we can safely ignore the output not escaped warning.
+			echo $html_safe; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
 
 		/**
@@ -611,7 +611,7 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 							admin_url( 'admin.php' )
 						);
 						// $icon = ( !empty( $tab['icon'] ) ) ? '<div class="sunshine-settings-menu-icon">' . file_get_contents( $tab['icon'] ) . '</div>' : '';
-						echo '<li class="' . $class . '" id="sunshine-settings-menu-' . esc_attr( $tab['id'] ) . '"><a href="' . esc_url( $url ) . '"><span>' . wp_kses_post( $tab['title'] ) . '</span></a></li>';
+						echo '<li class="' . esc_attr( $class ) . '" id="sunshine-settings-menu-' . esc_attr( $tab['id'] ) . '"><a href="' . esc_url( $url ) . '"><span>' . wp_kses_post( $tab['title'] ) . '</span></a></li>';
 					}
 					echo '</ul>';
 					echo '</nav>';
@@ -706,39 +706,39 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 							}
 							$i++;
 							?>
-							var condition_field_value_<?php echo $i; ?> = sunshine_get_condition_field_value( '<?php echo esc_js( $condition['field'] ); ?>' );
-							function condition_field_action_<?php echo $i; ?>( value ) {
+							var condition_field_value_<?php echo esc_js( $i ); ?> = sunshine_get_condition_field_value( '<?php echo esc_js( $condition['field'] ); ?>' );
+							function condition_field_action_<?php echo esc_js( $i ); ?>( value ) {
 								<?php
-								$action_target     = ( isset( $condition['action_target'] ) ) ? $condition['action_target'] : '.sunshine-settings-' . $field['id'];
-								$true_action       = ( $condition['action'] == 'show' ) ? 'show' : 'hide';
-								$false_action      = ( $condition['action'] == 'show' ) ? 'hide' : 'show';
-								$comparison_string = '';
+								$action_target          = ( isset( $condition['action_target'] ) ) ? $condition['action_target'] : '.sunshine-settings-' . $field['id'];
+								$true_action            = ( $condition['action'] == 'show' ) ? 'show' : 'hide';
+								$false_action           = ( $condition['action'] == 'show' ) ? 'hide' : 'show';
+								$comparison_string_safe = '';
 								if ( is_array( $condition['value'] ) ) { // If value is an array, need to compare against each array value
 									$comparison_strings = array();
 									foreach ( $condition['value'] as $value ) {
 										$comparison_strings[] = '( value ' . esc_js( $condition['compare'] ) . ' "' . esc_js( $value ) . '" )';
 									}
-									$comparison_string = join( ' || ', $comparison_strings );
+									$comparison_string_safe = join( ' || ', $comparison_strings );
 								} else {
-									$comparison_string = 'value ' . esc_js( $condition['compare'] ) . ' "' . esc_js( $condition['value'] ) . '"';
+									$comparison_string_safe = 'value ' . esc_js( $condition['compare'] ) . ' "' . esc_js( $condition['value'] ) . '"';
 								}
 								?>
-								if ( <?php echo $comparison_string; ?> ) {
+								if ( <?php echo $comparison_string_safe; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> ) {
 									console.log( value + ' true' );
-									jQuery( '<?php echo esc_js( $action_target ); ?>' ).closest( 'tr' ).<?php echo $true_action; ?>();
+									jQuery( '<?php echo esc_js( $action_target ); ?>' ).closest( 'tr' ).<?php echo esc_js( $true_action ); ?>();
 								} else {
 									console.log( value + ' false' );
-									jQuery( '<?php echo esc_js( $action_target ); ?>' ).closest( 'tr' ).<?php echo $false_action; ?>();
+									jQuery( '<?php echo esc_js( $action_target ); ?>' ).closest( 'tr' ).<?php echo esc_js( $false_action ); ?>();
 								}
 							}
 
 							// Default action
-							condition_field_action_<?php echo $i; ?>( condition_field_value_<?php echo $i; ?> );
+							condition_field_action_<?php echo esc_js( $i ); ?>( condition_field_value_<?php echo esc_js( $i ); ?> );
 
 							// On change action
 							jQuery( '.sunshine-settings-<?php echo esc_js( $condition['field'] ); ?> input, .sunshine-settings-<?php echo esc_js( $condition['field'] ); ?> select' ).on( 'change', function(){
-								condition_field_value_<?php echo $i; ?> = sunshine_get_condition_field_value( '<?php echo esc_js( $condition['field'] ); ?>' );
-								condition_field_action_<?php echo $i; ?>( condition_field_value_<?php echo $i; ?> );
+								condition_field_value_<?php echo esc_js( $i ); ?> = sunshine_get_condition_field_value( '<?php echo esc_js( $condition['field'] ); ?>' );
+								condition_field_action_<?php echo esc_js( $i ); ?>( condition_field_value_<?php echo esc_js( $i ); ?> );
 							});
 							<?php
 						}

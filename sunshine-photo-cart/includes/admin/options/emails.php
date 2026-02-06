@@ -28,11 +28,11 @@ function sunshine_emails_display() {
 						<?php echo esc_html( $email_class->get_description() ); ?>
 						<?php
 						if ( $email_class->get_recipients() ) {
-							echo '<br /><em>' . join( ', ', $email_class->get_recipients() ) . '</em>'; }
+							echo '<br /><em>' . esc_html( join( ', ', $email_class->get_recipients() ) ) . '</em>'; }
 						?>
 					</td>
 					<td class="sunshine-actions">
-						<a href="<?php echo admin_url( 'admin.php?page=sunshine&section=email&email=' . esc_attr( $id ) ); ?>" class="button"><?php _e( 'Configure', 'sunshine-photo-cart' ); ?></a>
+						<a href="<?php echo esc_url( admin_url( 'admin.php?page=sunshine&section=email&email=' . esc_attr( $id ) ) ); ?>" class="button"><?php esc_html_e( 'Configure', 'sunshine-photo-cart' ); ?></a>
 					</td>
 				</tr>
 				<?php
@@ -49,11 +49,11 @@ function sunshine_emails_display() {
 			var toggled_id = $( this ).closest( 'tr' ).data( 'id' );
 			$.ajax({
 				type: 'POST',
-				url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+				url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 				data: {
 					action: 'sunshine_active_emails',
 					id: toggled_id,
-					security: "<?php echo wp_create_nonce( 'sunshine-active-emails' ); ?>"
+					security: "<?php echo esc_js( wp_create_nonce( 'sunshine-active-emails' ) ); ?>"
 				},
 				success: function( data, textStatus, XMLHttpRequest ) {
 					$( '#sunshine-emails-' + toggled_id + ' a' ).toggle();

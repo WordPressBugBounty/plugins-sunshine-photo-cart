@@ -1,7 +1,8 @@
-<html>
+<html <?php language_attributes(); ?>>
 <head>
 
-	<title><?php echo apply_filters( 'sunshine_invoice_title', sprintf( __( 'Invoice for %s', 'sunshine-photo-cart' ), $order->get_name() ), $order ); ?></title>
+	<?php /* translators: %s is the order name */ ?>
+	<title><?php echo esc_html( apply_filters( 'sunshine_invoice_title', sprintf( __( 'Invoice for %s', 'sunshine-photo-cart' ), $order->get_name() ), $order ) ); ?></title>
 	<style type="text/css">
 
 		body, html { margin: 0; padding: 0; }
@@ -59,17 +60,18 @@
 		<?php
 		$css = SPC()->get_option( 'css' );
 		if ( $css ) {
-			echo wp_strip_all_tags( $css );
+			echo esc_html( wp_strip_all_tags( $css ) );
 		}
 		?>
 
 	</style>
 
-	<script src="<?php echo SUNSHINE_PHOTO_CART_URL; ?>assets/js/html2pdf.bundle.min.js"></script>
+	<script src="<?php echo esc_url( SUNSHINE_PHOTO_CART_URL . 'assets/js/html2pdf.bundle.min.js' ); ?>"></script> <?php // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedScript ?>
 	<script>
 		function pdf() {
 			html2pdf( document.getElementById('sunshine--invoice'), {
 				margin: .5,
+				<?php /* translators: %s is the order number */ ?>
 				filename: "<?php echo esc_js( sanitize_title( apply_filters( 'sunshine_invoice_file', sprintf( __( 'invoice-%s', 'sunshine-photo-cart' ), $order->get_order_number() ), $order ) ) ); ?>.pdf",
 				image: { type: 'jpeg', quality: 0.98 },
 				html2canvas: { scale: 2 },
@@ -84,7 +86,7 @@
 <div id="sunshine--invoice">
 
 <div id="sunshine--invoice--actions" data-html2canvas-ignore>
-	<button onclick="pdf()"><?php _e( 'Download PDF', 'sunshine-photo-cart' ); ?></button>
+	<button onclick="pdf()"><?php esc_html_e( 'Download PDF', 'sunshine-photo-cart' ); ?></button>
 </div>
 
 <table id="sunshine--invoice--pageheader">
@@ -92,14 +94,15 @@
 		<td id="sunshine--invoice--logo">
 		<?php
 		if ( SPC()->get_option( 'invoice_logo' ) > 0 ) {
-			echo '<img src="' . wp_get_attachment_url( SPC()->get_option( 'invoice_logo' ) ) . '" alt="' . esc_attr( get_bloginfo( 'name' ) ) . '" />';
+			echo '<img src="' . esc_url( wp_get_attachment_url( SPC()->get_option( 'invoice_logo' ) ) ) . '" alt="' . esc_attr( get_bloginfo( 'name' ) ) . '" />';
 		} else {
 			bloginfo( 'name' );
 		}
 		?>
 		</td>
 		<td id="sunshine--invoice--title">
-			<?php echo apply_filters( 'sunshine_invoice_title', sprintf( __( 'Invoice #%s', 'sunshine-photo-cart' ), $order->get_order_number() ), $order ); ?>
+			<?php /* translators: %s is the order number */ ?>
+			<?php echo esc_html( apply_filters( 'sunshine_invoice_title', sprintf( __( 'Invoice #%s', 'sunshine-photo-cart' ), $order->get_order_number() ), $order ) ); ?>
 		</td>
 	</tr>
 </table>
@@ -118,19 +121,19 @@
 				'postcode' => SPC()->get_option( 'postcode' ),
 				'country'  => SPC()->get_option( 'country' ),
 			);
-			echo SPC()->countries->get_formatted_address( $address );
+			echo wp_kses_post( SPC()->countries->get_formatted_address( $address ) );
 			do_action( 'sunshine_invoice_after_address', $order );
 			?>
 		</td>
 		<td id="sunshine--invoice--basics" width="50%">
 			<table align="right">
 				<tr>
-					<th><?php _e( 'Date', 'sunshine-photo-cart' ); ?></th>
-					<td><?php echo $order->get_date( get_option( 'date_format' ) ); ?></td>
+					<th><?php esc_html_e( 'Date', 'sunshine-photo-cart' ); ?></th>
+					<td><?php echo wp_kses_post( $order->get_date( get_option( 'date_format' ) ) ); ?></td>
 				</tr>
 				<tr>
-					<th><?php _e( 'Total', 'sunshine-photo-cart' ); ?></th>
-					<td><?php echo $order->get_total_formatted(); ?></td>
+					<th><?php esc_html_e( 'Total', 'sunshine-photo-cart' ); ?></th>
+					<td><?php echo wp_kses_post( $order->get_total_formatted() ); ?></td>
 				</tr>
 			</table>
 			<?php do_action( 'sunshine_invoice_after_basics', $order ); ?>
@@ -140,7 +143,7 @@
 
 <?php do_action( 'sunshine_invoice_after_header', $order ); ?>
 
-<div id="sunshine--invoice--order-status"><?php echo $order->get_status_name(); ?>: <?php echo $order->get_status_description(); ?></div>
+<div id="sunshine--invoice--order-status"><?php echo esc_html( $order->get_status_name() ); ?>: <?php echo wp_kses_post( $order->get_status_description() ); ?></div>
 
 <?php do_action( 'sunshine_invoice_after_order_status', $order ); ?>
 
@@ -149,53 +152,54 @@
 		<td id="sunshine--invoice--data--general" width="33%">
 			<table>
 				<tr>
-					<th><?php _e( 'Customer', 'sunshine-photo-cart' ); ?></th>
-					<td><?php echo $order->get_customer_name(); ?></td>
+					<th><?php esc_html_e( 'Customer', 'sunshine-photo-cart' ); ?></th>
+					<td><?php echo wp_kses_post( $order->get_customer_name() ); ?></td>
 				</tr>
 				<tr>
-					<th><?php _e( 'Email', 'sunshine-photo-cart' ); ?></th>
-					<td><?php echo $order->get_email(); ?></td>
+					<th><?php esc_html_e( 'Email', 'sunshine-photo-cart' ); ?></th>
+					<td><?php echo wp_kses_post( $order->get_email() ); ?></td>
 				</tr>
 				<?php if ( $order->get_phone() ) { ?>
 				<tr>
-					<th><?php _e( 'Phone', 'sunshine-photo-cart' ); ?></th>
-					<td><?php echo $order->get_phone(); ?></td>
+					<th><?php esc_html_e( 'Phone', 'sunshine-photo-cart' ); ?></th>
+					<td><?php echo wp_kses_post( $order->get_phone() ); ?></td>
 				</tr>
 				<?php } ?>
 				<tr>
-					<th><?php _e( 'Payment Method', 'sunshine-photo-cart' ); ?></th>
-					<td><?php echo $order->get_payment_method_name(); ?></td>
+					<th><?php esc_html_e( 'Payment Method', 'sunshine-photo-cart' ); ?></th>
+					<td><?php echo wp_kses_post( $order->get_payment_method_name() ); ?></td>
 				</tr>
 				<tr>
-					<th><?php _e( 'Shipping Method', 'sunshine-photo-cart' ); ?></th>
+					<th><?php esc_html_e( 'Shipping Method', 'sunshine-photo-cart' ); ?></th>
 					<td>
-						<?php echo $order->get_delivery_method_name(); ?>
 						<?php if ( $order->get_shipping_method_name() ) { ?>
-							(<?php echo $order->get_shipping_method_name(); ?>)
+							<?php echo wp_kses_post( $order->get_shipping_method_name() ); ?>
+						<?php } else { ?>
+							<?php echo wp_kses_post( $order->get_delivery_method_name() ); ?>
 						<?php } ?>
 					</td>
 				</tr>
 				<?php if ( $order->get_vat() ) { ?>
 					<tr>
-						<th><?php echo ( SPC()->get_option( 'vat_label' ) ) ? SPC()->get_option( 'vat_label' ) : __( 'EU VAT Number', 'sunshine-photo-cart' ); ?></th>
-						<td><?php echo $order->get_vat(); ?></td>
+						<th><?php echo ( SPC()->get_option( 'vat_label' ) ) ? esc_html( SPC()->get_option( 'vat_label' ) ) : esc_html__( 'EU VAT Number', 'sunshine-photo-cart' ); ?></th>
+						<td><?php echo wp_kses_post( $order->get_vat() ); ?></td>
 					</tr>
 				<?php } ?>
 			</table>
 		</td>
 		<?php if ( $order->has_shipping_address() ) { ?>
-			<td id="sunshine--invoice--data--shipping" width="33%"><strong><?php _e( 'Shipping Address', 'sunshine-photo-cart' ); ?></strong><br /><?php echo $order->get_shipping_address_formatted(); ?></td>
+			<td id="sunshine--invoice--data--shipping" width="33%"><strong><?php esc_html_e( 'Shipping Address', 'sunshine-photo-cart' ); ?></strong><br /><?php echo wp_kses_post( $order->get_shipping_address_formatted() ); ?></td>
 		<?php } ?>
 		<?php if ( $order->has_billing_address() ) { ?>
-			<td id="sunshine--invoice--data--billing" width="33%"><strong><?php _e( 'Billing Address', 'sunshine-photo-cart' ); ?></strong><br /><?php echo $order->get_billing_address_formatted(); ?></td>
+			<td id="sunshine--invoice--data--billing" width="33%"><strong><?php esc_html_e( 'Billing Address', 'sunshine-photo-cart' ); ?></strong><br /><?php echo wp_kses_post( $order->get_billing_address_formatted() ); ?></td>
 		<?php } ?>
 	</tr>
 </table>
 
 <?php if ( ! empty( $order->get_customer_notes() ) ) { ?>
 	<div id="sunshine--invoice--notes">
-		<strong><?php _e( 'Customer Notes', 'sunshine-photo-cart' ); ?></strong><br />
-		<?php esc_html_e( $order->get_customer_notes() ); ?>
+		<strong><?php esc_html_e( 'Customer Notes', 'sunshine-photo-cart' ); ?></strong><br />
+		<?php echo wp_kses_post( $order->get_customer_notes() ); ?>
 	</div>
 <?php } ?>
 
@@ -214,31 +218,31 @@
 </thead>
 <tbody>
 <?php foreach ( $cart as $cart_item ) { ?>
-	<tr class="sunshine--cart-item <?php echo $cart_item->classes(); ?>">
+	<tr class="sunshine--cart-item <?php echo esc_attr( $cart_item->classes() ); ?>">
 		<td class="sunshine--cart-item--image" data-label="<?php esc_attr_e( 'Image', 'sunshine-photo-cart' ); ?>">
-			<?php echo $cart_item->get_image_html( '', true, array( 'width' => '50' ) ); ?>
+			<?php echo wp_kses_post( $cart_item->get_image_html( '', true, array( 'width' => '50' ) ) ); ?>
 		</td>
 		<td class="sunshine--cart-item--name" data-label="<?php esc_attr_e( 'Product', 'sunshine-photo-cart' ); ?>">
-			<div class="sunshine--cart-item--product-name"><?php echo $cart_item->get_name(); ?></div>
-			<div class="sunshine--cart-item--product-options"><?php echo $cart_item->get_options_formatted(); ?></div>
-			<div class="sunshine--cart-item--gallery"><?php echo $cart_item->get_gallery_hierarchy(); ?></div>
-			<div class="sunshine--cart-item--image-name"><?php echo $cart_item->get_image_name( '' ); ?></div>
-			<div class="sunshine--cart-item--comments"><?php echo $cart_item->get_comments(); ?></div>
-			<div class="sunshine--cart-item--extra"><?php echo $cart_item->get_extra(); ?></div>
+			<div class="sunshine--cart-item--product-name"><?php echo wp_kses_post( $cart_item->get_name() ); ?></div>
+			<div class="sunshine--cart-item--product-options"><?php echo wp_kses_post( $cart_item->get_options_formatted() ); ?></div>
+			<div class="sunshine--cart-item--gallery"><?php echo wp_kses_post( $cart_item->get_gallery_hierarchy() ); ?></div>
+			<div class="sunshine--cart-item--image-name"><?php echo wp_kses_post( $cart_item->get_image_name( '' ) ); ?></div>
+			<div class="sunshine--cart-item--comments"><?php echo wp_kses_post( $cart_item->get_comments() ); ?></div>
+			<div class="sunshine--cart-item--extra"><?php echo wp_kses_post( $cart_item->get_extra() ); ?></div>
 			<?php if ( current_user_can( 'sunshine_manage_options' ) && $cart_item->get_file_names() ) { ?>
 				<div class="sunshine--cart-item--filenames">
-					<?php _e( 'Filenames', 'sunshine-photo-cart' ); ?>:<br />
-					<?php echo join( '<br />', $cart_item->get_file_names() ); ?></div>
+					<?php esc_html_e( 'Filenames', 'sunshine-photo-cart' ); ?>:<br />
+					<?php echo wp_kses_post( join( '<br />', $cart_item->get_file_names() ) ); ?></div>
 			<?php } ?>
 		</td>
 		<td class="sunshine--cart-item--qty" data-label="<?php esc_attr_e( 'Qty', 'sunshine-photo-cart' ); ?>">
-			<?php echo $cart_item->get_qty(); ?>
+			<?php echo wp_kses_post( $cart_item->get_qty() ); ?>
 		</td>
 		<td class="sunshine--cart-item--price" data-label="<?php esc_attr_e( 'Price', 'sunshine-photo-cart' ); ?>">
-			<?php echo $cart_item->get_price_formatted(); ?>
+			<?php echo wp_kses_post( $cart_item->get_price_formatted() ); ?>
 		</td>
 		<td class="sunshine--cart-item--total" data-label="<?php esc_attr_e( 'Total', 'sunshine-photo-cart' ); ?>">
-			<?php echo $cart_item->get_subtotal_formatted(); ?>
+			<?php echo wp_kses_post( $cart_item->get_subtotal_formatted() ); ?>
 		</td>
 	</tr>
 <?php } ?>
@@ -249,42 +253,52 @@
 
 <table id="sunshine--invoice--order-totals">
 	<tr class="sunshine-subtotal">
-		<th><?php _e( 'Subtotal', 'sunshine-photo-cart' ); ?></th>
-		<td><?php echo $order->get_subtotal_formatted(); ?></td>
+		<th><?php esc_html_e( 'Subtotal', 'sunshine-photo-cart' ); ?></th>
+		<td><?php echo wp_kses_post( $order->get_subtotal_formatted() ); ?></td>
 	</tr>
 	<?php if ( ! empty( $order->get_shipping_method() ) ) { ?>
 	<tr class="sunshine-shipping">
-		<th><?php echo sprintf( __( 'Shipping via %s', 'sunshine-photo-cart' ), $order->get_shipping_method_name() ); ?></th>
-		<td><?php echo $order->get_shipping_formatted(); ?></td>
+		<?php /* translators: %s is the shipping method name */ ?>
+		<th><?php echo wp_kses_post( sprintf( __( 'Shipping via %s', 'sunshine-photo-cart' ), $order->get_shipping_method_name() ) ); ?></th>
+		<td><?php echo wp_kses_post( $order->get_shipping_formatted() ); ?></td>
 	</tr>
 	<?php } ?>
 	<?php if ( $order->has_discount() ) { ?>
 	<tr class="sunshine-discount">
-		<th><?php _e( 'Discounts', 'sunshine-photo-cart' ); ?></th>
-		<td><?php echo $order->get_discount_formatted(); ?></td>
+		<th><?php esc_html_e( 'Discounts', 'sunshine-photo-cart' ); ?></th>
+		<td><?php echo wp_kses_post( $order->get_discount_formatted() ); ?></td>
 	</tr>
 	<?php } ?>
 	<?php if ( $order->get_tax() ) { ?>
 	<tr class="sunshine-tax">
-		<th><?php _e( 'Tax', 'sunshine-photo-cart' ); ?></th>
-		<td><?php echo $order->get_tax_formatted(); ?></td>
+		<th><?php esc_html_e( 'Tax', 'sunshine-photo-cart' ); ?></th>
+		<td><?php echo wp_kses_post( $order->get_tax_formatted() ); ?></td>
 	</tr>
+	<?php } ?>
+	<?php if ( $order->get_fees() ) { ?>
+		<?php foreach ( $order->get_fees() as $fee ) { ?>
+			<tr class="sunshine--cart--fee">
+				<th><?php echo esc_html( $fee['name'] ); ?></th>
+				<td><?php echo wp_kses_post( sunshine_price( $fee['amount'] ) ); ?></td>
+			</tr>
+		<?php } ?>
 	<?php } ?>
 	<?php if ( $order->get_credits() > 0 ) { ?>
 	<tr class="sunshine-credits">
-		<th><?php _e( 'Credits Applied', 'sunshine-photo-cart' ); ?></th>
-		<td><?php echo $order->get_credits_formatted(); ?></td>
+		<th><?php esc_html_e( 'Credits Applied', 'sunshine-photo-cart' ); ?></th>
+		<td><?php echo wp_kses_post( $order->get_credits_formatted() ); ?></td>
 	</tr>
 	<?php } ?>
 	<?php if ( $order->get_refunds() ) { ?>
 	<tr class="sunshine-refunds">
-		<th><?php _e( 'Refunds', 'sunshine-photo-cart' ); ?></th>
-		<td><?php echo $order->get_refund_total_formatted(); ?></td>
+		<th><?php esc_html_e( 'Refunds', 'sunshine-photo-cart' ); ?></th>
+		<td><?php echo wp_kses_post( $order->get_refund_total_formatted() ); ?></td>
 	</tr>
 	<?php } ?>
+	
 	<tr class="sunshine-total">
-		<th><?php _e( 'Order Total', 'sunshine-photo-cart' ); ?></th>
-		<td><?php echo $order->get_total_formatted(); ?></td>
+		<th><?php esc_html_e( 'Order Total', 'sunshine-photo-cart' ); ?></th>
+		<td><?php echo wp_kses_post( $order->get_total_formatted() ); ?></td>
 	</tr>
 </table>
 

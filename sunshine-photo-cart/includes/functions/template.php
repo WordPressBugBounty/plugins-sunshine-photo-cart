@@ -53,14 +53,14 @@ function sunshine_locate_template( $template, $args = array(), $base = '' ) {
 		// Use the general theme option.
 		$theme = SPC()->get_option( 'theme', 'theme' );
 	}
-	$base = SUNSHINE_PHOTO_CART_PATH . 'themes/' . $theme;
+	$base          = SUNSHINE_PHOTO_CART_PATH . 'themes/' . $theme;
 	$template_path = trailingslashit( $base ) . $template . '.php';
 	if ( file_exists( $template_path ) ) {
 		return $template_path;
 	}
 
 	// Now check default templates path.
-	$base = SUNSHINE_PHOTO_CART_PATH . 'templates';
+	$base          = SUNSHINE_PHOTO_CART_PATH . 'templates';
 	$template_path = trailingslashit( $base ) . $template . '.php';
 	if ( file_exists( $template_path ) ) {
 		return $template_path;
@@ -76,7 +76,9 @@ function sunshine_get_template( $template, $args = array(), $base = '' ) {
 		if ( ! empty( $args ) && is_array( $args ) ) {
 			extract( $args );
 		}
+		do_action( 'sunshine_template_before_' . $template, $args );
 		include $located_template;
+		do_action( 'sunshine_template_after_' . $template, $args );
 		return;
 	}
 	return false;
@@ -94,7 +96,7 @@ function sunshine_page_title( $echo = true ) {
 	$page_title = apply_filters( 'sunshine_page_title', SPC()->frontend->get_page_title() );
 
 	if ( $echo ) {
-		echo $page_title;
+		echo esc_html( $page_title );
 	} else {
 		return $page_title;
 	}
@@ -164,8 +166,8 @@ function sunshine_action_menu() {
 			}
 		}
 		$menu_html_safe .= '</ul></nav>';
-		// $menu_html = wp_kses_post( $menu_html );
-		echo $menu_html_safe;
+		// Everything above all do escaping, so we can safely output the result.
+		echo $menu_html_safe; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 	do_action( 'sunshine_after_action_menu', $menu );
 }
@@ -315,19 +317,18 @@ function sunshine_gallery_pagination( $gallery = '', $echo = true, $class = 'sun
 		if ( $page_number > 1 ) {
 			$prev_page = $page_number - 1;
 			$url       = add_query_arg( 'pagination', $prev_page, $base_url );
-			$html     .= '<a href="' . $url . '">' . apply_filters( 'sunshine_pagination_previous_label', '&laquo; ' . __( 'Previous', 'sunshine-photo-cart' ) ) . '</a> ';
+			$html     .= '<a href="' . esc_url( $url ) . '">' . esc_html( apply_filters( 'sunshine_pagination_previous_label', '&laquo; ' . __( 'Previous', 'sunshine-photo-cart' ) ) ) . '</a> ';
 		}
 		for ( $i = 1; $i <= $pages; $i++ ) {
 			$class = ( $page_number == $i || ( $page_number == 0 && $i == 1 ) ) ? 'current' : '';
 			$url   = add_query_arg( 'pagination', $i, $base_url );
-			$html .= '<a href="' . $url . '" class="' . $class . '">' . $i . '</a> ';
+			$html .= '<a href="' . esc_url( $url ) . '" class="' . esc_attr( $class ) . '">' . esc_html( $i ) . '</a> ';
 		}
 		if ( $page_number < $pages ) {
 			$next_page = $page_number + 1;
 			$url       = add_query_arg( 'pagination', $next_page, $base_url );
-			$html     .= ' <a href="' . $url . '">' . apply_filters( 'sunshine_pagination_next_label', __( 'Next', 'sunshine-photo-cart' ) . '  &raquo;' ) . '</a>';
+			$html     .= ' <a href="' . esc_url( $url ) . '">' . esc_html( apply_filters( 'sunshine_pagination_next_label', __( 'Next', 'sunshine-photo-cart' ) . '  &raquo;' ) ) . '</a>';
 		}
-
 	} else {
 
 		$image_count = $gallery->get_image_count();
@@ -340,7 +341,8 @@ function sunshine_gallery_pagination( $gallery = '', $echo = true, $class = 'sun
 	$html .= '</nav>';
 
 	if ( $echo ) {
-		echo $html;
+		// Everything above all do escaping, so we can safely output the result.
+		echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	} else {
 		return $html;
 	}
@@ -355,10 +357,10 @@ function sunshine_gallery_pagination_load() {
 
 	$gallery = sunshine_get_gallery( intval( $_POST['gallery'] ) );
 	$args    = array(
-		'offset' => sunshine_gallery_images_per_page() * intval( $_POST['page'] ),
+		'offset'         => sunshine_gallery_images_per_page() * intval( $_POST['page'] ),
 		'posts_per_page' => sunshine_gallery_images_per_page(),
 	);
-	$images = $gallery->get_images( $args );
+	$images  = $gallery->get_images( $args );
 	if ( $images ) {
 		$html = '';
 		foreach ( $images as $image ) {
@@ -389,8 +391,8 @@ function sunshine_main_menu( $echo = true ) {
 	if ( $menu ) {
 		ksort( $menu );
 		// $menu_html = '<div>';
-		$unique_id  = 'sunshine--main-menu--toggle--' . uniqid();
-		$menu_html_safe = '<div id="sunshine--main-menu" class="sunshine--main-menu">';
+		$unique_id       = 'sunshine--main-menu--toggle--' . uniqid();
+		$menu_html_safe  = '<div id="sunshine--main-menu" class="sunshine--main-menu">';
 		$menu_html_safe .= '<input type="checkbox" name="sunshine_main_menu_toggle" id="' . esc_attr( $unique_id ) . '" />';
 		$menu_html_safe .= '<label for="' . esc_attr( $unique_id ) . '" class="sunshine--main-menu--toggle sunshine--main-menu--open">' . __( 'Menu', 'sunshine-photo-cart' ) . '</label>';
 		$menu_html_safe .= '<label for="' . esc_attr( $unique_id ) . '" class="sunshine--main-menu--toggle sunshine--main-menu--close">' . __( 'Close', 'sunshine-photo-cart' ) . '</label>';
@@ -448,9 +450,9 @@ function sunshine_main_menu( $echo = true ) {
 
 		// $menu_html .=  '</div>';
 
-		// $menu_html = wp_kses_post( $menu_html );
 		if ( $echo ) {
-			echo $menu_html_safe;
+			// Everything above all do escaping, so we can safely output the result.
+			echo $menu_html_safe; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		} else {
 			return $menu_html_safe;
 		}
@@ -527,7 +529,8 @@ function sunshine_image_menu( $image = '', $echo = true ) {
 		}
 		$menu_html_safe .= '</ul></div>';
 		if ( $echo ) {
-			echo $menu_html_safe;
+			// Everything above all do escaping, so we can safely output the result.
+			echo $menu_html_safe; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		} else {
 			return $menu_html_safe;
 		}
@@ -541,7 +544,7 @@ function sunshine_image_status( $image ) {
 	$status[] = '<span class="sunshine--image--has-comments"></span>';
 	$status   = apply_filters( 'sunshine_image_status', $status, $image );
 	if ( ! empty( $status ) ) {
-		echo '<div class="sunshine--image-status">' . join( '', $status ) . '</div>';
+		echo '<div class="sunshine--image-status">' . wp_kses_post( join( '', $status ) ) . '</div>';
 	}
 }
 
@@ -595,8 +598,8 @@ function sunshine_checkout_login_form() {
 	?>
 
 	<div id="sunshine--checkout--login">
-		<?php _e( 'Already have an account?', 'sunshine-photo-cart' ); ?>
-		<a href="#login" class="sunshine--open-modal" data-hook="login"><?php _e( 'Click here to login', 'sunshine-photo-cart' ); ?></a>
+		<?php esc_html_e( 'Already have an account?', 'sunshine-photo-cart' ); ?>
+		<a href="#login" class="sunshine--open-modal" data-hook="login"><?php esc_html_e( 'Click here to login', 'sunshine-photo-cart' ); ?></a>
 	</div>
 
 	<?php
@@ -604,9 +607,9 @@ function sunshine_checkout_login_form() {
 
 function sunshine_logo() {
 	if ( SPC()->get_option( 'template_logo' ) > 0 ) {
-		echo wp_get_attachment_image( SPC()->get_option( 'template_logo' ), 'full' );
+		echo wp_kses_post( wp_get_attachment_image( SPC()->get_option( 'template_logo' ), 'full' ) );
 	} else {
-		bloginfo( 'name' );
+		echo esc_html( get_bloginfo( 'name' ) );
 	}
 }
 
@@ -666,7 +669,7 @@ function sunshine_adjacent_image_link( $image, $prev = true, $echo = true ) {
 		}
 		$link = '<a href="' . esc_url( $link_url ) . '" class="sunshine-adjacent-link sunshine-adjacent-link-' . esc_attr( $direction ) . '">' . esc_html( $label ) . '</a>';
 		if ( $echo ) {
-			echo $link;
+			echo wp_kses_post( $link );
 		} else {
 			return $link;
 		}
@@ -679,19 +682,19 @@ function sunshine_breadcrumb( $divider = ' / ', $echo = true ) {
 	if ( ! empty( SPC()->get_option( 'disable_breadcrumbs' ) ) && SPC()->get_option( 'disable_breadcrumbs' ) ) {
 		return;
 	}
-	$breadcrumb = '<a href="' . get_permalink( SPC()->get_option( 'page' ) ) . '">' . get_the_title( SPC()->get_option( 'page' ) ) . '</a>';
+	$breadcrumb_safe = '<a href="' . esc_url( get_permalink( SPC()->get_option( 'page' ) ) ) . '">' . esc_html( get_the_title( SPC()->get_option( 'page' ) ) ) . '</a>';
 	if ( SPC()->frontend->is_gallery() ) {
-		$breadcrumb .= sunshine_breadcrumb_gallery( SPC()->frontend->current_gallery, $divider );
+		$breadcrumb_safe .= sunshine_breadcrumb_gallery( SPC()->frontend->current_gallery, $divider );
 	} elseif ( SPC()->frontend->is_image() ) {
-		$breadcrumb .= sunshine_breadcrumb_gallery( SPC()->frontend->current_gallery, $divider );
-		$breadcrumb .= $divider . '<a href="' . SPC()->frontend->current_image->get_permalink() . '">' . SPC()->frontend->current_image->get_name() . '</a>';
+		$breadcrumb_safe .= sunshine_breadcrumb_gallery( SPC()->frontend->current_gallery, $divider );
+		$breadcrumb_safe .= $divider . '<a href="' . esc_url( SPC()->frontend->current_image->get_permalink() ) . '">' . esc_html( SPC()->frontend->current_image->get_name() ) . '</a>';
 	}
-	$breadcrumb = wp_kses_post( $breadcrumb );
 	if ( $echo ) {
-		echo $breadcrumb;
+		// Everything above all do escaping, so we can safely output the result.
+		echo $breadcrumb_safe; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		return;
 	}
-	return $breadcrumb;
+	return $breadcrumb_safe;
 }
 
 // Adds the parent gallery this current gallery to breadcrumb, iterates on itself for full hierarchy of galleries
@@ -699,10 +702,10 @@ function sunshine_breadcrumb_gallery( $gallery, $divider = ' / ' ) {
 
 	$parent = $gallery->get_parent_gallery();
 	if ( empty( $parent ) ) {
-		$breadcrumb = $divider . '<a href="' . $gallery->get_permalink() . '">' . $gallery->get_name() . '</a>';
+		$breadcrumb = $divider . '<a href="' . esc_url( $gallery->get_permalink() ) . '">' . esc_html( $gallery->get_name() ) . '</a>';
 	} else {
 		$breadcrumb  = sunshine_breadcrumb_gallery( $parent, $divider );
-		$breadcrumb .= $divider . '<a href="' . $gallery->get_permalink() . '">' . $gallery->get_name() . '</a>';
+		$breadcrumb .= $divider . '<a href="' . esc_url( $gallery->get_permalink() ) . '">' . esc_html( $gallery->get_name() ) . '</a>';
 	}
 	return $breadcrumb;
 
@@ -714,7 +717,7 @@ function sunshine_gallery_password_form( $echo = true ) {
 	$form = apply_filters( 'sunshine_shortcode_gallery_password_form', $form );
 
 	if ( $echo ) {
-		echo $form;
+		echo $form; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	} else {
 		return $form;
 	}
@@ -727,6 +730,7 @@ function sunshine_gallery_expiration_notice() {
 		$end_date = get_post_meta( SPC()->frontend->current_gallery->get_id(), 'sunshine_gallery_end_date', true );
 		if ( $end_date != '' && $end_date > current_time( 'timestamp' ) ) {
 			echo '<div id="sunshine--gallery--expiration-notice">';
+			/* translators: %s is the gallery expiration date and time */
 			echo wp_kses_post( apply_filters( 'sunshine_gallery_expiration_notice', sprintf( __( 'This gallery is set to expire on <strong>%s</strong>', 'sunshine-photo-cart' ), date_i18n( get_option( 'date_format' ) . ' @ ' . get_option( 'time_format' ), $end_date ) ) ) );
 			echo '</div>';
 		}
@@ -748,7 +752,7 @@ function sunshine_search_form( $gallery = '', $echo = true ) {
 	$form = apply_filters( 'sunshine_shortcode_search_form', $form );
 
 	if ( $echo ) {
-		echo $form;
+		echo $form; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	} else {
 		return $form;
 	}
@@ -761,7 +765,7 @@ function sunshine_search( $gallery, $echo = true ) {
 
 
 add_action( 'sunshine_after_cart', 'sunshine_gallery_return', 5 );
-//add_action( 'sunshine_after_favorites', 'sunshine_gallery_return', 5 );
+// add_action( 'sunshine_after_favorites', 'sunshine_gallery_return', 5 );
 function sunshine_gallery_return() {
 	$last_gallery = SPC()->session->get( 'last_gallery' );
 	if ( ! empty( $last_gallery ) ) {
@@ -775,14 +779,15 @@ function sunshine_gallery_return() {
 			$url = add_query_arg( 'pagination', $current_gallery_page[1], $url );
 		}
 		?>
-	<div id="sunshine--cart--gallery-return">
-		<a href="<?php echo esc_url( $url ); ?>"><?php echo sprintf( __( 'Return to gallery "%s"', 'sunshine-photo-cart' ), esc_html( $gallery->get_name() ) ); ?></a>
-	</div>
+		<div id="sunshine--cart--gallery-return">
+			<?php /* translators: %s is the gallery name */ ?>
+			<a href="<?php echo esc_url( $url ); ?>"><?php echo sprintf( esc_html__( 'Return to gallery "%s"', 'sunshine-photo-cart' ), esc_html( $gallery->get_name() ) ); ?></a> // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		</div>
 		<?php
 	}
 }
 
 function sunshine_get_required_notice() {
-	return apply_filters( 'sunshine_required_notice', '<span class="sunshine--required">' . __( '* Required', 'sunshine-photo-cart' ) . '</span>' );
+	return apply_filters( 'sunshine_required_notice', '<span class="sunshine--required">* ' . esc_html__( 'Required', 'sunshine-photo-cart' ) . '</span>' );
 }
 ?>

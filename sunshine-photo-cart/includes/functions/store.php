@@ -18,10 +18,10 @@ function sunshine_modal_display_store_product() {
 		'html' => sunshine_get_template_html(
 			'store/product-details',
 			array(
-				'gallery' => $gallery,
-				'product' => $product,
+				'gallery'     => $gallery,
+				'product'     => $product,
 				'image_count' => $image_count,
-				'key' => uniqid(),
+				'key'         => uniqid(),
 			),
 		),
 	);
@@ -54,7 +54,6 @@ function sunshine_get_sources( $product, $gallery ) {
 			$galleries        = sunshine_get_galleries( array( 'post__in' => $ancestor_ids ) );
 			$source_galleries = array_merge( $source_galleries, $galleries );
 		}
-
 	} else {
 		// Fallback to all accessible galleries if nothing is selected.
 		$source_galleries = sunshine_get_galleries( array( 'meta_query' => array() ) );
@@ -64,48 +63,14 @@ function sunshine_get_sources( $product, $gallery ) {
 		$source_galleries[] = $gallery;
 	}
 
-	/*
-	if ( ! empty( $source_galleries ) ) {
-		foreach ( $source_galleries as $source_gallery ) {
-			// Don't show galleries the user cannot access.
-			if ( ! $source_gallery->can_access() ) {
-				//continue;
-			}
-			// Don't show galleries without images to select from.
-			$images = $source_gallery->get_images( array( 'nopaging' => true ) );
-			if ( $images > 0 ) {
-				$sources[ $source_gallery->get_id() ] = array(
-					'name'   => $source_gallery->get_name(),
-					'images' => $images,
-				);
-			}
-		}
-	}
-	*/
-
-	// Choose from favorites, always allow
-	// if ( is_array( $allowed_sources ) && in_array( 'favorites', $allowed_sources ) ) {
-	/*
-	 Putting favorite select option within the template
-		$images = SPC()->customer->get_favorites();
-		if ( $images ) {
-			$sources[ 'favorites' ] = array(
-				'name' => __( 'Favorites', 'sunshine-photo-cart' ),
-				'images' => $images
-			);
-		}
-		*/
-	// }
-
-	//return $sources;
 	return $source_galleries;
 
 }
 
-function sunshine_source_dropdown_options( $galleries, $selected = '', $parent_id = 0, $level = 0) {
+function sunshine_source_dropdown_options( $galleries, $selected = '', $parent_id = 0, $level = 0 ) {
 	$indent = str_repeat( '--', $level );
 	foreach ( $galleries as $gallery ) {
-		if ( $parent_id == $gallery->get_parent_gallery_id() ) {
+		if ( $parent_id == $gallery->get_parent_gallery_id() && ( $gallery->has_images() || $gallery->has_children_galleries() ) ) {
 			echo '<option value="' . esc_attr( $gallery->get_id() ) . '" ' . selected( $selected, $gallery->get_id(), false ) . '>' . esc_html( $indent . $gallery->get_name() . ' (' . $gallery->get_image_count() . ')' ) . '</option>';
 			sunshine_source_dropdown_options( $galleries, $selected, $gallery->get_id(), $level + 1 );
 		}
@@ -146,26 +111,26 @@ function sunshine_multi_image_select_images() {
 		wp_send_json_error();
 	}
 
-	$value_target = ( ! empty( $_POST['value_target'] ) ) ? sanitize_text_field( $_POST['value_target'] ) : '';
+	$value_target    = ( ! empty( $_POST['value_target'] ) ) ? sanitize_text_field( $_POST['value_target'] ) : '';
 	$selected_target = ( ! empty( $_POST['selected_target'] ) ) ? sanitize_text_field( $_POST['selected_target'] ) : '';
-	$id = ( ! empty( $_POST['id'] ) ) ? sanitize_text_field( $_POST['id'] ) : '';
-	$ref = ( ! empty( $_POST['ref'] ) ) ? sanitize_text_field( $_POST['ref'] ) : 'store-images';
-	$key = ( isset( $_POST['key'] ) ) ? sanitize_text_field( $_POST['key'] ) : '0';
-	$selected = ( isset( $_POST['selected'] ) ) ? sanitize_text_field( $_POST['selected'] ) : '';
+	$id              = ( ! empty( $_POST['id'] ) ) ? sanitize_text_field( $_POST['id'] ) : '';
+	$ref             = ( ! empty( $_POST['ref'] ) ) ? sanitize_text_field( $_POST['ref'] ) : 'store-images';
+	$key             = ( isset( $_POST['key'] ) ) ? sanitize_text_field( $_POST['key'] ) : '0';
+	$selected        = ( isset( $_POST['selected'] ) ) ? sanitize_text_field( $_POST['selected'] ) : '';
 
 	$sources = sunshine_get_sources( ( ! empty( $source_product ) ) ? $source_product : $product, $gallery );
 
 	$args = array(
-		'sources'     => $sources,
-		'image_count' => $image_count,
-		'value_target' => $value_target,
+		'sources'         => $sources,
+		'image_count'     => $image_count,
+		'value_target'    => $value_target,
 		'selected_target' => $selected_target,
-		'product' => $product,
-		'gallery' => $gallery,
-		'id' => $id,
-		'ref' => $ref,
-		'key' => $key,
-		'selected' => ( ! empty( $selected ) ) ? explode( ',', $selected ) : array(),
+		'product'         => $product,
+		'gallery'         => $gallery,
+		'id'              => $id,
+		'ref'             => $ref,
+		'key'             => $key,
+		'selected'        => ( ! empty( $selected ) ) ? explode( ',', $selected ) : array(),
 	);
 
 	$result = array(
@@ -188,7 +153,7 @@ function sunshine_multi_image_select_gallery_images() {
 
 	$args = array();
 
-	$gallery_id = intval( $_POST['gallery_id'] );
+	$gallery_id      = intval( $_POST['gallery_id'] );
 	$args['gallery'] = sunshine_get_gallery( $gallery_id );
 
 	$args['selected'] = SPC()->session->get( 'selected' );
@@ -201,11 +166,11 @@ function sunshine_multi_image_select_gallery_images() {
 
 	$args['product'] = '';
 	if ( ! empty( $_POST['product_id'] ) ) {
-		$product_id = intval( $_POST['product_id'] );
+		$product_id      = intval( $_POST['product_id'] );
 		$args['product'] = sunshine_get_product( $product_id );
 	}
 
-	$args['image_count'] = 0;
+	$args['image_count'] = 25;
 	if ( ! empty( $_POST['image_count'] ) ) {
 		$args['image_count'] = intval( $_POST['image_count'] );
 	}
@@ -219,8 +184,8 @@ add_action( 'wp_ajax_sunshine_multi_image_select_images_item', 'sunshine_multi_i
 add_action( 'wp_ajax_nopriv_sunshine_multi_image_select_images_item', 'sunshine_multi_image_select_images_item' );
 function sunshine_multi_image_select_images_item() {
 
-	$hash = ( ! empty( $_POST['ref'] ) ) ? sanitize_text_field( $_POST['ref'] ) : '';
-	$key = ( isset( $_POST['key'] ) ) ? sanitize_text_field( $_POST['key'] ) : '';
+	$hash      = ( ! empty( $_POST['ref'] ) ) ? sanitize_text_field( $_POST['ref'] ) : '';
+	$key       = ( isset( $_POST['key'] ) ) ? sanitize_text_field( $_POST['key'] ) : '';
 	$image_ids = ( ! empty( $_POST['selected_image_ids'] ) ) ? array_map( 'intval', $_POST['selected_image_ids'] ) : '';
 
 	do_action( 'sunshine_multi_image_select_images_item', $image_ids, $hash, $key );
@@ -231,9 +196,9 @@ function sunshine_multi_image_select_images_item() {
 			if ( $image_id <= 0 ) {
 				continue;
 			}
-			$image = sunshine_get_image( $image_id );
+			$image        = sunshine_get_image( $image_id );
 			$image_data[] = array(
-				'id' => $image->get_id(),
+				'id'  => $image->get_id(),
 				'url' => $image->get_image_url(),
 			);
 		}

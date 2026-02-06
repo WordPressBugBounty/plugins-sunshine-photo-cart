@@ -1,9 +1,9 @@
 <h2><?php esc_html_e( 'Your Sunshine Photo Cart Weekly Summary', 'sunshine-photo-cart' ); ?></h2>
 <p>
-	<?php echo $start_date; ?> - <?php echo $end_date; ?>
+	<?php echo esc_html( $start_date ); ?> - <?php echo esc_html( $end_date ); ?>
 </p>
 <p>
-	<a href="<?php echo bloginfo( 'url' ); ?>"><?php echo bloginfo( 'url' ); ?></a>
+	<a href="<?php echo esc_url( bloginfo( 'url' ) ); ?>"><?php echo esc_html( bloginfo( 'url' ) ); ?></a>
 </p>
 
 <?php if ( $paid_total > 279 ) { ?>
@@ -24,48 +24,48 @@
 	<tr>
 		<td>
 			<h3><?php esc_html_e( 'Total Received', 'sunshine-photo-cart' ); ?></h3>
-			<p><?php echo sunshine_price( $paid_total, true ); ?></p>
+			<p><?php echo wp_kses_post( sunshine_price( $paid_total, true ) ); ?></p>
 		</td>
 		<td>
 			<h3><?php esc_html_e( 'Orders', 'sunshine-photo-cart' ); ?></h3>
-			<p><?php echo $paid_count; ?></p>
+			<p><?php echo esc_html( $paid_count ); ?></p>
 		</td>
 	</tr>
 	<tr>
 		<td>
 			<h3><?php esc_html_e( 'Avg Order', 'sunshine-photo-cart' ); ?></h3>
-			<p><?php echo sunshine_price( $avg_order, true ); ?></p>
+			<p><?php echo wp_kses_post( sunshine_price( $avg_order, true ) ); ?></p>
 		</td>
 		<td>
 			<h3><?php esc_html_e( 'New Customers', 'sunshine-photo-cart' ); ?></h3>
-			<p><?php echo $customers; ?></p>
+			<p><?php echo esc_html( $customers ); ?></p>
 		</td>
 	</tr>
 	<?php if ( $galleries > 0 ) { ?>
 	<tr>
 		<td>
 			<h3><?php esc_html_e( 'New Galleries', 'sunshine-photo-cart' ); ?></h3>
-			<p><?php echo $galleries; ?></p>
+			<p><?php echo esc_html( $galleries ); ?></p>
 		</td>
 		<td>
 			<h3><?php esc_html_e( 'New Images', 'sunshine-photo-cart' ); ?></h3>
-			<p><?php echo $images; ?></p>
+			<p><?php echo esc_html( $images ); ?></p>
 		</td>
 	</tr>
 	<?php } ?>
 	</table>
 
-	<p align="center"><a href="<?php echo admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-reports' ); ?>" class="button"><?php esc_html_e( 'View All Reports', 'sunshine-photo-cart' ); ?></a></p>
+	<p align="center"><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-reports' ) ); ?>" class="button"><?php esc_html_e( 'View All Reports', 'sunshine-photo-cart' ); ?></a></p>
 
 </div>
 
 <?php if ( $dyk ) { ?>
 <div id="dyk">
 	<h2>Pro Tips from Sunshine Photo Cart</h2>
-	<h3><?php echo $dyk['title']; ?></h3>
-	<p><?php echo $dyk['content']; ?></p>
+	<h3><?php echo esc_html( $dyk['title'] ); ?></h3>
+	<p><?php echo wp_kses_post( $dyk['content'] ); ?></p>
 	<?php if ( ! empty( $dyk['button_text'] ) && ! empty( $dyk['button_link'] ) ) { ?>
-		<p><a href="<?php echo $dyk['button_link']; ?>" class="button"><?php echo $dyk['button_text']; ?></a></p>
+		<p><a href="<?php echo esc_url( $dyk['button_link'] ); ?>" class="button"><?php echo esc_html( $dyk['button_text'] ); ?></a></p>
 	<?php } ?>
 </div>
 <?php } ?>

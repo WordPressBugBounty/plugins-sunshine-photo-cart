@@ -7,7 +7,7 @@ function sunshine_site_health_info( $debug_info ) {
 				'label' => 'Gallery URL',
 				'value' => get_permalink( SPC()->get_option( 'page' ) ),
 			),
-			'admin_url' => array(
+			'admin_url'   => array(
 				'label' => 'Admin URL',
 				'value' => admin_url(),
 			),
@@ -22,10 +22,10 @@ function sunshine_site_health_info( $debug_info ) {
 			}
 
 			if ( $field['type'] == 'header' ) {
-				$name = strtoupper( $field['name'] );
+				$name  = strtoupper( $field['name'] );
 				$value = '================================';
 			} else {
-				$name = $field['name'];
+				$name  = $field['name'];
 				$value = SPC()->get_option( $field['id'] );
 				if ( is_array( $value ) ) {
 					$values = $value;
@@ -53,18 +53,17 @@ function sunshine_site_health_info( $debug_info ) {
 		}
 	endforeach;
 
-
 	return $debug_info;
 }
 add_filter( 'debug_information', 'sunshine_site_health_info' );
 
 // Define the custom test function
 function sunshine_site_health_test( $tests ) {
-    $tests['direct']['sunshine_photo_cart_memory'] = array(
-        'label' => __( 'Sunshine Photo Cart Memory Availability' ),
-        'test'  => 'sunshine_memory_test',
-    );
-    return $tests;
+	$tests['direct']['sunshine_photo_cart_memory'] = array(
+		'label' => __( 'Sunshine Photo Cart Memory Availability', 'sunshine-photo-cart' ),
+		'test'  => 'sunshine_memory_test',
+	);
+	return $tests;
 }
 add_filter( 'site_status_tests', 'sunshine_site_health_test' );
 
@@ -72,50 +71,50 @@ add_filter( 'site_status_tests', 'sunshine_site_health_test' );
 function sunshine_memory_test() {
 
 	// Get WordPress memory limit
-	$wp_memory_limit = wp_convert_hr_to_bytes(WP_MEMORY_LIMIT) / (1024 * 1024);
+	$wp_memory_limit = wp_convert_hr_to_bytes( WP_MEMORY_LIMIT ) / ( 1024 * 1024 );
 
-    // Get PHP memory limit
-    $php_memory_limit = wp_convert_hr_to_bytes(ini_get('memory_limit')) / (1024 * 1024);
+	// Get PHP memory limit
+	$php_memory_limit = wp_convert_hr_to_bytes( ini_get( 'memory_limit' ) ) / ( 1024 * 1024 );
 
 	$result = '';
 
-    // Compare memory limits
-    if ( $wp_memory_limit < $php_memory_limit ) {
-        $result = array(
-            'label' => __( 'Sunshine Photo Cart Recommended Memory Limit', 'sunshine-photo-cart' ),
-            'status' => 'recommended',
-            'badge' => array(
-                'label' => __( 'Performance' ),
-                'color' => 'orange',
-            ),
-            'description' => '<p>' . sprintf( __( 'Your current WordPress memory limit is set to %sM, but your web server allows up to %sM. It is recommended to increase the WordPress memory limit to match or exceed the PHP memory limit for optimal performance and speed to ensure your uploads and applying watermarks go as fast as possible.', 'sunshine-photo-cart' ), $wp_memory_limit, $php_memory_limit ) . '</p>',
-			'actions' => sprintf(
-			    '<p><a href="%s" target="_blank">%s</a></p>',
-			    esc_url('https://www.sunshinephotocart.com/docs/increasing-memory-limit-wordpress'),
-			    __( 'Learn how to increase the WordPress memory limit', 'sunshine-photo-cart' )
+	// Compare memory limits
+	if ( $wp_memory_limit < $php_memory_limit ) {
+		$result = array(
+			'label'       => __( 'Sunshine Photo Cart Recommended Memory Limit', 'sunshine-photo-cart' ),
+			'status'      => 'recommended',
+			'badge'       => array(
+				'label' => __( 'Performance', 'sunshine-photo-cart' ),
+				'color' => 'orange',
 			),
-			'test' => 'sunshine_photo_cart_memory',
-        );
-    } elseif ( $php_memory_limit < 256 ) {
-	        $result = array(
-	            'label' => __( 'Sunshine Photo Cart Recommended Memory Limit', 'sunshine-photo-cart' ),
-	            'status' => 'recommended',
-	            'badge' => array(
-	                'label' => __( 'Performance' ),
-	                'color' => 'orange',
-	            ),
-	            'description' => '<p>' . sprintf( __( 'Your current PHP memory limit is %sM. If you are seeing issues with slow uploading images or errors, it is recommended to ask your web host if your available memory can be increased. A minimum of 256M is recommended, but as high as possible is best.', 'sunshine-photo-cart' ), $php_memory_limit ) . '</p>',
-				'actions' => sprintf(
-				    '<p><a href="%s" target="_blank">%s</a></p>',
-				    esc_url('https://www.sunshinephotocart.com/docs/increasing-memory-limit-wordpress'),
-				    __( 'Learn how to increase the WordPress memory limit', 'sunshine-photo-cart' )
+			/* translators: %1$s is the WordPress memory limit, %2$s is the PHP memory limit */
+			'description' => '<p>' . sprintf( __( 'Your current WordPress memory limit is set to %1$sM, but your web server allows up to %2$sM. It is recommended to increase the WordPress memory limit to match or exceed the PHP memory limit for optimal performance and speed to ensure your uploads and applying watermarks go as fast as possible.', 'sunshine-photo-cart' ), $wp_memory_limit, $php_memory_limit ) . '</p>',
+			'actions'     => sprintf(
+				'<p><a href="%s" target="_blank">%s</a></p>',
+				esc_url( 'https://www.sunshinephotocart.com/docs/increasing-memory-limit-wordpress' ),
+				__( 'Learn how to increase the WordPress memory limit', 'sunshine-photo-cart' )
+			),
+			'test'        => 'sunshine_photo_cart_memory',
+		);
+	} elseif ( $php_memory_limit < 256 ) {
+			$result = array(
+				'label'       => __( 'Sunshine Photo Cart Recommended Memory Limit', 'sunshine-photo-cart' ),
+				'status'      => 'recommended',
+				'badge'       => array(
+					'label' => __( 'Performance', 'sunshine-photo-cart' ),
+					'color' => 'orange',
 				),
-				'test' => 'sunshine_photo_cart_memory',
-	        );
+				/* translators: %s is the PHP memory limit */
+				'description' => '<p>' . sprintf( __( 'Your current PHP memory limit is %sM. If you are seeing issues with slow uploading images or errors, it is recommended to ask your web host if your available memory can be increased. A minimum of 256M is recommended, but as high as possible is best.', 'sunshine-photo-cart' ), $php_memory_limit ) . '</p>',
+				'actions'     => sprintf(
+					'<p><a href="%s" target="_blank">%s</a></p>',
+					esc_url( 'https://www.sunshinephotocart.com/docs/increasing-memory-limit-wordpress' ),
+					__( 'Learn how to increase the WordPress memory limit', 'sunshine-photo-cart' )
+				),
+				'test'        => 'sunshine_photo_cart_memory',
+			);
 	}
-    return $result;
-	define( “WP_MEMORY_LIMIT”, “512M”);
-
+	return $result;
 
 }
 
@@ -130,21 +129,21 @@ function sunshine_system_info_page() {
 
 ### Begin System Info ###
 
-Home Page:                <?php echo site_url() . "\n"; ?>
-Gallery URL:              <?php echo get_permalink( SPC()->get_option( 'page' ) ) . "\n"; ?>
-Admin:                 	  <?php echo admin_url() . "\n"; ?>
+Home Page:                <?php echo esc_url( site_url() ) . "\n"; ?>
+Gallery URL:              <?php echo esc_url( get_permalink( SPC()->get_option( 'page' ) ) ) . "\n"; ?>
+Admin:                 	  <?php echo esc_url( admin_url() ) . "\n"; ?>
 
-WordPress Version:        <?php echo get_bloginfo( 'version' ) . "\n"; ?>
+WordPress Version:        <?php echo esc_html( get_bloginfo( 'version' ) ) . "\n"; ?>
 
-PHP Version:              <?php echo PHP_VERSION . "\n"; ?>
-PHP Memory Limit:         <?php echo ini_get( 'memory_limit' ) . "\n"; ?>
-WordPress Memory Limit:   <?php echo ( sunshine_let_to_num( WP_MEMORY_LIMIT ) / ( 1024 * 1024 ) ) . 'M'; ?><?php echo "\n"; ?>
+PHP Version:              <?php echo esc_html( PHP_VERSION ) . "\n"; ?>
+PHP Memory Limit:         <?php echo esc_html( ini_get( 'memory_limit' ) ) . "\n"; ?>
+WordPress Memory Limit:   <?php echo esc_html( ( sunshine_let_to_num( WP_MEMORY_LIMIT ) / ( 1024 * 1024 ) ) . 'M' ); ?><?php echo "\n"; ?>
 ImageMagick:
 	<?php
 	echo ( extension_loaded( 'imagick' ) ) ? 'Yes' : 'No';
 	echo "\n";
 	?>
-Image Quality:            <?php echo apply_filters( 'jpeg_quality', 60 ); ?>
+Image Quality:            <?php echo esc_html( apply_filters( 'jpeg_quality', 60 ) ); ?>
 	<?php do_action( 'sunshine_sunshine_info' ); ?>
 
 
@@ -161,7 +160,7 @@ ACTIVE PLUGINS:
 			continue;
 		}
 		?>
-		<?php echo $plugin['Name']; ?>: <?php echo $plugin['Version']; ?>
+		<?php echo esc_html( $plugin['Name'] ); ?>: <?php echo esc_html( $plugin['Version'] ); ?>
 
 <?php endforeach; ?>
 
@@ -170,10 +169,10 @@ CURRENT THEME:
 	<?php
 	if ( get_bloginfo( 'version' ) < '3.4' ) {
 		$theme_data = get_theme_data( get_stylesheet_directory() . '/style.css' );
-		echo $theme_data['Name'] . ': ' . $theme_data['Version'];
+		echo esc_html( $theme_data['Name'] ) . ': ' . esc_html( $theme_data['Version'] );
 	} else {
 		$theme_data = wp_get_theme();
-		echo $theme_data->Name . ': ' . $theme_data->Version;
+		echo esc_html( $theme_data->Name ) . ': ' . esc_html( $theme_data->Version );
 	}
 	?>
 
@@ -195,7 +194,7 @@ SUNSHINE SETTINGS:
 					$value .= $k . ': ' . maybe_serialize( $v ) . '|';
 				}
 			}
-			echo $field['name'] . ': ' . $value . "\r\n";
+			echo esc_html( $field['name'] ) . ': ' . esc_html( $value ) . "\r\n";
 		}
 endforeach;
 	?>
@@ -207,7 +206,7 @@ IMAGE SIZES:
 	foreach ( $_wp_additional_image_sizes as $name => $image_size ) {
 		$crop = ( $image_size['crop'] ) ? 'cropped' : 'not cropped';
 		?>
-		<?php echo $name . ': ' . $image_size['width'] . 'x' . $image_size['height'] . ' (' . $crop . ')'; ?>
+		<?php echo esc_html( $name ) . ': ' . esc_html( $image_size['width'] ) . 'x' . esc_html( $image_size['height'] ) . ' (' . esc_html( $crop ) . ')'; ?>
 
 <?php } ?>
 
@@ -215,7 +214,7 @@ IMAGE SIZES:
 </textarea>
 
 	</div>
-	<p><button class="button button-primary" onclick="sunshine_copy_system_info()"><?php _e( 'Copy system info to clipboard', 'sunshine-photo-cart' ); ?></button></p>
+	<p><button class="button button-primary" onclick="sunshine_copy_system_info()"><?php esc_html_e( 'Copy system info to clipboard', 'sunshine-photo-cart' ); ?></button></p>
 	<script>
 	function sunshine_copy_system_info() {
 		var copyText = document.getElementById( "sunshine-system-info" );

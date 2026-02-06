@@ -9,14 +9,20 @@ class SPC_Admin_Order {
 		add_filter( 'views_edit-sunshine-order', array( $this, 'views_edit' ), 999 );
 		add_action( 'restrict_manage_posts', array( $this, 'filter_by_customer' ) );
 		add_action( 'wp_ajax_sunshine_customer_search', array( $this, 'customer_search' ) );
+		add_action( 'wp_ajax_sunshine_gallery_search', array( $this, 'gallery_search' ) );
 		add_filter( 'bulk_actions-edit-sunshine-order', array( $this, 'bulk_actions' ) );
 		add_filter( 'handle_bulk_actions-edit-sunshine-order', array( $this, 'handle_bulk_actions' ), 10, 3 );
 		add_filter( 'parse_query', array( $this, 'parse_query' ) );
 
 		// Searching.
-		add_filter( 'posts_join', array( $this, 'order_search_join' ) );
-		add_filter( 'posts_search', array( $this, 'order_search_where' ) );
+		add_filter( 'posts_join', array( $this, 'order_search_join' ), 10, 2 );
+		add_filter( 'posts_search', array( $this, 'order_search_where' ), 10, 2 );
 		add_filter( 'posts_distinct', array( $this, 'order_search_distinct' ), 10, 2 );
+
+		// Gallery filtering
+		add_filter( 'posts_join', array( $this, 'gallery_filter_join' ), 10, 2 );
+		add_filter( 'posts_where', array( $this, 'gallery_filter_where' ), 10, 2 );
+		add_filter( 'posts_distinct', array( $this, 'gallery_filter_distinct' ), 10, 2 );
 
 		// Columns on main order page
 		add_filter( 'manage_sunshine-order_posts_columns', array( $this, 'column_headers' ), 9999 );
@@ -52,11 +58,14 @@ class SPC_Admin_Order {
 		add_action( 'untrashed_post', array( $this, 'untrash' ) );
 		add_action( 'before_delete_post', array( $this, 'delete' ) );
 
+		// Fix order items
+		add_action( 'admin_init', array( $this, 'fix_order_items' ) );
+
 	}
 
-	function order_search_join( $join ) {
+	function order_search_join( $join, $query ) {
 		global $pagenow, $wpdb;
-		if ( is_admin() && $pagenow == 'edit.php' && ! empty( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-order' && ! empty( $_GET['s'] ) ) {
+		if ( is_admin() && $pagenow == 'edit.php' && ! empty( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-order' && ! empty( $_GET['s'] ) && isset( $query->query_vars['post_type'] ) && $query->query_vars['post_type'] == 'sunshine-order' ) {
 			$join .= ' LEFT JOIN ' . $wpdb->postmeta . ' AS sunshine_order_meta ON ' . $wpdb->posts . '.ID = sunshine_order_meta.post_id ';
 			$join .= ' LEFT JOIN ' . $wpdb->prefix . 'sunshine_order_items AS sunshine_order_items ON ' . $wpdb->posts . '.ID = sunshine_order_items.order_id ';
 			$join .= ' LEFT JOIN ' . $wpdb->prefix . 'sunshine_order_itemmeta AS sunshine_order_itemmeta ON sunshine_order_items.order_item_id = sunshine_order_itemmeta.order_item_id ';
@@ -64,9 +73,9 @@ class SPC_Admin_Order {
 		return $join;
 	}
 
-	function order_search_where( $where ) {
+	function order_search_where( $where, $query ) {
 		global $pagenow, $wpdb;
-		if ( is_admin() && $pagenow == 'edit.php' && ! empty( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-order' && ! empty( $_GET['s'] ) ) {
+		if ( is_admin() && $pagenow == 'edit.php' && ! empty( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-order' && ! empty( $_GET['s'] ) && isset( $query->query_vars['post_type'] ) && $query->query_vars['post_type'] == 'sunshine-order' ) {
 			$where = preg_replace(
 				'/\(\s*' . $wpdb->posts . ".post_title\s+LIKE\s*(\'[^\']+\')\s*\)/",
 				'(' . $wpdb->posts . '.post_title LIKE $1) OR (sunshine_order_meta.meta_value LIKE $1) OR (sunshine_order_itemmeta.meta_value LIKE $1)',
@@ -79,7 +88,7 @@ class SPC_Admin_Order {
 	function order_search_distinct( $distinct, $query ) {
 		global $pagenow;
 
-		if ( is_admin() && 'edit.php' === $pagenow && $query->is_search() && $query->get( 'post_type' ) === 'sunshine-order' ) {
+		if ( is_admin() && 'edit.php' === $pagenow && $query->is_search() && isset( $query->query_vars['post_type'] ) && $query->query_vars['post_type'] === 'sunshine-order' ) {
 			$distinct = 'DISTINCT';
 		}
 
@@ -94,16 +103,16 @@ class SPC_Admin_Order {
 		$counts = wp_count_posts( 'sunshine-order' );
 
 		$class        = ( ! isset( $_GET['sunshine-order-status'] ) ) ? 'current' : '';
-		$views['all'] = '<a class="' . $class . '" href="?post_type=sunshine-order">' . __( 'All' ) . ' <span class="count">(' . array_sum( (array) $counts ) . ')</span></a>';
+		$views['all'] = '<a class="' . esc_attr( $class ) . '" href="?post_type=sunshine-order">' . __( 'All', 'sunshine-photo-cart' ) . ' <span class="count">(' . esc_html( array_sum( (array) $counts ) ) . ')</span></a>';
 
 		$statuses = sunshine_get_order_statuses( 'object' );
 		foreach ( $statuses as $status ) {
 			$class                       = ( isset( $_GET['sunshine-order-status'] ) && $_GET['sunshine-order-status'] == $status->get_key() ) ? 'current' : '';
-			$views[ $status->get_key() ] = '<a class="' . $class . '" href="?post_type=sunshine-order&amp;sunshine-order-status=' . $status->get_key() . '">' . $status->get_name() . ' <span class="count">(' . $status->get_count() . ')</span></a>';
+			$views[ $status->get_key() ] = '<a class="' . esc_attr( $class ) . '" href="?post_type=sunshine-order&amp;sunshine-order-status=' . esc_attr( $status->get_key() ) . '">' . esc_html( $status->get_name() ) . ' <span class="count">(' . esc_html( $status->get_count() ) . ')</span></a>';
 		}
 
 		if ( $counts->trash > 0 ) {
-			$views['trash'] = '<a class="' . $class . '" href="?post_type=sunshine-order&post_status=trash">' . __( 'Trash' ) . ' <span class="count">(' . $counts->trash . ')</span></a>';
+			$views['trash'] = '<a class="' . esc_attr( $class ) . '" href="?post_type=sunshine-order&post_status=trash">' . __( 'Trash', 'sunshine-photo-cart' ) . ' <span class="count">(' . esc_html( $counts->trash ) . ')</span></a>';
 		}
 
 		return $views;
@@ -126,7 +135,7 @@ class SPC_Admin_Order {
 				$payment_methods = sunshine_get_payment_methods();
 				if ( ! empty( $payment_methods ) ) {
 					foreach ( $payment_methods as $payment_method ) {
-						echo '<option value="' . esc_attr( $payment_method->get_id() ) . '" ' . selected( $selected_payment_method, $payment_method->get_id(), false ) . '>' . $payment_method->get_name() . '</option>';
+						echo '<option value="' . esc_attr( $payment_method->get_id() ) . '" ' . selected( $selected_payment_method, $payment_method->get_id(), false ) . '>' . esc_html( $payment_method->get_name() ) . '</option>';
 					}
 				}
 				?>
@@ -147,6 +156,28 @@ class SPC_Admin_Order {
 						return {
 							search: params.term,
 							action: 'sunshine_customer_search',
+						};
+					},
+					cache: true
+				  }
+			});
+			</script>
+
+			<select name="gallery">
+				<option value="" selected="selected"></option>
+			</select>
+			<script>
+			jQuery( 'select[name="gallery"]' ).select2({
+				width: 200,
+				minimumInputLength: 3,
+				placeholder: '<?php echo esc_js( __( 'Filter by gallery', 'sunshine-photo-cart' ) ); ?>',
+				  ajax: {
+					url: ajaxurl,
+					delay: 1000,
+					data: function( params ) {
+						return {
+							search: params.term,
+							action: 'sunshine_gallery_search',
 						};
 					},
 					cache: true
@@ -180,6 +211,35 @@ class SPC_Admin_Order {
 		return wp_send_json( array( 'results' => $data ) );
 	}
 
+	function gallery_search() {
+		$data = array();
+		if ( isset( $_GET['search'] ) ) {
+			$galleries = get_posts(
+				array(
+					'post_type'      => 'sunshine-gallery',
+					'post_status'    => 'publish',
+					's'              => sanitize_text_field( $_GET['search'] ),
+					'posts_per_page' => 50,
+				)
+			);
+			if ( ! empty( $galleries ) ) {
+				foreach ( $galleries as $gallery_post ) {
+					$gallery = new SPC_Gallery( $gallery_post );
+					$text    = $gallery->get_name();
+					// Add parent gallery hierarchy if exists
+					if ( $gallery->get_parent_gallery_id() > 0 ) {
+						$text = $gallery->get_ancestors_formatted( false );
+					}
+					$data[] = array(
+						'id'   => $gallery->get_id(),
+						'text' => $text,
+					);
+				}
+			}
+		}
+		return wp_send_json( array( 'results' => $data ) );
+	}
+
 	function parse_query( $query ) {
 		global $pagenow;
 		if ( is_admin() && $query->is_main_query() && $pagenow == 'edit.php' && isset( $query->query_vars['post_type'] ) && $query->query_vars['post_type'] == 'sunshine-order' ) {
@@ -206,16 +266,81 @@ class SPC_Admin_Order {
 		return $query;
 	}
 
+	function gallery_filter_join( $join, $query ) {
+		global $pagenow, $wpdb;
+		static $gallery_join_applied = false;
+
+		// Prevent multiple executions per request.
+		if ( $gallery_join_applied ) {
+			return $join;
+		}
+
+		// Only apply to the main query for the list table.
+		if ( ! isset( $query->query_vars['post_type'] ) || $query->query_vars['post_type'] != 'sunshine-order' ) {
+			return $join;
+		}
+
+		if ( is_admin() && $pagenow == 'edit.php' && ! empty( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-order' && ! empty( $_GET['gallery'] ) ) {
+			$join                .= ' INNER JOIN ' . $wpdb->prefix . 'sunshine_order_items AS gallery_filter_items ON ' . $wpdb->posts . '.ID = gallery_filter_items.order_id ';
+			$gallery_join_applied = true;
+		}
+		return $join;
+	}
+
+	function gallery_filter_where( $where, $query ) {
+		global $pagenow, $wpdb;
+		static $gallery_filter_applied = false;
+
+		// Prevent multiple executions per request.
+		if ( $gallery_filter_applied ) {
+			return $where;
+		}
+
+		// Only apply to the main query for the list table.
+		if ( ! isset( $query->query_vars['post_type'] ) || $query->query_vars['post_type'] != 'sunshine-order' ) {
+			return $where;
+		}
+
+		if ( is_admin() && $pagenow == 'edit.php' && ! empty( $_GET['post_type'] ) && $_GET['post_type'] == 'sunshine-order' && ! empty( $_GET['gallery'] ) ) {
+			$gallery_id = intval( $_GET['gallery'] );
+
+			$gallery_ids   = (array) sunshine_get_gallery_descendant_ids( $gallery_id, 'any' );
+			$gallery_ids[] = $gallery_id;
+
+			// Use IN clause to match any of the gallery IDs.
+			$gallery_ids            = array_unique( array_map( 'absint', $gallery_ids ) );
+			$where                 .= ' AND gallery_filter_items.gallery_id IN (' . implode( ',', $gallery_ids ) . ')';
+			$gallery_filter_applied = true;
+		}
+		return $where;
+	}
+
+	function gallery_filter_distinct( $distinct, $query ) {
+		global $pagenow;
+
+		// Only apply to the main query for the list table.
+		if ( ! isset( $query->query_vars['post_type'] ) || $query->query_vars['post_type'] != 'sunshine-order' ) {
+			return $distinct;
+		}
+
+		if ( is_admin() && 'edit.php' === $pagenow && ! empty( $_GET['post_type'] ) && $_GET['post_type'] === 'sunshine-order' && ! empty( $_GET['gallery'] ) ) {
+			$distinct = 'DISTINCT';
+		}
+
+		return $distinct;
+	}
+
 
 	function bulk_actions( $actions ) {
 
 		unset( $actions['edit'] );
 
-		$actions['sunshine_order_view_items'] = __( 'View ordered products', 'sunshine' );
+		$actions['sunshine_order_view_items'] = __( 'View ordered products', 'sunshine-photo-cart' );
 
 		$statuses = sunshine_get_order_statuses( 'object' );
 		foreach ( $statuses as $status ) {
-			$actions[ 'sunshine_order_status_' . $status->get_key() ] = sprintf( __( 'Change status to: %s', 'sunshine' ), $status->get_name() );
+			/* translators: %s is the status name */
+			$actions[ 'sunshine_order_status_' . $status->get_key() ] = sprintf( __( 'Change status to: %s', 'sunshine-photo-cart' ), $status->get_name() );
 		}
 		return $actions;
 
@@ -228,7 +353,7 @@ class SPC_Admin_Order {
 			foreach ( $ids as $order_id ) {
 				$order = new SPC_Order( $order_id );
 				$order->set_status( $new_status );
-				$order->notify( false );
+				do_action( 'sunshine_admin_order_status_update', $order );
 				$changed++;
 			}
 		} elseif ( $action == 'sunshine_order_view_items' ) {
@@ -245,7 +370,8 @@ class SPC_Admin_Order {
 				$output = ob_get_contents();
 			ob_end_clean();
 
-			echo $output;
+			// Everything in the template file is escaped, so we can safely ignore the output not escaped warning.
+			echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
 			exit();
 		}
@@ -267,8 +393,8 @@ class SPC_Admin_Order {
 
 	function column_headers( $columns ) {
 		$columns                   = array(); // Reset so we can defeat all the other plugins trying to add stuff here that we don't want
-		$columns['cb']             = __( 'Select All' );
-		$columns['title']          = __( 'Order' );
+		$columns['cb']             = __( 'Select All', 'sunshine-photo-cart' );
+		$columns['title']          = __( 'Order', 'sunshine-photo-cart' );
 		$columns['order_date']     = __( 'Date', 'sunshine-photo-cart' );
 		$columns['customer']       = __( 'Customer', 'sunshine-photo-cart' );
 		$columns['status']         = __( 'Status', 'sunshine-photo-cart' );
@@ -283,39 +409,39 @@ class SPC_Admin_Order {
 		$order = new SPC_Order( $post_id );
 		switch ( $column ) {
 			case 'order_date':
-				echo $order->get_date();
+				echo esc_html( $order->get_date() );
 				break;
 			case 'customer':
 				if ( $order->get_customer_id() ) {
-					echo '<a href="' . admin_url( 'user-edit.php?user_id=' . $order->get_customer_id() ) . '">' . $order->get_customer_name() . '</a>';
+					echo '<a href="' . esc_url( admin_url( 'user-edit.php?user_id=' . esc_attr( $order->get_customer_id() ) ) ) . '">' . esc_html( $order->get_customer_name() ) . '</a>';
 				} else {
-					echo $order->get_customer_name();
+					echo esc_html( $order->get_customer_name() );
 				}
 				break;
 			case 'status':
-				echo '<span class="sunshine-order-status-' . esc_attr( $order->get_status() ) . '">' . $order->get_status_name() . '</span>';
+				echo '<span class="sunshine-order-status-' . esc_attr( $order->get_status() ) . '">' . esc_html( $order->get_status_name() ) . '</span>';
 				if ( $order->get_mode() == 'test' ) {
-					echo '<span class="sunshine-order-status-test">' . __( 'Test', 'sunshine-photo-cart' ) . '</span>';
+					echo '<span class="sunshine-order-status-test">' . esc_html__( 'Test', 'sunshine-photo-cart' ) . '</span>';
 				}
 				break;
 			case 'payment_method':
-				echo $order->get_payment_method_name();
+				echo esc_html( $order->get_payment_method_name() );
 				break;
 			case 'total':
-				echo $order->get_total_formatted();
+				echo wp_kses_post( $order->get_total_formatted() );
 				break;
 			case 'galleries':
 				$galleries = array();
 				foreach ( $order->get_cart() as $order_item ) {
 					if ( ! empty( $order_item->get_gallery_id() ) ) {
 						$gallery                         = $order_item->get_gallery();
-						$galleries[ $gallery->get_id() ] = '<a href="' . admin_url( 'post.php?action=edit&post=' . $gallery->get_id() ) . '">' . $gallery->get_name() . '</a>';
+						$galleries[ $gallery->get_id() ] = '<a href="' . esc_url( admin_url( 'post.php?action=edit&post=' . esc_attr( $gallery->get_id() ) ) ) . '" title="' . esc_attr( $gallery->get_ancestors_formatted( false ) ) . '" class="sunshine-tooltip">' . esc_html( $gallery->get_name() ) . '</a>';
 					}
 				}
-				echo join( '<br />', $galleries );
+				echo wp_kses_post( join( '<br />', $galleries ) );
 				break;
 			case 'invoice':
-				echo '<a href="' . admin_url( 'post.php?sunshine_invoice=1&post=' . $post_id ) . '" class="invoice">' . __( 'View invoice', 'sunshine-photo-cart' ) . '</a>';
+				echo '<a href="' . esc_url( admin_url( 'post.php?sunshine_invoice=1&post=' . esc_attr( $post_id ) ) ) . '" class="invoice">' . esc_html__( 'View invoice', 'sunshine-photo-cart' ) . '</a>';
 				break;
 		}
 	}
@@ -394,13 +520,13 @@ class SPC_Admin_Order {
 				<?php
 			}
 			?>
-			<a href="<?php echo admin_url( 'post.php?sunshine_invoice=1&post=' . $post->ID ); ?>" class="invoice"><?php _e( 'View invoice', 'sunshine-photo-cart' ); ?></a>
+			<a href="<?php echo esc_url( admin_url( 'post.php?sunshine_invoice=1&post=' . esc_attr( $post->ID ) ) ); ?>" class="invoice"><?php esc_html_e( 'View invoice', 'sunshine-photo-cart' ); ?></a>
 			<?php do_action( 'sunshine_admin_order_buttons', $order ); ?>
 		</div>
 
 		<div id="sunshine-order-actions">
 
-			<h3><?php _e( 'Order Actions', 'sunshine-order-cart' ); ?></h3>
+			<h3><?php esc_html_e( 'Order Actions', 'sunshine-photo-cart' ); ?></h3>
 
 			<?php do_action( 'sunshine_order_actions_start', $order ); ?>
 
@@ -443,68 +569,69 @@ class SPC_Admin_Order {
 		<?php
 		if ( $order->get_mode() == 'test' ) {
 			?>
-			<div id="sunshine-order-test"><?php _e( 'Test Order', 'sunshine-photo-cart' ); ?></div>
-		<?php } ?>
-		<h2><?php echo sprintf( __( '%1$s &mdash; %2$s', 'sunshine-photo-cart' ), $order->get_name(), $order->get_total_formatted() ); ?></h2>
+		<div id="sunshine-order-test"><?php esc_html_e( 'Test Order', 'sunshine-photo-cart' ); ?></div>
+	<?php } ?>
+		<?php /* translators: %1$s is the order name, %2$s is the total amount formatted as price */ ?>
+	<h2><?php echo sprintf( esc_html__( '%1$s &mdash; %2$s', 'sunshine-photo-cart' ), esc_html( $order->get_name() ), wp_kses_post( $order->get_total_formatted() ) ); ?></h2>
 		<ul id="sunshine-order-basics">
 			<li id="sunshine-order-date">
-				<span><?php _e( 'Date', 'sunshine-photo-cart' ); ?></span>
-				<?php echo $order->get_date(); ?>
+				<span><?php esc_html_e( 'Date', 'sunshine-photo-cart' ); ?></span>
+				<?php echo esc_html( $order->get_date() ); ?>
 			</li>
 			<li id="sunshine-order-payment-method">
-				<span><?php _e( 'Payment Method', 'sunshine-photo-cart' ); ?></span>
+				<span><?php esc_html_e( 'Payment Method', 'sunshine-photo-cart' ); ?></span>
 				<?php
 					$payment_method = SPC()->payment_methods->get_payment_method_by_id( $order->get_payment_method() );
 				if ( $payment_method ) {
 					$transaction_url = $payment_method->get_transaction_url( $order );
 					if ( $transaction_url ) {
-						echo '<a href="' . esc_url( $transaction_url ) . '" target="_blank">' . $payment_method->get_name() . '</a>';
+						echo '<a href="' . esc_url( $transaction_url ) . '" target="_blank">' . esc_html( $payment_method->get_name() ) . '</a>';
 					} else {
-						echo $payment_method->get_name();
+						echo esc_html( $payment_method->get_name() );
 					}
 				}
 				?>
 			</li>
 			<li id="sunshine-order-shipping">
-				<span><?php _e( 'Delivery/Shipping Method', 'sunshine-photo-cart' ); ?></span>
-				<?php echo $order->get_delivery_method_name(); ?>
+				<span><?php esc_html_e( 'Delivery/Shipping Method', 'sunshine-photo-cart' ); ?></span>
+				<?php echo esc_html( $order->get_delivery_method_name() ); ?>
 				<?php if ( $order->get_shipping_method_name() ) { ?>
-					(<?php echo $order->get_shipping_method_name(); ?>)
+					(<?php echo esc_html( $order->get_shipping_method_name() ); ?>)
 				<?php } ?>
 			</li>
 		</ul>
 		<div id="sunshine-order-addresses">
 			<div id="sunshine-order-general">
-				<h3><?php _e( 'Customer', 'sunshine-photo-cart' ); ?></h3>
+				<h3><?php esc_html_e( 'Customer', 'sunshine-photo-cart' ); ?></h3>
 				<p>
 					<?php if ( $order->get_customer_id() ) { ?>
-						<a href="<?php echo admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-customers&customer=' . $order->get_customer_id() ); ?>"><?php echo $order->get_customer_name(); ?></a>
+						<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-customers&customer=' . esc_attr( $order->get_customer_id() ) ) ); ?>"><?php echo esc_html( $order->get_customer_name() ); ?></a>
 						<?php
 					} else {
-						echo $order->get_customer_name();
+						echo esc_html( $order->get_customer_name() );
 					}
 					?>
 					<br />
-					<a href="mailto:<?php echo $order->get_email(); ?>"><?php echo $order->get_email(); ?></a>
+					<a href="mailto:<?php echo esc_attr( $order->get_email() ); ?>"><?php echo esc_html( $order->get_email() ); ?></a>
 					<?php
 					if ( $order->get_phone() ) {
-						echo '<br />' . $order->get_phone();
+						echo '<br />' . esc_html( $order->get_phone() );
 					}
 					?>
 				</p>
-				<h3><?php _e( 'Order Status', 'sunshine-photo-cart' ); ?></h3>
+				<h3><?php esc_html_e( 'Order Status', 'sunshine-photo-cart' ); ?></h3>
 				<p>
 					<select id="order-status" name="order_status">
 						<?php
 						$current_order_status = $order->get_status();
 						$order_statuses       = sunshine_get_order_statuses( 'object' );
 						foreach ( $order_statuses as $order_status ) {
-							echo '<option value="' . $order_status->get_key() . '" ' . selected( $current_order_status, $order_status->get_key(), false ) . '>' . $order_status->get_name() . '</option>';
+							echo '<option value="' . esc_attr( $order_status->get_key() ) . '" ' . selected( $current_order_status, $order_status->get_key(), false ) . '>' . esc_html( $order_status->get_name() ) . '</option>';
 						}
 						?>
 					</select>
 				</p>
-				<p id="order-status-change-notify" style="display: none;"><label><input type="checkbox" name="order_status_change_notify" value="yes" /> <?php _e( 'Notify customer of status change', 'sunshine-photo-cart' ); ?></label></p>
+				<p id="order-status-change-notify" style="display: none;"><label><input type="checkbox" name="order_status_change_notify" value="yes" /> <?php esc_html_e( 'Notify customer of status change', 'sunshine-photo-cart' ); ?></label></p>
 				<script>
 					jQuery( 'select[name="order_status"]' ).change(function() {
 						if ( jQuery('select[name="order_status"]').val() != '<?php echo esc_js( $current_order_status ); ?>' ) {
@@ -517,24 +644,24 @@ class SPC_Admin_Order {
 				<?php do_action( 'sunshine_admin_after_order_general', $order ); ?>
 			</div>
 			<div id="sunshine-order-shipping">
-				<h3><?php _e( 'Shipping', 'sunshine-photo-cart' ); ?></h3>
+				<h3><?php esc_html_e( 'Shipping', 'sunshine-photo-cart' ); ?></h3>
 				<?php if ( $order->has_shipping_address() ) { ?>
-					<p><?php echo $order->get_shipping_address_formatted(); ?></p>
+					<p><?php echo wp_kses_post( $order->get_shipping_address_formatted() ); ?></p>
 				<?php } else { ?>
-					<p><?php _e( 'No shipping address collected for this order', 'sunshine-photo-cart' ); ?>
+					<p><?php esc_html_e( 'No shipping address collected for this order', 'sunshine-photo-cart' ); ?>
 				<?php } ?>
 				<?php do_action( 'sunshine_admin_after_order_shipping', $order ); ?>
 			</div>
 			<div id="sunshine-order-billing">
-				<h3><?php _e( 'Billing', 'sunshine-photo-cart' ); ?></h3>
+				<h3><?php esc_html_e( 'Billing', 'sunshine-photo-cart' ); ?></h3>
 				<?php if ( $order->has_billing_address() ) { ?>
-					<p><?php echo $order->get_billing_address_formatted(); ?></p>
+					<p><?php echo wp_kses_post( $order->get_billing_address_formatted() ); ?></p>
 				<?php } else { ?>
-					<p><?php _e( 'No billing address collected for this order', 'sunshine-photo-cart' ); ?>
+					<p><?php esc_html_e( 'No billing address collected for this order', 'sunshine-photo-cart' ); ?>
 				<?php } ?>
 				<?php if ( $order->get_vat() ) { ?>
-					<p><strong><?php echo ( SPC()->get_option( 'vat_label' ) ) ? SPC()->get_option( 'vat_label' ) : __( 'EU VAT Number', 'sunshine-photo-cart' ); ?></strong><br />
-					<?php echo $order->get_vat(); ?></p>
+					<p><strong><?php echo ( SPC()->get_option( 'vat_label' ) ) ? esc_html( SPC()->get_option( 'vat_label' ) ) : esc_html__( 'EU VAT Number', 'sunshine-photo-cart' ); ?></strong><br />
+					<?php echo esc_html( $order->get_vat() ); ?></p>
 				<?php } ?>
 
 				<?php do_action( 'sunshine_admin_after_order_billing', $order ); ?>
@@ -542,7 +669,7 @@ class SPC_Admin_Order {
 
 			<?php if ( $order->get_customer_notes() ) { ?>
 				<div id="sunshine-order-notes">
-					<h3><?php _e( 'Customer Notes', 'sunshine-photo-cart' ); ?></h3>
+					<h3><?php esc_html_e( 'Customer Notes', 'sunshine-photo-cart' ); ?></h3>
 					<?php echo wp_kses_post( $order->get_customer_notes() ); ?>
 				</div>
 			<?php } ?>
@@ -551,14 +678,14 @@ class SPC_Admin_Order {
 
 		<?php
 		$tabs = array(
-			'items'    => __( 'Items', 'sunshine-photo-cart' ),
-			'images'   => __( 'Images', 'sunshine-photo-cart' ),
-			'comments' => __( 'Comments', 'sunshine-photo-cart' ),
-			'notes'    => __( 'Notes', 'sunshine-photo-cart' ),
-			'log'      => __( 'Log', 'sunshine-photo-cart' ),
+			'items'    => esc_html__( 'Items', 'sunshine-photo-cart' ),
+			'images'   => esc_html__( 'Images', 'sunshine-photo-cart' ),
+			'comments' => esc_html__( 'Comments', 'sunshine-photo-cart' ),
+			'notes'    => esc_html__( 'Notes', 'sunshine-photo-cart' ),
+			'log'      => esc_html__( 'Log', 'sunshine-photo-cart' ),
 		);
 		if ( $order->has_refunds() ) {
-			$tabs['refunds'] = __( 'Refunds', 'sunshine-photo-cart' );
+			$tabs['refunds'] = esc_html__( 'Refunds', 'sunshine-photo-cart' );
 		}
 		$admin_order_tabs = apply_filters( 'sunshine_admin_order_tabs', $tabs, $order );
 
@@ -596,6 +723,19 @@ class SPC_Admin_Order {
 		if ( empty( $items ) ) {
 			return;
 		}
+
+		$meta_items = maybe_unserialize( get_post_meta( $order->get_id(), 'cart', true ) );
+		if ( count( $meta_items ) !== count( $items ) ) {
+			echo wp_kses_post(
+				'<div class="error"><p>' . sprintf(
+				/* translators: 1: number of items in meta, 2: number of items in database, 3: URL to fix the order */
+					__( 'This order has %1$d items in meta, but %2$d items in the database. <a href="%3$s">Attempt to fix it</a>', 'sunshine-photo-cart' ),
+					count( $meta_items ),
+					count( $items ),
+					esc_url( admin_url( 'post.php?post=' . $order->get_id() . '&action=edit&fix_order_items=' . wp_create_nonce( 'sunshine_fix_order_items' ) ) )
+				) . '</p></div>'
+			);
+		}
 		?>
 
 		<table id="sunshine-admin-cart-items">
@@ -611,9 +751,15 @@ class SPC_Admin_Order {
 		</thead>
 		<tbody>
 		<?php foreach ( $items as $item ) { ?>
-			<tr class="sunshine-cart-item <?php echo $item->classes(); ?>" id="sunshine-cart-item-<?php echo esc_attr( $item->get_id() ); ?>">
+			<tr class="sunshine-cart-item <?php echo esc_attr( $item->classes() ); ?>" id="sunshine-cart-item-<?php echo esc_attr( $item->get_id() ); ?>">
 				<td class="sunshine-cart-item-image" data-label="<?php esc_attr_e( 'Image', 'sunshine-photo-cart' ); ?>">
-					<?php echo $item->get_image_html(); ?>
+					<?php
+					if ( $item->get_image_id() ) {
+						echo '<a href="' . esc_url( admin_url( 'post.php?action=edit&post=' . esc_attr( $item->get_image_id() ) ) ) . '" target="_blank">' . wp_kses_post( $item->get_image_html() ) . '</a>';
+					} else {
+						echo wp_kses_post( $item->get_image_html() );
+					}
+					?>
 				</td>
 				<td class="sunshine-cart-item-image-data" data-label="<?php esc_attr_e( 'Image Data', 'sunshine-photo-cart' ); ?>">
 					<?php
@@ -623,37 +769,31 @@ class SPC_Admin_Order {
 					<div class="sunshine-cart-item-name-gallery">
 						<?php
 						if ( $gallery->get_parent_gallery_id() > 0 ) {
-							$ancestors      = get_ancestors( $gallery->get_id(), 'sunshine-gallery', 'post_type' );
-							$ancestor_links = array( '<a href="' . admin_url( 'post.php?action=edit&post=' . $gallery->get_id() ) . '">' . esc_html( $gallery->get_name() ) . '</a>' );
-							foreach ( $ancestors as $ancestor_id ) {
-								$ancestor_links[] = '<a href="' . admin_url( 'post.php?action=edit&post=' . $ancestor_id ) . '">' . esc_html( get_the_title( $ancestor_id ) ) . '</a>';
-							}
-							$ancestor_links = array_reverse( $ancestor_links );
-							echo join( ' > ', $ancestor_links );
+							echo wp_kses_post( $gallery->get_ancestors_formatted( true, 'admin' ) );
 						} else {
-							echo '<a href="' . admin_url( 'post.php?action=edit&post=' . $gallery->get_id() ) . '">' . esc_html( $gallery->get_name() ) . '</a>';
+							echo '<a href="' . esc_url( admin_url( 'post.php?action=edit&post=' . esc_attr( $gallery->get_id() ) ) ) . '">' . esc_html( $gallery->get_name() ) . '</a>';
 						}
 						?>
 						<?php // echo $item->get_gallery_name(); ?>
 					</div>
 					<?php } ?>
-					<div class="sunshine-cart-item-name-image"><?php echo $item->get_image_name(); ?></div>
-					<div class="sunshine-cart-item-filename"><?php echo join( '<br />', $item->get_file_names() ); ?></div>
+					<div class="sunshine-cart-item-name-image"><?php echo wp_kses_post( $item->get_image_name() ); ?></div>
+					<div class="sunshine-cart-item-filename"><?php echo wp_kses_post( join( '<br />', $item->get_file_names() ) ); ?></div>
 				</td>
 				<td class="sunshine-cart-item-name" data-label="<?php esc_attr_e( 'Product', 'sunshine-photo-cart' ); ?>">
-					<div class="sunshine-cart-item-name-product"><?php echo $item->get_name(); ?></div>
-					<div class="sunshine-cart-item-product-options"><?php echo $item->get_options_formatted(); ?></div>
-					<div class="sunshine-cart-item-comments"><?php echo $item->get_comments(); ?></div>
-					<div class="sunshine-cart-item-extra"><?php echo $item->get_extra(); ?></div>
+					<div class="sunshine-cart-item-name-product"><?php echo wp_kses_post( $item->get_name() ); ?></div>
+					<div class="sunshine-cart-item-product-options"><?php echo wp_kses_post( $item->get_options_formatted() ); ?></div>
+					<div class="sunshine-cart-item-comments"><?php echo wp_kses_post( $item->get_comments() ); ?></div>
+					<div class="sunshine-cart-item-extra"><?php echo wp_kses_post( $item->get_extra() ); ?></div>
 				</td>
 				<td class="sunshine-cart-item-qty" data-label="<?php esc_attr_e( 'Qty', 'sunshine-photo-cart' ); ?>">
-					<?php echo $item->get_qty(); ?>
+					<?php echo esc_html( $item->get_qty() ); ?>
 				</td>
 				<td class="sunshine-cart-item-price" data-label="<?php esc_attr_e( 'Price', 'sunshine-photo-cart' ); ?>">
-					<?php echo $item->get_price_formatted(); ?>
+					<?php echo wp_kses_post( $item->get_price_formatted() ); ?>
 				</td>
 				<td class="sunshine-cart-item-total" data-label="<?php esc_attr_e( 'Total', 'sunshine-photo-cart' ); ?>">
-					<?php echo $item->get_subtotal_formatted(); ?>
+					<?php echo wp_kses_post( $item->get_subtotal_formatted() ); ?>
 				</td>
 			</tr>
 		<?php } ?>
@@ -662,58 +802,81 @@ class SPC_Admin_Order {
 
 		<table id="sunshine-admin-order-totals">
 			<tr class="sunshine-subtotal">
-				<th><?php _e( 'Subtotal', 'sunshine-photo-cart' ); ?></th>
-				<td><?php echo $order->get_subtotal_formatted(); ?></td>
+				<th><?php esc_html_e( 'Subtotal', 'sunshine-photo-cart' ); ?></th>
+				<td><?php echo wp_kses_post( $order->get_subtotal_formatted() ); ?></td>
 			</tr>
-			<?php if ( ! empty( $order->get_shipping_method() ) ) { ?>
-			<tr class="sunshine-shipping">
-				<th><?php echo sprintf( __( 'Shipping via %s', 'sunshine-photo-cart' ), $order->get_shipping_method_name() ); ?></th>
-				<td><?php echo $order->get_shipping_formatted(); ?></td>
+		<?php if ( ! empty( $order->get_shipping_method() ) ) { ?>
+		<tr class="sunshine-shipping">
+			<?php /* translators: %s is the shipping method name */ ?>
+			<th><?php echo esc_html( sprintf( __( 'Shipping via %s', 'sunshine-photo-cart' ), $order->get_shipping_method_name() ) ); ?></th>
+				<td><?php echo wp_kses_post( $order->get_shipping_formatted() ); ?></td>
 			</tr>
 			<?php } ?>
 			<?php if ( ! empty( $order->get_discount() ) ) { ?>
 			<tr class="sunshine-discount">
 				<th>
-					<?php _e( 'Discounts', 'sunshine-photo-cart' ); ?><br />
-					<span><?php echo join( '<br />', $order->get_discount_names() ); ?></span>
+					<?php esc_html_e( 'Discounts', 'sunshine-photo-cart' ); ?><br />
+					<span><?php echo wp_kses( join( '<br />', $order->get_discount_names() ), array( 'br' => array() ) ); ?></span>
 				</th>
-				<td><?php echo $order->get_discount_formatted(); ?></td>
+				<td><?php echo wp_kses_post( $order->get_discount_formatted() ); ?></td>
 			</tr>
 			<?php } ?>
 			<?php if ( $order->get_tax() ) { ?>
 			<tr class="sunshine-tax">
-				<th><?php _e( 'Tax', 'sunshine-photo-cart' ); ?></th>
-				<td><?php echo $order->get_tax_formatted(); ?></td>
+				<th><?php esc_html_e( 'Tax', 'sunshine-photo-cart' ); ?></th>
+				<td><?php echo wp_kses_post( $order->get_tax_formatted() ); ?></td>
 			</tr>
 			<?php } ?>
 			<?php if ( $order->get_fees() ) { ?>
 				<?php foreach ( $order->get_fees() as $fee ) { ?>
 					<tr class="sunshine--cart--fee">
-						<th><?php esc_html_e( $fee['name'] ); ?></th>
-						<td><?php echo sunshine_price( $fee['amount'] ); ?></td>
+						<th><?php echo esc_html( $fee['name'] ); ?></th>
+						<td><?php echo wp_kses_post( sunshine_price( $fee['amount'] ) ); ?></td>
 					</tr>
 				<?php } ?>
 			<?php } ?>
 			<?php if ( $order->get_credits() > 0 ) { ?>
 			<tr class="sunshine-credits">
-				<th><?php _e( 'Credits Applied', 'sunshine-photo-cart' ); ?></th>
-				<td><?php echo $order->get_credits_formatted(); ?></td>
+				<th><?php esc_html_e( 'Credits Applied', 'sunshine-photo-cart' ); ?></th>
+				<td><?php echo wp_kses_post( $order->get_credits_formatted() ); ?></td>
 			</tr>
 			<?php } ?>
 			<?php if ( $order->get_refunds() ) { ?>
 			<tr class="sunshine-refunds">
-				<th><?php _e( 'Refunds', 'sunshine-photo-cart' ); ?></th>
-				<td><?php echo $order->get_refund_total_formatted(); ?></td>
+				<th><?php esc_html_e( 'Refunds', 'sunshine-photo-cart' ); ?></th>
+				<td><?php echo wp_kses_post( $order->get_refund_total_formatted() ); ?></td>
 			</tr>
 			<?php } ?>
 			<tr class="sunshine-total">
-				<th><?php _e( 'Order Total', 'sunshine-photo-cart' ); ?></th>
-				<td><?php echo $order->get_total_formatted(); ?></td>
+				<th><?php esc_html_e( 'Order Total', 'sunshine-photo-cart' ); ?></th>
+				<td><?php echo wp_kses_post( $order->get_total_formatted() ); ?></td>
 			</tr>
 			<?php do_action( 'sunshine_admin_order_totals', $order ); ?>
 		</table>
 
 		<?php
+	}
+
+	public function fix_order_items() {
+		global $wpdb;
+
+		if ( ! isset( $_GET['post'] ) || ! isset( $_GET['fix_order_items'] ) || ! wp_verify_nonce( $_GET['fix_order_items'], 'sunshine_fix_order_items' ) ) {
+			return;
+		}
+
+		$order      = new SPC_Order( intval( $_GET['post'] ) );
+		$items      = $order->get_items();
+		$meta_items = maybe_unserialize( get_post_meta( $order->get_id(), 'cart', true ) );
+		if ( count( $meta_items ) !== count( $items ) ) {
+			$wpdb->delete(
+				$wpdb->prefix . 'sunshine_order_items',
+				array( 'order_id' => $order->get_id() )
+			);
+
+			foreach ( $meta_items as $item ) {
+				$order->add_item( $item );
+			}
+		}
 	}
 
 	function images_tab( $order ) {
@@ -726,16 +889,22 @@ class SPC_Admin_Order {
 			$file_names = array_unique( $file_names );
 			asort( $file_names );
 			echo '<input type="text" id="filenames" style="width:70%" value="' . esc_attr( join( ',', $file_names ) ) . '" />';
-			echo ' <a id="copy-filenames" class="button">' . __( 'Copy to clipboard', 'sunshine-photo-cart' ) . '</a><br /><br />';
-			_e( 'Copy and paste the file names above into Lightroom search feature (Library filter) to quickly find and create a new collection to make processing this order easier. Make sure you are using the "Contains" (and not "Contains All") search parameter.', 'sunshine-photo-cart' );
+			echo ' <a id="copy-filenames" class="button">' . esc_html__( 'Copy to clipboard', 'sunshine-photo-cart' ) . '</a><br /><br />';
+			esc_html_e( 'Copy and paste the file names above into Lightroom search feature (Library filter) to quickly find and create a new collection to make processing this order easier. Make sure you are using the "Contains" (and not "Contains All") search parameter.', 'sunshine-photo-cart' );
 			echo '<script>
 				jQuery("#copy-filenames").click(function(){
-					jQuery("#filenames").select();
-					document.execCommand( "copy" );
-					jQuery( this ).html( "Copied!" );
-					return false;
-				});
+	var text = jQuery("#filenames").val();
+	navigator.clipboard.writeText(text).then(function() {
+		jQuery("#copy-filenames").html("Copied!");
+	}).catch(function(err) {
+		console.error("Failed to copy:", err);
+	});
+	return false;
+});
 				</script>';
+			echo '<p>';
+			echo wp_kses_post( join( '<br />', $file_names ) );
+			echo '</p>';
 		}
 	}
 
@@ -752,8 +921,8 @@ class SPC_Admin_Order {
 
 		?>
 		<p><textarea name="comment"></textarea></p>
-		<p><label><input type="checkbox" name="notify" value="1" checked="checked" /> <?php _e( 'Notify customer?', 'sunshine-photo-cart' ); ?></label></p>
-		<p><button class="button"><?php _e( 'Add comment', 'sunshine-photo-cart' ); ?></button></p>
+		<p><label><input type="checkbox" name="notify" value="1" checked="checked" /> <?php esc_html_e( 'Notify customer?', 'sunshine-photo-cart' ); ?></label></p>
+		<p><button class="button"><?php esc_html_e( 'Add comment', 'sunshine-photo-cart' ); ?></button></p>
 		<script>
 		jQuery( document ).ready(function($){
 			$( 'body' ).on( 'click', '#sunshine-admin-order-tab-content-comments button', function(e) {
@@ -773,7 +942,7 @@ class SPC_Admin_Order {
 							comment: comment,
 							notify: notify,
 							order_id: '<?php echo esc_js( $order->get_id() ); ?>',
-							security: '<?php echo wp_create_nonce( 'sunshine_order_add_comment' ); ?>'
+							security: '<?php echo esc_js( wp_create_nonce( 'sunshine_order_add_comment' ) ); ?>'
 						},
 						success: function( result, textStatus, XMLHttpRequest) {
 							if ( result.success ) {
@@ -829,9 +998,9 @@ class SPC_Admin_Order {
 
 	function notes_tab( $order ) {
 		?>
-		<p><?php _e( 'This is for internal use only and is not visible to your customer', 'sunshine-photo-cart' ); ?></p>
+		<p><?php esc_html_e( 'This is for internal use only and is not visible to your customer', 'sunshine-photo-cart' ); ?></p>
 		<p><textarea name="notes" rows="10"><?php echo esc_attr( $order->get_notes() ); ?></textarea></p>
-		<p><button class="button"><?php _e( 'Save notes', 'sunshine-photo-cart' ); ?></button></p>
+		<p><button class="button"><?php esc_html_e( 'Save notes', 'sunshine-photo-cart' ); ?></button></p>
 		<script>
 		jQuery( document ).ready(function($){
 			$( 'body' ).on( 'click', '#sunshine-admin-order-tab-content-notes button', function(e) {
@@ -847,7 +1016,7 @@ class SPC_Admin_Order {
 						action: 'sunshine_order_save_notes',
 						notes: $( 'textarea[name="notes"]' ).val(),
 						order_id: '<?php echo esc_js( $order->get_id() ); ?>',
-						security: '<?php echo wp_create_nonce( 'sunshine_order_save_notes' ); ?>'
+						security: '<?php echo esc_js( wp_create_nonce( 'sunshine_order_save_notes' ) ); ?>'
 					},
 					success: function( result, textStatus, XMLHttpRequest) {
 						// TODO: Success message
@@ -885,11 +1054,11 @@ class SPC_Admin_Order {
 		if ( ! empty( $log ) ) {
 			echo '<ol>';
 			foreach ( $log as $entry ) {
-				echo '<li><span class="log-date">' . date( get_option( 'date_format' ) . ' @ ' . get_option( 'time_format' ), strtotime( $entry->comment_date ) ) . '</span> <span class="log-content">' . $entry->comment_content . '</span></li>';
+				echo '<li><span class="log-date">' . esc_html( date( get_option( 'date_format' ) . ' @ ' . get_option( 'time_format' ), strtotime( $entry->comment_date ) ) ) . '</span> <span class="log-content">' . wp_kses_post( $entry->comment_content ) . '</span></li>';
 			}
 			echo '</ol>';
 		} else {
-			echo '<p>' . __( 'No log entries yet', 'sunshine-photo-cart' ) . '</p>';
+			echo '<p>' . esc_html__( 'No log entries yet', 'sunshine-photo-cart' ) . '</p>';
 		}
 
 	}
@@ -900,9 +1069,9 @@ class SPC_Admin_Order {
 
 		echo '<ol>';
 		foreach ( $refunds as $refund ) {
-			echo '<li><span class="log-date">' . date( get_option( 'date_format' ) . ' @ ' . get_option( 'time_format' ), $refund['date'] ) . '</span> ' . sunshine_price( $refund['amount'] );
+			echo '<li><span class="log-date">' . esc_html( date( get_option( 'date_format' ) . ' @ ' . get_option( 'time_format' ), $refund['date'] ) ) . '</span> ' . wp_kses_post( sunshine_price( $refund['amount'] ) );
 			if ( ! empty( $refund['reason'] ) ) {
-				echo ': ' . $refund['reason'];
+				echo ': ' . wp_kses_post( $refund['reason'] );
 			}
 			echo '</li>';
 		}
@@ -923,12 +1092,15 @@ class SPC_Admin_Order {
 			$current_order_status = $order->get_status();
 			$new_order_status     = sanitize_key( $_POST['order_status'] );
 			if ( $current_order_status != $new_order_status ) {
+				$order->add_log( 'Order status changed in admin' );
 				$order->set_status( $new_order_status );
 				if ( ! empty( $_POST['order_status_change_notify'] ) && $_POST['order_status_change_notify'] == 'yes' ) {
 					do_action( 'sunshine_admin_order_status_update', $order );
 					// $order->notify( false );
-					SPC()->notices->add_admin( 'order_status_change', sprintf( __( 'Order status notification email sent to %s', 'sunshine-photo-cart' ), $order->get_email() ), 'success' );
-					$order->add_log( sprintf( __( 'Order status notification email sent to %s', 'sunshine-photo-cart' ), $order->get_email() ) );
+					/* translators: %s is the customer email address */
+					SPC()->notices->add_admin( 'order_status_change', sprintf( esc_html__( 'Order status notification email sent to %s', 'sunshine-photo-cart' ), $order->get_email() ), 'success' );
+					/* translators: %s is the customer email address */
+					$order->add_log( sprintf( esc_html__( 'Order status notification email sent to %s', 'sunshine-photo-cart' ), $order->get_email() ) );
 				}
 			}
 		}
@@ -954,8 +1126,9 @@ class SPC_Admin_Order {
 
 		$order = new SPC_Order( $order_id );
 		$order->notify( false );
-		SPC()->notices->add_admin( 'resend_order_email', __( 'Order email successfully resent', 'sunshine-photo-cart' ), 'success' );
-		$order->add_log( sprintf( __( 'Order email resent to customer for %s', 'sunshine-photo-cart' ), $order->get_name() ) );
+		SPC()->notices->add_admin( 'resend_order_email', esc_html__( 'Order email successfully resent', 'sunshine-photo-cart' ), 'success' );
+		/* translators: %s is the order name */
+		$order->add_log( sprintf( esc_html__( 'Order email resent to customer for %s', 'sunshine-photo-cart' ), $order->get_name() ) );
 
 	}
 
@@ -965,11 +1138,12 @@ class SPC_Admin_Order {
 
 			$order = new SPC_Order( intval( $_GET['post'] ) );
 			if ( empty( $order ) ) {
-				wp_die( __( 'Invalid order ID', 'sunshine-photo-cart' ) );
+				wp_die( esc_html__( 'Invalid order ID', 'sunshine-photo-cart' ) );
 				exit;
 			}
 
-			echo sunshine_get_template( 'invoice/admin', array( 'order' => $order ) );
+			// Everything in the template file is escaped, so we can safely ignore the output not escaped warning.
+			echo sunshine_get_template( 'invoice/admin', array( 'order' => $order ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			exit;
 
 		}

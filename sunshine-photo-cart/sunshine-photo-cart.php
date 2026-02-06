@@ -1,26 +1,15 @@
 <?php
 /**
- * Plugin Name: Sunshine Photo Cart
+ * Plugin Name: Sunshine Photo Cart: Free Client Photo Galleries for Photographers
  * Plugin URI: https://www.sunshinephotocart.com
  * Description: Client Gallery Photo Cart & Photo Proofing Plugin for Professional Photographers using WordPress
  * Author: WP Sunshine
  * Author URI: https://www.wpsunshine.com
- * Version: 3.4.13
+ * Version: 3.5.7.3
  * Text Domain: sunshine-photo-cart
  * Domain Path: /languages
- *
- * Sunshine Photo Cart is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * any later version.
- *
- * Sunshine Photo Cart is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Sunshine Photo Cart. If not, see <http://www.gnu.org/licenses/>.
+ * License: GPLv2 or later
+ * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  */
 
 // Exit if accessed directly
@@ -31,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'SUNSHINE_PHOTO_CART_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SUNSHINE_PHOTO_CART_URL', plugin_dir_url( __FILE__ ) );
 define( 'SUNSHINE_PHOTO_CART_FILE', __FILE__ );
-define( 'SUNSHINE_PHOTO_CART_VERSION', '3.4.13' );
+define( 'SUNSHINE_PHOTO_CART_VERSION', '3.5.7.3' );
 define( 'SUNSHINE_PHOTO_CART_STORE_URL', 'https://www.sunshinephotocart.com' );
 
 if ( ! class_exists( 'Sunshine_Photo_Cart', false ) ) {

@@ -10,8 +10,8 @@ class Sunshine_Widget_Gallery_Password_Box extends WP_Widget {
 	public function __construct() {
 		parent::__construct(
 			'sunshine_widget_gallery_password_box', // Base ID
-			__( 'Sunshine Gallery Password Box', 'sunshine' ), // Name
-			array( 'description' => __( 'Display a gallery password box', 'sunshine' ) ) // Args
+			__( 'Sunshine Gallery Password Box', 'sunshine-photo-cart' ), // Name
+			array( 'description' => __( 'Display a gallery password box', 'sunshine-photo-cart' ) ) // Args
 		);
 	}
 
@@ -51,8 +51,8 @@ class Sunshine_Widget_Gallery_Password_Box extends WP_Widget {
 	 */
 	public function update( $new_instance, $old_instance ) {
 		$instance               = array();
-		$instance['title']      = strip_tags( $new_instance['title'] );
-		$instance['visibility'] = strip_tags( $new_instance['visibility'] );
+		$instance['title']      = wp_strip_all_tags( $new_instance['title'] );
+		$instance['visibility'] = wp_strip_all_tags( $new_instance['visibility'] );
 
 		return $instance;
 	}
@@ -75,12 +75,12 @@ class Sunshine_Widget_Gallery_Password_Box extends WP_Widget {
 		}
 		?>
 		<p>
-		<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php _e( 'Title (Optional):', 'sunshine' ); ?></label>
+		<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title (Optional):', 'sunshine-photo-cart' ); ?></label>
 		<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'title' ) ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
 		</p>
 		<p>
-		<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php _e( 'Visibility (Optional):', 'sunshine' ); ?></label>
-		<br /><input type="checkbox" value="sunshine_only" name="<?php echo esc_attr( $this->get_field_name( 'visibility' ) ); ?>" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" <?php checked( 'sunshine_only', $visibility ); ?> /> <?php _e( 'Only visible when on Sunshine pages', 'sunshine' ); ?>
+		<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Visibility (Optional):', 'sunshine-photo-cart' ); ?></label>
+		<br /><input type="checkbox" value="sunshine_only" name="<?php echo esc_attr( $this->get_field_name( 'visibility' ) ); ?>" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" <?php checked( 'sunshine_only', $visibility ); ?> /> <?php esc_html_e( 'Only visible when on Sunshine pages', 'sunshine-photo-cart' ); ?>
 		</p>
 		<?php
 	}
@@ -95,8 +95,8 @@ class Sunshine_Widget_Main_Menu extends WP_Widget {
 	public function __construct() {
 		parent::__construct(
 			'sunshine_widget_main_menu', // Base ID
-			__( 'Sunshine Main Menu', 'sunshine' ), // Name
-			array( 'description' => __( 'Display Sunshine\'s main menu links', 'sunshine' ) ) // Args
+			__( 'Sunshine Main Menu', 'sunshine-photo-cart' ), // Name
+			array( 'description' => __( 'Display Sunshine\'s main menu links', 'sunshine-photo-cart' ) ) // Args
 		);
 	}
 
@@ -139,8 +139,8 @@ class Sunshine_Widget_Main_Menu extends WP_Widget {
 	 */
 	public function update( $new_instance, $old_instance ) {
 		$instance               = array();
-		$instance['title']      = strip_tags( $new_instance['title'] );
-		$instance['visibility'] = strip_tags( $new_instance['visibility'] );
+		$instance['title']      = wp_strip_all_tags( $new_instance['title'] );
+		$instance['visibility'] = wp_strip_all_tags( $new_instance['visibility'] );
 		return $instance;
 	}
 
@@ -162,12 +162,12 @@ class Sunshine_Widget_Main_Menu extends WP_Widget {
 		}
 		?>
 		<p>
-		<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php _e( 'Title (Optional):', 'sunshine' ); ?></label>
+		<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title (Optional):', 'sunshine-photo-cart' ); ?></label>
 		<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'title' ) ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
 		</p>
 		<p>
-		<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php _e( 'Visibility (Optional):', 'sunshine' ); ?></label>
-		<br /><input type="checkbox" value="sunshine_only" name="<?php echo esc_attr( $this->get_field_name( 'visibility' ) ); ?>" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" <?php checked( 'sunshine_only', $visibility ); ?> /> <?php _e( 'Only visible when on Sunshine pages', 'sunshine' ); ?>
+		<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Visibility (Optional):', 'sunshine-photo-cart' ); ?></label>
+		<br /><input type="checkbox" value="sunshine_only" name="<?php echo esc_attr( $this->get_field_name( 'visibility' ) ); ?>" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" <?php checked( 'sunshine_only', $visibility ); ?> /> <?php esc_html_e( 'Only visible when on Sunshine pages', 'sunshine-photo-cart' ); ?>
 		</p>
 		<?php
 	}
@@ -182,8 +182,8 @@ class Sunshine_Widget_Search extends WP_Widget {
 	public function __construct() {
 		parent::__construct(
 			'sunshine_widget_search', // Base ID
-			__( 'Sunshine Search', 'sunshine' ), // Name
-			array( 'description' => __( 'Display a search box', 'sunshine' ) ) // Args
+			__( 'Sunshine Search', 'sunshine-photo-cart' ), // Name
+			array( 'description' => __( 'Display a search box', 'sunshine-photo-cart' ) ) // Args
 		);
 	}
 
@@ -226,8 +226,8 @@ class Sunshine_Widget_Search extends WP_Widget {
 	 */
 	public function update( $new_instance, $old_instance ) {
 		$instance               = array();
-		$instance['title']      = strip_tags( $new_instance['title'] );
-		$instance['visibility'] = strip_tags( $new_instance['visibility'] );
+		$instance['title']      = wp_strip_all_tags( $new_instance['title'] );
+		$instance['visibility'] = wp_strip_all_tags( $new_instance['visibility'] );
 		return $instance;
 	}
 
@@ -249,12 +249,12 @@ class Sunshine_Widget_Search extends WP_Widget {
 		}
 		?>
 		<p>
-		<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php _e( 'Title (Optional):', 'sunshine' ); ?></label>
+		<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title (Optional):', 'sunshine-photo-cart' ); ?></label>
 		<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'title' ) ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
 		</p>
 		<p>
-		<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php _e( 'Visibility (Optional):' ); ?></label>
-		<br /><input type="checkbox" value="sunshine_only" name="<?php echo esc_attr( $this->get_field_name( 'visibility' ) ); ?>" id="<?php echo esc_attr( $this->get_field_id( 'visibility' ) ); ?>" <?php checked( 'sunshine_only', $visibility ); ?> /> <?php _e( 'Only visible when on Sunshine pages', 'sunshine' ); ?>
+		<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Visibility (Optional):', 'sunshine-photo-cart' ); ?></label>
+		<br /><input type="checkbox" value="sunshine_only" name="<?php echo esc_attr( $this->get_field_name( 'visibility' ) ); ?>" id="<?php echo esc_attr( $this->get_field_id( 'visibility' ) ); ?>" <?php checked( 'sunshine_only', $visibility ); ?> /> <?php esc_html_e( 'Only visible when on Sunshine pages', 'sunshine-photo-cart' ); ?>
 		</p>
 		<?php
 	}

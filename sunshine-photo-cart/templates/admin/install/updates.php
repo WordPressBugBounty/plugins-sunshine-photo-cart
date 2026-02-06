@@ -1,6 +1,6 @@
 <div id="sunshine-install--updates" class="sunshine-install--step">
-	<form method="post" action="<?php echo admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install&step=updates' ); ?>">
-		<?php echo wp_nonce_field( 'sunshine_install_updates', 'sunshine_install_updates' ); ?>
+	<form method="post" action="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install&step=updates' ) ); ?>">
+		<?php echo wp_nonce_field( 'sunshine_install_updates', 'sunshine_install_updates' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
 		<h2>Stay up-to-date with Sunshine Photo Cart</h2>
 		<p>Join our email newsletter to receive important updates, new features, photo selling tips and how to make the most of Sunshine Photo Cart (you can always unsubscribe).</p>
@@ -25,7 +25,7 @@
 
 		<div class="sunshine-install--step--actions">
 			<p><button class="button-primary large" type="submit">Join & Continue</button></p>
-			<p style="font-size:16px;"><a href="<?php echo admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install&step=guide' ); ?>" class="sunshine-install--continue">Skip step</a></p>
+			<p style="font-size:16px;"><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install&step=guide' ) ); ?>" class="sunshine-install--continue">Skip step</a></p>
 		</div>
 
 	</form>

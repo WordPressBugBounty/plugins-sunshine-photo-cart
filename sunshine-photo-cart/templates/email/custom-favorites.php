@@ -1,14 +1,14 @@
 <?php
 if ( ! empty( $message ) ) {
-	echo '<div id="custom-message">' . wpautop( apply_filters( 'the_content', $message ) ) . '</div>';
+	echo '<div id="custom-message">' . wp_kses_post( wpautop( apply_filters( 'the_content', $message ) ) ) . '</div>';
 }
 ?>
 
 <?php
 if ( ! empty( $note ) ) {
 	echo '<div id="custom-note">';
-	echo '<p><strong>' . __( 'A custom note from the sender:', 'sunshine-photo-cart' ) . '</strong></p>';
-	echo wpautop( $note );
+	echo '<p><strong>' . esc_html__( 'A custom note from the sender:', 'sunshine-photo-cart' ) . '</strong></p>';
+	echo wp_kses_post( wpautop( $note ) );
 	echo '</div>';
 }
 ?>
@@ -21,8 +21,8 @@ if ( ! empty( $note ) ) {
 			$i++;
 			?>
 			<td>
-				<a href="<?php echo $image->get_permalink(); ?>"><img src="<?php echo $image->get_image_url(); ?>" alt="<?php echo esc_attr( $image->get_name() ); ?>" /></a>
-				<span class="image-name"><?php echo $image->get_file_name(); ?></span>
+				<a href="<?php echo esc_url( $image->get_permalink() ); ?>"><img src="<?php echo esc_url( $image->get_image_url() ); ?>" alt="<?php echo esc_attr( $image->get_name() ); ?>" /></a>
+				<span class="image-name"><?php echo esc_html( $image->get_file_name() ); ?></span>
 			</td>
 			<?php
 			if ( $i == 6 ) {
@@ -36,7 +36,7 @@ if ( ! empty( $note ) ) {
 </table>
 
 <p align="center">
-	<a href="<?php echo $favorites_url; ?>" class="button">
-		<?php _e( 'View all favorites', 'sunshine-photo-cart' ); ?>
+	<a href="<?php echo esc_url( $favorites_url ); ?>" class="button">
+		<?php esc_html_e( 'View all favorites', 'sunshine-photo-cart' ); ?>
 	</a>
 </p>

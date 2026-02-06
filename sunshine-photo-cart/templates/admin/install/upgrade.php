@@ -6,17 +6,17 @@
 			<p>
 				<a href="https://www.sunshinephotocart.com/upgrade/?utm_source=plugin&utm_medium=link&utm_campaign=onboarding" class="button-primary large" target"_blank" style="margin-top: 15px;">Go Pro!</a>
 				<br />
-				<a href="<?php echo admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install&step=updates' ); ?>" style="font-size: 14px;">Not now, I will check this out later</a>
+				<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install&step=updates' ) ); ?>" style="font-size: 14px;">Not now, I will check this out later</a>
 			</p>
 		</div>
 	</div>
 	<ul id="sunshine-upgrade--list">
 		<?php
-		$addons = sunshine_get_addon_data( true ); // TODO: Do not force this.
+		$addons       = sunshine_get_addon_data( true ); // TODO: Do not force this.
 		$addons_total = 0;
 		foreach ( $addons as $addon ) {
 			$addons_total += $addon['price'];
-		?>
+			?>
 		<li>
 			<a href="<?php echo esc_url( $addon['url'] ); ?>?utm_source=plugin&utm_medium=link&utm_campaign=onboarding" target="_blank">
 				<h3>
@@ -31,7 +31,7 @@
 
 	<div id="sunshine-upgrade--cta">
 		<p>
-			Save <?php echo round( 100 - ( ( 279 / $addons_total  ) * 100 ) ); ?>% and get every add-on for <em>only $279!</em><br />
+			Save <?php echo esc_html( round( 100 - ( ( 249 / $addons_total ) * 100 ) ) ); ?>% and get every add-on for <em>only $249!</em><br />
 			<a href="https://www.sunshinephotocart.com/upgrade/?utm_source=plugin&utm_medium=link&utm_campaign=onboarding" class="button-primary large" target"_blank" style="margin-top: 15px;">Go Pro!</a>
 		</p>
 		<ul>
@@ -65,4 +65,4 @@
 	</div>
 </div>
 
-<p style="margin-top: 50px; text-align: center;"><a href="<?php echo admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install&step=updates' ); ?>" class="button">No thanks, I do not want a better client gallery experience</a></p>
+<p style="margin-top: 50px; text-align: center;"><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install&step=updates' ) ); ?>" class="button">No thanks, I do not want a better client gallery experience</a></p>

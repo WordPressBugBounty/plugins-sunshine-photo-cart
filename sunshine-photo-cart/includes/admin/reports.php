@@ -10,16 +10,16 @@ function sunshine_reports_page() {
 			'order'          => 'ASC',
 		),
 	);
-	$init_date = ( ! empty( $init_order ) ) ? $init_order[0]->get_date( 'Y-m-d' ) : date( 'Y-m-d', SPC()->get_option( 'install_time' ) );
+	$init_date  = ( ! empty( $init_order ) ) ? $init_order[0]->get_date( 'Y-m-d' ) : date( 'Y-m-d', SPC()->get_option( 'install_time' ) );
 
 	$available_reports = array(
-		'orders' => __( 'Orders', 'sunshine-photo-cart' ),
-		'products' => __( 'Products', 'sunshine-photo-cart' ),
-	    'galleries' => __( 'Galleries', 'sunshine-photo-cart' ),
-	    'images' => __( 'Images', 'sunshine-photo-cart' ),
-	    'customers' => __( 'Customers', 'sunshine-photo-cart' ),
-		'profits' => __( 'Profits', 'sunshine-photo-cart' ),
-		'tax' => __( 'Tax', 'sunshine-photo-cart' ),
+		'orders'    => __( 'Orders', 'sunshine-photo-cart' ),
+		'products'  => __( 'Products', 'sunshine-photo-cart' ),
+		'galleries' => __( 'Galleries', 'sunshine-photo-cart' ),
+		'images'    => __( 'Images', 'sunshine-photo-cart' ),
+		'customers' => __( 'Customers', 'sunshine-photo-cart' ),
+		'profits'   => __( 'Profits', 'sunshine-photo-cart' ),
+		'tax'       => __( 'Tax', 'sunshine-photo-cart' ),
 	);
 	$available_reports = apply_filters( 'sunshine_reports', $available_reports );
 
@@ -31,7 +31,7 @@ function sunshine_reports_page() {
 		}
 	}
 
-	$durations = apply_filters(
+	$durations        = apply_filters(
 		'sunshine_reports_date_formats',
 		array(
 			'day'   => array(
@@ -85,17 +85,17 @@ function sunshine_reports_page() {
 
 		<div id="sunshine-reports-header">
 			<div id="sunshine-reports-header--title">
-				<h1><?php _e( 'Reports', 'sunshine-photo-cart' ); ?></h1>
+				<h1><?php esc_html_e( 'Reports', 'sunshine-photo-cart' ); ?></h1>
 			</div>
 			<div id="sunshine-reports-header--filter">
 				<div id="sunshine-reports-header--filter--dates">
-					<form method="get" action="<?php echo admin_url( 'edit.php' ); ?>">
+					<form method="get" action="<?php echo esc_url( admin_url( 'edit.php' ) ); ?>">
 						<input type="hidden" name="post_type" value="sunshine-gallery" />
 						<input type="hidden" name="page" value="sunshine-reports" />
 						<input type="hidden" name="report" value="<?php echo esc_attr( $report ); ?>" />
 						<input type="hidden" name="duration" value="custom" />
-						<input type="date" name="after" value="<?php echo esc_attr( date( 'Y-m-d', strtotime( $current_after ) ) ); ?>" min="<?php echo esc_attr( $init_date ); ?>" max="<?php echo date( 'Y-m-d' ); ?>" />
-						<input type="date" name="before" value="<?php echo esc_attr( date( 'Y-m-d', strtotime( $current_before ) ) ); ?>" min="<?php echo esc_attr( $init_date ); ?>" max="<?php echo date( 'Y-m-d' ); ?>" />
+							<input type="date" name="after" value="<?php echo esc_attr( date( 'Y-m-d', strtotime( $current_after ) ) ); ?>" min="<?php echo esc_attr( $init_date ); ?>" max="<?php echo esc_attr( date( 'Y-m-d' ) ); ?>" />
+						<input type="date" name="before" value="<?php echo esc_attr( date( 'Y-m-d', strtotime( $current_before ) ) ); ?>" min="<?php echo esc_attr( $init_date ); ?>" max="<?php echo esc_attr( date( 'Y-m-d' ) ); ?>" />
 						<input type="submit" value="<?php esc_attr_e( 'Filter', 'sunshine-photo-cart' ); ?>" class="button" />
 					</form>
 				</div>
@@ -103,7 +103,7 @@ function sunshine_reports_page() {
 					<?php
 					foreach ( $durations as $key => $duration ) {
 						$class = ( $key == $current_duration ) ? 'active' : '';
-						echo '<a class="' . $class . '" href="' . admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-reports&duration=' . esc_attr( $key ) . '&report=' . $report ) . '">' . esc_html( $duration['label'] ) . '</a>';
+						echo '<a class="' . esc_attr( $class ) . '" href="' . esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-reports&duration=' . esc_attr( $key ) . '&report=' . esc_attr( $report ) ) ) . '">' . esc_html( $duration['label'] ) . '</a>';
 					}
 					?>
 				</nav>
@@ -121,11 +121,11 @@ function sunshine_reports_page() {
 						$url = add_query_arg( 'report', $key, $url );
 						$url = remove_query_arg( 'refresh', $url );
 						?>
-						<li id="sunshine-page--nav--<?php echo esc_attr( $key ); ?>" <?php echo ( $key === $report ) ? ' class="sunshine-page--nav--active"' : ''; ?>><a href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( $label ); ?></a></li>
+						<li id="sunshine-page--nav--<?php echo esc_attr( $key ); ?>" <?php echo ( $key === $report ) ? ' class="sunshine-page--nav--active"' : ''; ?>><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $label ); ?></a></li>
 					<?php } ?>
 					</ul>
 				</nav>
-			<?php }	?>
+			<?php } ?>
 
 			<div id="sunshine-page--content">
 				<?php do_action( 'sunshine_report_' . $report, $current_duration, $current_after, $current_before ); ?>
@@ -142,7 +142,7 @@ add_action( 'sunshine_report_orders', 'sunshine_report_orders_display', 10, 3 );
 function sunshine_report_orders_display( $current_duration, $current_after, $current_before ) {
 
 	$transient_key = 'sunshine_reports_orders' . md5( $current_after . $current_before );
-	$data = get_transient( $transient_key );
+	$data          = get_transient( $transient_key );
 
 	if ( ! $data || isset( $_GET['refresh'] ) ) {
 
@@ -236,12 +236,12 @@ function sunshine_report_orders_display( $current_duration, $current_after, $cur
 		}
 
 		$data = array(
-			'paid_total' => $paid_total,
-			'paid_count' => $paid_count,
+			'paid_total'          => $paid_total,
+			'paid_count'          => $paid_count,
 			'needs_payment_count' => $needs_payment_count,
 			'needs_payment_total' => $needs_payment_total,
-			'paid_labels' => $paid_labels,
-			'paid_values' => $paid_values,
+			'paid_labels'         => $paid_labels,
+			'paid_values'         => $paid_values,
 		);
 
 		set_transient( $transient_key, $data, HOUR_IN_SECONDS );
@@ -260,21 +260,21 @@ function sunshine_report_orders_display( $current_duration, $current_after, $cur
 	<div id="sunshine-reports--stats">
 
 		<div clas="sunshine-report--stat">
-			<h3><?php _e( 'Total Received', 'sunshine-photo-cart' ); ?></h3>
-			<p><?php echo sunshine_price( $data['paid_total'], true ); ?></p>
+			<h3><?php esc_html_e( 'Total Received', 'sunshine-photo-cart' ); ?></h3>
+			<p><?php echo wp_kses_post( sunshine_price( $data['paid_total'], true ) ); ?></p>
 		</div>
 		<div clas="sunshine-report--stat">
-			<h3><?php _e( 'Completed Orders', 'sunshine-photo-cart' ); ?></h3>
-			<p><?php echo $data['paid_count']; ?></p>
+			<h3><?php esc_html_e( 'Completed Orders', 'sunshine-photo-cart' ); ?></h3>
+			<p><?php echo esc_html( $data['paid_count'] ); ?></p>
 		</div>
 		<div clas="sunshine-report--stat">
-			<h3><?php _e( 'Average Order', 'sunshine-photo-cart' ); ?></h3>
-			<p><?php echo ( $data['paid_count'] ) ? sunshine_price( $data['paid_total'] / $data['paid_count'], true ) : sunshine_price( 0, true ); ?></p>
+			<h3><?php esc_html_e( 'Average Order', 'sunshine-photo-cart' ); ?></h3>
+			<p><?php echo wp_kses_post( ( $data['paid_count'] ) ? sunshine_price( $data['paid_total'] / $data['paid_count'], true ) : sunshine_price( 0, true ) ); ?></p>
 		</div>
 		<?php if ( $data['needs_payment_count'] ) { ?>
 			<div clas="sunshine-report--stat">
-				<h3><?php _e( 'Total Unpaid Orders', 'sunshine-photo-cart' ); ?></h3>
-				<p><?php echo $data['needs_payment_count']; ?> (<?php echo sunshine_price( $data['needs_payment_total'], true ); ?>)</p>
+				<h3><?php esc_html_e( 'Total Unpaid Orders', 'sunshine-photo-cart' ); ?></h3>
+				<p><?php echo esc_html( $data['needs_payment_count'] ); ?> (<?php echo wp_kses_post( sunshine_price( $data['needs_payment_total'], true ) ); ?>)</p>
 			</div>
 		<?php } ?>
 
@@ -351,14 +351,14 @@ function sunshine_report_orders_display( $current_duration, $current_after, $cur
 
 	</div>
 
-<?php
+	<?php
 }
 
 add_action( 'sunshine_report_tax', 'sunshine_report_tax_display', 10, 3 );
 function sunshine_report_tax_display( $current_duration, $current_after, $current_before ) {
 
 	$transient_key = 'sunshine_reports_tax' . md5( $current_after . $current_before );
-	$data = get_transient( $transient_key );
+	$data          = get_transient( $transient_key );
 
 	if ( ! $data || isset( $_GET['refresh'] ) ) {
 
@@ -386,7 +386,7 @@ function sunshine_report_tax_display( $current_duration, $current_after, $curren
 
 		$data = array(
 			'order_count' => count( $paid_orders ),
-			'tax' => $tax,
+			'tax'         => $tax,
 		);
 
 		set_transient( $transient_key, $data, HOUR_IN_SECONDS );
@@ -398,16 +398,16 @@ function sunshine_report_tax_display( $current_duration, $current_after, $curren
 	<div id="sunshine-reports--stats">
 
 		<div clas="sunshine-report--stat">
-			<h3><?php _e( 'Tax Collected', 'sunshine-photo-cart' ); ?></h3>
-			<p><?php echo sunshine_price( $data['tax'], true ); ?></p>
+			<h3><?php esc_html_e( 'Tax Collected', 'sunshine-photo-cart' ); ?></h3>
+			<p><?php echo wp_kses_post( sunshine_price( $data['tax'], true ) ); ?></p>
 		</div>
 		<div clas="sunshine-report--stat">
-			<h3><?php _e( 'Completed Orders', 'sunshine-photo-cart' ); ?></h3>
-			<p><?php echo $data['order_count']; ?></p>
+			<h3><?php esc_html_e( 'Completed Orders', 'sunshine-photo-cart' ); ?></h3>
+			<p><?php echo esc_html( $data['order_count'] ); ?></p>
 		</div>
 	</div>
 
-<?php
+	<?php
 }
 
 
@@ -420,7 +420,7 @@ function sunshine_report_promo_display( $duration, $after, $before ) {
 	if ( is_sunshine_addon_active( 'analytics' ) ) {
 		return;
 	}
-?>
+	?>
 <div style="background: #FFF; padding: 30px 40px; box-shadow: 0 0 5px 0 rgba(0,0,0,.1); border-radius: 5px;">
 	<p style="font-size: 22px;"><strong>Get the Advanced Reports & Customer Activity Add-on!</strong></p>
 	<p style="font-size: 18px;">Upgrade to get more advanced reports and analytics to help learn what is working most with your customers and increase overall profits:</p>
@@ -433,10 +433,10 @@ function sunshine_report_promo_display( $duration, $after, $before ) {
 	</ul>
 	<p style="font-size: 18px;"><strong>ALSO!</strong> See each of your customers' exact journies in your galleries by viewing when exactly they viewed galleries and images, added images to favorites or to cart, shared an image on social media, and make a purchase!</p>
 	<?php if ( SPC()->is_pro() ) { ?>
-		<p align="center"><a href="<?php echo admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-addons' ); ?>" class="button-primary">See your add-ons</a></p>
+		<p align="center"><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-addons' ) ); ?>" class="button-primary">See your add-ons</a></p>
 	<?php } else { ?>
 		<p align="center"><a href="https://www.sunshinephotocart.com/addon/analytics/" target="_blank" class="button-primary">View details</a></p>
 	<?php } ?>
 </div>
-<?php
+	<?php
 }

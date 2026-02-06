@@ -10,30 +10,30 @@ function sunshine_get_gallery( $gallery ) {
 function sunshine_get_galleries( $custom_args = array(), $conditional_method = 'access' ) {
 
 	if ( SPC()->get_option( 'gallery_order' ) == 'date_new_old' ) {
-		$order   = 'date';
-		$orderby = 'DESC';
+		$orderby = 'date';
+		$order   = 'DESC';
 	} elseif ( SPC()->get_option( 'gallery_order' ) == 'date_old_new' ) {
-		$order   = 'date';
-		$orderby = 'ASC';
+		$orderby = 'date';
+		$order   = 'ASC';
 	} elseif ( SPC()->get_option( 'gallery_order' ) == 'title' ) {
-		$order   = 'title';
-		$orderby = 'ASC';
+		$orderby = 'title';
+		$order   = 'ASC';
 	} else {
-		$order   = 'menu_order';
-		$orderby = 'ASC';
+		$orderby = 'menu_order';
+		$order   = 'ASC';
 	}
 	$args = array(
 		'post_type'      => 'sunshine-gallery',
 		// 'post_parent' => 0,
-		'orderby'        => $order,
-		'order'          => $orderby,
+		'orderby'        => $orderby,
+		'order'          => $order,
 		'posts_per_page' => -1,
 		// 'update_post_meta_cache' => false,
 		'post_status'    => array( 'publish' ),
 	);
 
 	$args = wp_parse_args( $custom_args, $args );
-	$args = apply_filters( 'sunshine_get_galleries_args', $args );
+	$args = apply_filters( 'sunshine_get_galleries_args', $args, $conditional_method );
 
 	$galleries = new WP_Query( $args );
 
@@ -62,12 +62,12 @@ function sunshine_get_galleries( $custom_args = array(), $conditional_method = '
 
 }
 
-function sunshine_get_gallery_descendants( $gallery_id ) {
+function sunshine_get_gallery_descendants( $gallery_id, $status = 'publish' ) {
 	$children  = array();
 	$galleries = get_posts(
 		array(
 			'numberposts'      => -1,
-			'post_status'      => 'publish',
+			'post_status'      => $status,
 			'post_type'        => 'sunshine-gallery',
 			'post_parent'      => $gallery_id,
 			'suppress_filters' => false,
@@ -75,7 +75,7 @@ function sunshine_get_gallery_descendants( $gallery_id ) {
 	);
 	// now grab the grand children.
 	foreach ( $galleries as $child ) {
-		$gchildren = sunshine_get_gallery_descendants( $child->ID );
+		$gchildren = sunshine_get_gallery_descendants( $child->ID, $status );
 		if ( ! empty( $gchildren ) ) {
 			$children = array_merge( $children, $gchildren );
 		}
@@ -84,13 +84,32 @@ function sunshine_get_gallery_descendants( $gallery_id ) {
 	return $children;
 }
 
-function sunshine_get_gallery_descendant_ids( $gallery_id ) {
-	$galleries = sunshine_get_gallery_descendants( $gallery_id );
-	$ids       = array();
-	foreach ( $galleries as $gallery ) {
-		$ids[] = $gallery->ID;
+function sunshine_get_gallery_descendant_ids( $gallery_id, $status = 'publish' ) {
+	// Optimized to fetch only IDs instead of full post objects.
+	$children  = array();
+	$galleries = get_posts(
+		array(
+			'post_type'      => 'sunshine-gallery',
+			'post_parent'    => $gallery_id,
+			'post_status'    => $status,
+			'fields'         => 'ids',
+			'posts_per_page' => -1,
+			'no_found_rows'  => true,
+		)
+	);
+
+	if ( ! empty( $galleries ) ) {
+		$children = $galleries;
+		// Recursively get grandchildren, great-grandchildren, etc.
+		foreach ( $galleries as $child_id ) {
+			$grandchildren = sunshine_get_gallery_descendant_ids( $child_id, $status );
+			if ( ! empty( $grandchildren ) ) {
+				$children = array_merge( $children, $grandchildren );
+			}
+		}
 	}
-	return $ids;
+
+	return $children;
 }
 
 function sunshine_get_image_dimensions( $size = 'thumbnail' ) {

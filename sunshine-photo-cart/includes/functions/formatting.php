@@ -5,9 +5,12 @@ function sunshine_price( $value, $force_0 = false ) {
 	if ( $value == '' ) {
 		$value = 0;
 	}
-	if ( $value == 0 && ! $force_0 ) {
-		return '<span class="sunshine-amount">' . apply_filters( 'sunshine_free_label', __( 'Free', 'sunshine-photo-cart' ) ) . '</span>';
+	/*
+	$free_label = apply_filters( 'sunshine_price_free_label', __( 'Free', 'sunshine-photo-cart' ) );
+	if ( $value == 0 && ! $force_0 && $free_label ) {
+		return '<span class="sunshine-amount">' . $free_label . '</span>';
 	}
+	*/
 	return '<span class="sunshine-price">' . sunshine_currency_filter( sunshine_format_amount( $value ) ) . '</span>';
 }
 
@@ -98,7 +101,8 @@ function sunshine_currency_filter( $price = '', $currency = '' ) {
 		$currency = SPC()->get_option( 'currency' );
 	}
 
-	$position = SPC()->get_option( 'currency_symbol_position' );
+	$position  = SPC()->get_option( 'currency_symbol_position' );
+	$show_code = SPC()->get_option( 'currency_show_code' );
 
 	$negative = is_numeric( $price ) && $price < 0;
 
@@ -108,6 +112,7 @@ function sunshine_currency_filter( $price = '', $currency = '' ) {
 
 	$symbol_html = '<span class="sunshine-currency-symbol">' . sunshine_currency_symbol( $currency ) . '</span>';
 	$price_html  = '<span class="sunshine-amount">' . $price . '</span>';
+	$code_html   = $show_code ? '<span class="sunshine-currency-code">' . $currency . '</span>' : '';
 
 	if ( $position == 'left' ) :
 		switch ( $currency ) :
@@ -128,6 +133,9 @@ function sunshine_currency_filter( $price = '', $currency = '' ) {
 				$formatted = $symbol_html . ' ' . $price_html;
 				break;
 		endswitch;
+		if ( $show_code ) {
+			$formatted .= ' ' . $code_html;
+		}
 		$formatted = apply_filters( 'sunshine_' . strtolower( $currency ) . '_currency_filter_before', $formatted, $currency, $price );
 	else :
 		switch ( $currency ) :
@@ -147,6 +155,9 @@ function sunshine_currency_filter( $price = '', $currency = '' ) {
 				$formatted = $price_html . ' ' . $symbol_html;
 				break;
 		endswitch;
+		if ( $show_code ) {
+			$formatted .= ' ' . $code_html;
+		}
 		$formatted = apply_filters( 'sunshine_' . strtolower( $currency ) . '_currency_filter_after', $formatted, $currency, $price );
 	endif;
 
@@ -321,9 +332,9 @@ function sunshine_currency_symbol() {
 }
 
 function sunshine_get_price_to_display( $price, $tax = 0, $force_suffix = false ) {
-	//$price_has_tax = SPC()->get_option( 'price_has_tax' );
+	// $price_has_tax = SPC()->get_option( 'price_has_tax' );
 	$display_price = SPC()->get_option( 'display_price' );
-	$suffix = SPC()->get_option( 'price_suffix' );
+	$suffix        = SPC()->get_option( 'price_suffix' );
 
 	if ( 'with_tax' === $display_price ) {
 		$price += $tax;

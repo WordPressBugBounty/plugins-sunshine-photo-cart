@@ -1,19 +1,24 @@
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly
+}
+?>
 <!DOCTYPE html>
 <html>
 <head>
-	<title><?php wp_title(); ?></title>
+	<title><?php echo esc_html( wp_title() ); ?></title>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class(); ?>>
 
-<?php if ( SPC()->frontend->is_gallery() ) { ?>
+<?php if ( SPC()->frontend->is_gallery() && ! SPC()->frontend->is_store() ) { ?>
 	<div id="sunshine--cover">
 		<div id="sunshine--cover--image"><?php SPC()->frontend->current_gallery->featured_image( 'sunshine-cover' ); ?></div>
 		<div id="sunshine--cover--content">
-			<div id="sunshine--cover--content--title"><?php echo SPC()->frontend->current_gallery->get_name(); ?></div>
-			<a href="#sunshine" class="sunshine--button"><?php _e( 'View gallery', 'sunshine-photo-cart' ); ?></a>
+			<div id="sunshine--cover--content--title"><?php echo esc_html( SPC()->frontend->current_gallery->get_name() ); ?></div>
+			<a href="#sunshine" class="sunshine--button"><?php esc_html_e( 'View gallery', 'sunshine-photo-cart' ); ?></a>
 		</div>
 	</div>
 <?php } ?>

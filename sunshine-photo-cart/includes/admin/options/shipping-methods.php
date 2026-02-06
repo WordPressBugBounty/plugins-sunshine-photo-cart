@@ -13,7 +13,7 @@ function sunshine_shipping_methods_display() {
 	?>
 	<p id="sunshine-new-shipping-method">
 		<select name="new_shipping_method">
-			<option value=""><?php _e( 'Select shipping method', 'sunshine-photo-cart' ); ?></option>
+			<option value=""><?php esc_html_e( 'Select shipping method', 'sunshine-photo-cart' ); ?></option>
 			<?php
 			foreach ( $shipping_methods as $id => $shipping_method ) {
 				$shipping_method_class = sunshine_get_shipping_method_by_id( $shipping_method['id'] );
@@ -21,7 +21,7 @@ function sunshine_shipping_methods_display() {
 			}
 			?>
 		</select>
-		<a class="button"><?php _e( 'Add shipping method', 'sunshine-photo-cart' ); ?></a>
+		<a class="button"><?php esc_html_e( 'Add shipping method', 'sunshine-photo-cart' ); ?></a>
 	</p>
 
 	<table id="sunshine-shipping-methods" class="sunshine-table">
@@ -41,11 +41,11 @@ function sunshine_shipping_methods_display() {
 					</td>
 					<td><strong><?php echo esc_html( $this_shipping_method->get_name() ); ?></strong></td>
 					<td class="sunshine-actions">
-						<a href="<?php echo admin_url( 'admin.php?page=sunshine&section=shipping_methods&shipping_method=' . $shipping_method['id'] . '&instance_id=' . esc_attr( $instance_id ) ); ?>" class="button"><?php _e( 'Configure', 'sunshine-photo-cart' ); ?></a>
+						<a href="<?php echo esc_url( admin_url( 'admin.php?page=sunshine&section=shipping_methods&shipping_method=' . esc_attr( $shipping_method['id'] ) . '&instance_id=' . esc_attr( $instance_id ) ) ); ?>" class="button"><?php esc_html_e( 'Configure', 'sunshine-photo-cart' ); ?></a>
 						<?php
 						if ( $this_shipping_method->can_be_cloned() ) {
 							?>
-							<a href="#" class="button delete"><?php _e( 'Delete', 'sunshine-photo-cart' ); ?></a><?php } ?>
+							<a href="#" class="button delete"><?php esc_html_e( 'Delete', 'sunshine-photo-cart' ); ?></a><?php } ?>
 					</td>
 				</tr>
 				<?php
@@ -68,11 +68,11 @@ function sunshine_shipping_methods_display() {
 			if ( new_shipping_method ) {
 				$.ajax({
 					type: 'POST',
-					url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+					url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 					data: {
 						action: 'sunshine_add_shipping_method',
 						shipping_method: new_shipping_method,
-						security: "<?php echo wp_create_nonce( 'sunshine-add-shipping-method' ); ?>"
+						security: "<?php echo esc_js( wp_create_nonce( 'sunshine-add-shipping-method' ) ); ?>"
 					},
 					success: function( data, textStatus, XMLHttpRequest ) {
 						var result = $.parseJSON( data );
@@ -101,11 +101,11 @@ function sunshine_shipping_methods_display() {
 				});
 				$.ajax({
 					type: 'POST',
-					url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+					url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 					data: {
 						action: 'sunshine_sort_shipping_methods',
 						sorted_instances: sorted_instances,
-						security: "<?php echo wp_create_nonce( 'sunshine-sort-shipping-methods' ); ?>"
+						security: "<?php echo esc_js( wp_create_nonce( 'sunshine-sort-shipping-methods' ) ); ?>"
 					}
 				});
 			}
@@ -116,11 +116,11 @@ function sunshine_shipping_methods_display() {
 			if ( data_instance_id ) {
 				$.ajax({
 					type: 'POST',
-					url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+					url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 					data: {
 						action: 'sunshine_delete_shipping_method',
 						instance_id: data_instance_id,
-						security: "<?php echo wp_create_nonce( 'sunshine-delete-shipping-method' ); ?>"
+						security: "<?php echo esc_js( wp_create_nonce( 'sunshine-delete-shipping-method' ) ); ?>"
 					},
 					success: function( data, textStatus, XMLHttpRequest ) {
 						console.log( data );
@@ -139,11 +139,11 @@ function sunshine_shipping_methods_display() {
 		$( document ).on( 'change', '.sunshine-switch', function( e ){
 			$.ajax({
 				type: 'POST',
-				url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+				url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 				data: {
 					action: 'sunshine_active_shipping_methods',
 					instance_id: $( this ).closest( 'tr' ).data( 'instance' ),
-					security: "<?php echo wp_create_nonce( 'sunshine-active-shipping-methods' ); ?>"
+					security: "<?php echo esc_js( wp_create_nonce( 'sunshine-active-shipping-methods' ) ); ?>"
 				}
 			});
 		});

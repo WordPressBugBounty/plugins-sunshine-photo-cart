@@ -5,10 +5,10 @@ foreach ( $categories as $category ) {
 	if ( ! empty( $products ) ) {
 		?>
 
-		<div class="sunshine--image--add-to-cart--category" id="sunshine--image--add-to-cart--category-<?php echo $category->get_id(); ?>" aria-selected="true">
-			<div class="sunshine--image--add-to-cart--category-name"><?php echo $category->get_name(); ?></div>
+		<div class="sunshine--image--add-to-cart--category" id="sunshine--image--add-to-cart--category-<?php echo esc_attr( $category->get_id() ); ?>" aria-selected="true">
+			<div class="sunshine--image--add-to-cart--category-name"><?php echo esc_html( $category->get_name() ); ?></div>
 			<?php if ( $category->get_description() ) { ?>
-				<div class="sunshine--image--add-to-cart--category-description"><?php echo $category->get_description(); ?></div>
+				<div class="sunshine--image--add-to-cart--category-description"><?php echo wp_kses_post( $category->get_description() ); ?></div>
 			<?php } ?>
 			<div class="sunshine--image--add-to-cart--product-list">
 				<?php

@@ -432,7 +432,8 @@ abstract class SPC_Background_Process extends SPC_Async_Request {
 		// Adds every 5 minutes to the existing schedules.
 		$schedules[ $this->identifier . '_cron_interval' ] = array(
 			'interval' => MINUTE_IN_SECONDS * $interval,
-			'display'  => sprintf( __( 'Every %d Minutes' ), $interval ),
+			/* translators: %d is the interval in minutes */
+			'display'  => sprintf( __( 'Every %d minute(s)', 'sunshine-photo-cart' ), $interval ),
 		);
 
 		return $schedules;

@@ -37,6 +37,6 @@
 		<p><a href="https://www.sunshinephotocart.com/upgrade/?utm_source=plugin&utm_medium=link&utm_campaign=pluginfooter" target="_blank" class="button-primary large">Learn more</a></p>
 	</div>
 	<div id="footer--image">
-		<img src="<?php echo SUNSHINE_PHOTO_CART_URL; ?>/assets/images/camera-blobs.svg" alt="" />
+		<img src="<?php echo esc_url( SUNSHINE_PHOTO_CART_URL ); ?>/assets/images/camera-blobs.svg" alt="" />
 	</div>
 </div>

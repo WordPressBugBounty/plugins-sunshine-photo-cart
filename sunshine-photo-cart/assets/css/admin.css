@@ -49,9 +49,12 @@ a#sunshine-header--link--review:before { content: "\f129"; }
 a#sunshine-header--link--upgrade:before { content: "\f133"; }
 a#sunshine-header--link--support:before { content: "\f147"; }
 
-#sunshine-header--notice { background: #FF7E00; padding: 15px 40px; font-size: 18px; color: #FFF; text-align: center; }
-#sunshine-header--notice a { margin-left: 10px; vertical-align: middle; }
-#sunshine-header--notice span { display: inline-block; font-size: 12px; color: var(--accent-alt); text-transform: uppercase; margin-right: 10px; font-weight: bold; vertical-align: middle; }
+.sunshine-header--notice, 
+#sunshine-header--trial { background: #FF7E00; padding: 15px 40px; font-size: 18px; color: #FFF; text-align: center; }
+.sunshine-header--notice a { display: inline-block; margin-left: 10px; vertical-align: middle; }
+.sunshine-header--notice span { display: inline-block; font-size: 12px; color: var(--accent-alt); text-transform: uppercase; margin-right: 10px; font-weight: bold; vertical-align: middle; }
+
+#sunshine-header--notice--expired-addons { background: red; }
 
 /* WP Main Menu Menu */
 #menu-posts-sunshine-product img,
@@ -60,6 +63,8 @@ a#sunshine-header--link--support:before { content: "\f147"; }
 #toplevel_page_sunshine_admin img { max-height: 20px; width: auto; }
 
 .sunshine-menu-highlight-link { color: var(--accent-alt); font-weight: bold !important; }
+.sunshine-menu-upgrade-link { display: block; background: var(--accent-alt); color: #000; text-align: center; font-size: 11px; text-transform: uppercase; padding: 5px 10px; border-radius: 3px; }
+a:hover .sunshine-menu-upgrade-link { background: var(--accent); color: #FFF; }
 
 .sunshine-menu-count { display: inline-block; background: var(--accent); color: #FFF; font-size: 11px; border-radius: 9px; padding: 0 5px; margin: 1px 0 -1px 2px; box-sizing: border-box; text-align: center; min-width: 18px; height: 18px; line-height: 18px; }
 
@@ -302,7 +307,7 @@ body.sunshine #wpbody .wp-list-table tbody span.sunshine--id { color: var(--medi
 
 .sunshine-settings-section-description { margin-top: 40px; font-size: 16px; line-height: 1.5; }
 
-.sunshine-settings-section .sunshine-image-preview img { padding: 15px; background: #f8f8f8; max-height: 125px; width: auto;  }
+.sunshine-settings-section .sunshine-image-preview img { padding: 15px; background: #CCC; max-height: 125px; width: auto;  }
 .sunshine-settings-section .sunshine-file-preview:has(a) { margin: 0 0 15px 0; }
 
 .sunshine .notice { margin: 0 0 30px 0; border-radius: 3px; }
@@ -636,9 +641,14 @@ a.invoice:before { content: "\f11e"; font-family: "SunshineIcons"; display: inli
 
 #sunshine-dashboard-widget-recent { border-top: 1px solid #dfdfdf; padding: 20px; }
 #sunshine-dashboard-widget-recent h3 { font-weight: bold; font-size: 12px; text-transform: uppercase; }
-table#sunshine-orders-table { width: 100%; border-collapse: collapse; }
-#sunshine-orders-table td { padding: 4px 10px 4px 0; border-top: 1px solid #dfdfdf; }
-#sunshine-orders-table td:last-child { padding-right: 0; text-align: right; }
+table#sunshine-orders-table,
+.sunshine-customer-tab table { width: 100%; border-collapse: collapse; }
+#sunshine-orders-table td,
+.sunshine-customer-tab table td { padding: 4px 10px 4px 0; border-top: 1px solid #dfdfdf; }
+#sunshine-orders-table td:last-child,
+.sunshine-customer-tab table td:last-child { padding-right: 0; text-align: right; }
+.sunshine-customer-tab th { text-align: left; padding: 4px 10px 4px 0; }
+.sunshine-customer-tab table th:last-child { padding-right: 0; text-align: right; }
 
 #sunshine-dashboard-setup .inside,
 #sunshine-dashboard-setup ol { padding: 0; margin: 0; }
@@ -963,3 +973,18 @@ a.sunshine-install--continue { text-decoration: none; border: 1px solid #CCC; bo
 #sunshine-edit-attachment table.slidetoggle thead td:nth-child( 2 ) { display: none; }
 #sunshine-edit-attachment table.slidetoggle thead img.thumbnail { max-width: 100%; height: auto; }
 #sunshine-edit-attachment table.slidetoggle tbody { flex-basis: 40%; }
+
+.sunshine-tooltip-ui {
+	background: #fff;
+	border: 1px solid #ccc;
+	border-radius: 3px;
+	box-shadow: 0 2px 6px rgba( 0, 0, 0, 0.3 );
+	padding: 8px 12px;
+	font-size: 13px;
+	line-height: 1.4;
+	max-width: 300px;
+	z-index: 100000;
+}
+.sunshine-tooltip-ui .ui-tooltip-content {
+	color: #333;
+}

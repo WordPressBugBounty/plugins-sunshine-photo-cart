@@ -37,7 +37,7 @@ class SPC_Gallery extends Sunshine_Data {
 	}
 
 	public function get_image_directory() {
-		return $this->images_directory;
+		return $this->get_meta_value( 'images_directory' );
 	}
 
 	public function can_purchase() {
@@ -48,7 +48,7 @@ class SPC_Gallery extends Sunshine_Data {
 	}
 
 	// Can the user even view or see that this gallery exists.
-	public function can_view() {
+	public function can_view( $parent = false ) {
 
 		if ( current_user_can( 'sunshine_manage_options' ) ) {
 			return true;
@@ -58,7 +58,7 @@ class SPC_Gallery extends Sunshine_Data {
 			if ( ! is_user_logged_in() ) {
 				return false;
 			}
-			$allowed_users = $this->get_private_users();
+			$allowed_users = $this->get_private_users( $parent );
 			if ( empty( $allowed_users ) || ! is_array( $allowed_users ) || ! in_array( get_current_user_id(), $allowed_users ) ) {
 				return false;
 			}
@@ -69,17 +69,17 @@ class SPC_Gallery extends Sunshine_Data {
 	}
 
 	// Just because they can view it does not mean they can access or see the images in it.
-	public function can_access() {
+	public function can_access( $parent = false ) {
 
 		if ( $this->get_data_value( 'post_status' ) != 'publish' ) {
 			return false;
 		}
 
-		if ( ! $this->can_view() ) {
+		if ( ! $this->can_view( $parent ) ) {
 			return false;
 		}
 
-		if ( $this->password_required() ) {
+		if ( $this->password_required( $parent ) ) {
 			return false;
 		}
 
@@ -95,20 +95,20 @@ class SPC_Gallery extends Sunshine_Data {
 
 	}
 
-	public function get_private_users() {
-		return $this->get_meta_value( 'private_users' );
+	public function get_private_users( $parent = false ) {
+		return $this->get_meta_value( 'private_users', $parent );
 	}
 
-	public function get_price_level() {
-		$price_level = $this->get_meta_value( 'price_level' );
+	public function get_price_level( $parent = false ) {
+		$price_level = $this->get_meta_value( 'price_level', $parent );
 		if ( empty( $price_level ) ) {
 			$price_level = sunshine_get_default_price_level_id();
 		}
 		return $price_level;
 	}
 
-	public function products_disabled() {
-		return $this->get_meta_value( 'disable_products' );
+	public function products_disabled( $parent = false ) {
+		return $this->get_meta_value( 'disable_products', $parent );
 	}
 
 	public function get_featured_image_id() {
@@ -143,6 +143,7 @@ class SPC_Gallery extends Sunshine_Data {
 
 	public function get_featured_image_url( $size = 'sunshine-thumbnail' ) {
 		$featured_image_id = $this->get_featured_image_id();
+		SPC()->log( 'Featured image ID: ' . $featured_image_id );
 		if ( $featured_image_id ) {
 			return wp_get_attachment_image_url( $featured_image_id, $size );
 		}
@@ -257,7 +258,7 @@ class SPC_Gallery extends Sunshine_Data {
 			// 'post_mime_type' => 'image',
 			'post__in'       => $image_ids,
 			'no_found_rows'  => true,
-			// 'post_parent' => $this->get_id()
+		// 'post_parent' => $this->get_id()
 		);
 
 		$order = SPC()->get_option( 'image_order' );
@@ -343,6 +344,29 @@ class SPC_Gallery extends Sunshine_Data {
 		return get_permalink( $this->get_id() );
 	}
 
+	public function get_ancestors() {
+		$ancestors = get_ancestors( $this->get_id(), $this->post_type );
+		if ( empty( $ancestors ) ) {
+			return array();
+		}
+		return $ancestors;
+	}
+
+	public function get_ancestors_formatted( $link = true, $context = 'public' ) {
+		if ( $this->get_parent_gallery_id() > 0 ) {
+			$ancestors      = $this->get_ancestors();
+			$url            = ( $context === 'admin' ) ? admin_url( 'post.php?action=edit&post=' . $this->get_id() ) : $this->get_permalink( $this->get_id() );
+			$ancestor_links = array( $link ? '<a href="' . $url . '">' . esc_html( $this->get_name() ) . '</a>' : esc_html( $this->get_name() ) );
+			foreach ( $ancestors as $ancestor_id ) {
+				$ancestor_url     = ( $context === 'admin' ) ? admin_url( 'post.php?action=edit&post=' . $ancestor_id ) : $this->get_permalink( $ancestor_id );
+				$ancestor_links[] = $link ? '<a href="' . $ancestor_url . '">' . esc_html( get_the_title( $ancestor_id ) ) . '</a>' : esc_html( get_the_title( $ancestor_id ) );
+			}
+			$ancestor_links = array_reverse( $ancestor_links );
+			return join( ' > ', $ancestor_links );
+		}
+		return false;
+	}
+
 	public function get_parent_gallery() {
 		if ( $this->data->post_parent ) {
 			return sunshine_get_gallery( $this->data->post_parent );
@@ -400,7 +424,7 @@ class SPC_Gallery extends Sunshine_Data {
 		return $this->image_comments_approval;
 	}
 
-	public function password_required() {
+	public function password_required( $parent = false ) {
 		if ( current_user_can( 'sunshine_manage_options' ) ) {
 			return false;
 		}
@@ -411,15 +435,15 @@ class SPC_Gallery extends Sunshine_Data {
 				return true;
 			}
 		}
-		return false;
+			return false;
 	}
 
-	public function get_status() {
+	public function get_status( $parent = false ) {
 		return $this->get_meta_value( 'status' );
 	}
 
-	public function get_access_type() {
-		return $this->get_meta_value( 'access_type' );
+	public function get_access_type( $parent = false ) {
+		return $this->get_meta_value( 'access_type', $parent );
 	}
 
 	public function get_password() {
@@ -456,7 +480,7 @@ class SPC_Gallery extends Sunshine_Data {
 			return;
 		}
 		$emails = $this->get_emails();
-		if ( empty( $emails ) ) {
+		if ( empty( $emails ) || ! is_array( $emails ) ) {
 			$emails = array();
 		}
 		$emails[] = $email;

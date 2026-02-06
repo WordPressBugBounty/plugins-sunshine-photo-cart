@@ -39,7 +39,7 @@ class SPC_Customer extends WP_User {
 		}
 	}
 
-	
+
 	public function update_meta( $key, $value ) {
 		if ( $this->ID > 0 ) {
 
@@ -135,8 +135,8 @@ class SPC_Customer extends WP_User {
 			$final_contents = array();
 			foreach ( $cart as $key => $item ) {
 				 $cart_item = new SPC_Cart_Item( $item );
-				 if ( ! empty( $cart_item->get_product() ) ) {
-					 $final_contents[] = $cart_item;
+				if ( ! empty( $cart_item->get_product() ) ) {
+					$final_contents[] = $cart_item;
 				}
 			}
 			return $final_contents;
@@ -150,7 +150,8 @@ class SPC_Customer extends WP_User {
 	 * @param float $credits The amount of credits to set.
 	 */
 	public function set_credits( $credits ) {
-		$this->update_meta( 'credits', floatval( $credits ) );
+		$this->update_meta( 'credits', intval( $credits ) );
+		SPC()->log( 'Customer ' . $this->get_id() . ' set credits to ' . $credits );
 	}
 
 	/**
@@ -159,7 +160,7 @@ class SPC_Customer extends WP_User {
 	 * @return float The customer's current credits.
 	 */
 	public function get_credits() {
-		return $this->credits;
+		return intval( $this->credits );
 	}
 
 	/**
@@ -168,9 +169,10 @@ class SPC_Customer extends WP_User {
 	 * @param float $amount The amount to decrease.
 	 */
 	public function decrease_credits( $amount ) {
-		$credits = $this->get_credits();
-		$credits -= $amount;
+		$credits  = $this->get_credits();
+		$credits -= intval( $amount );
 		$this->set_credits( max( $credits, 0 ) );
+		SPC()->log( 'Customer ' . $this->get_id() . ' decreased credits by ' . $amount . ' to ' . $credits );
 	}
 
 	/**
@@ -179,9 +181,11 @@ class SPC_Customer extends WP_User {
 	 * @param float $amount The amount to increase.
 	 */
 	public function increase_credits( $amount ) {
-		$credits = $this->get_credits();
+		$amount   = intval( $amount );
+		$credits  = $this->get_credits();
 		$credits += $amount;
 		$this->set_credits( max( $credits, 0 ) );
+		SPC()->log( 'Customer ' . $this->get_id() . ' increased credits by ' . $amount . ' to ' . $credits );
 	}
 
 	/**
@@ -238,6 +242,7 @@ class SPC_Customer extends WP_User {
 			$this->update_meta( 'favorites', $this->favorite_ids ); // TODO: Use the class function here and throughout for get/set/delete user meta
 			$this->increase_favorites_count();
 			do_action( 'sunshine_add_favorite', $image_id, $this );
+			SPC()->log( 'Customer ' . $this->get_id() . ' added favorite ' . $image_id );
 		}
 
 	}
@@ -255,6 +260,7 @@ class SPC_Customer extends WP_User {
 			$this->update_meta( 'favorites', $this->favorite_ids ); // TODO: Use the class function here and throughout for get/set/delete user meta
 			$this->decrease_favorites_count();
 			do_action( 'sunshine_delete_favorite', $image_id, $this );
+			SPC()->log( 'Customer ' . $this->get_id() . ' deleted favorite ' . $image_id );
 		}
 
 	}
@@ -306,6 +312,7 @@ class SPC_Customer extends WP_User {
 				do_action( 'sunshine_delete_favorite', $image_id, $this );
 			}
 			$this->update_meta( 'favorites', '' );
+			SPC()->log( 'Customer ' . $this->get_id() . ' cleared favorites' );
 		}
 	}
 
@@ -389,12 +396,12 @@ class SPC_Customer extends WP_User {
 	 */
 	public function get_shipping_address_formatted() {
 		$args = array(
-			'address1'   => $this->get_shipping_address1(),
-			'address2'   => $this->get_shipping_address2(),
-			'city'       => $this->get_shipping_city(),
-			'state'      => $this->get_shipping_state(),
-			'postcode'   => $this->get_shipping_postcode(),
-			'country'    => $this->get_shipping_country(),
+			'address1' => $this->get_shipping_address1(),
+			'address2' => $this->get_shipping_address2(),
+			'city'     => $this->get_shipping_city(),
+			'state'    => $this->get_shipping_state(),
+			'postcode' => $this->get_shipping_postcode(),
+			'country'  => $this->get_shipping_country(),
 		);
 		return SPC()->countries->get_formatted_address( $args );
 	}
@@ -478,12 +485,12 @@ class SPC_Customer extends WP_User {
 	 */
 	public function get_billing_address_formatted() {
 		$args = array(
-			'address1'   => $this->get_billing_address1(),
-			'address2'   => $this->get_billing_address2(),
-			'city'       => $this->get_billing_city(),
-			'state'      => $this->get_billing_state(),
-			'postcode'   => $this->get_billing_postcode(),
-			'country'    => $this->get_billing_country(),
+			'address1' => $this->get_billing_address1(),
+			'address2' => $this->get_billing_address2(),
+			'city'     => $this->get_billing_city(),
+			'state'    => $this->get_billing_state(),
+			'postcode' => $this->get_billing_postcode(),
+			'country'  => $this->get_billing_country(),
 		);
 		return SPC()->countries->get_formatted_address( $args );
 	}
@@ -519,22 +526,22 @@ class SPC_Customer extends WP_User {
 	}
 
 	public function get_galleries() {
-		$args = array(
+		$args      = array(
 			'posts_per_page' => -1,
-			'meta_query' => array(
+			'meta_query'     => array(
 				'relation' => 'AND',
 				array(
-					'key' => 'private_users',
-					'value' => '"' . $this->ID . '"',
-					'compare' => 'LIKE'
+					'key'     => 'private_users',
+					'value'   => '"' . $this->ID . '"',
+					'compare' => 'LIKE',
 				),
 				array(
-					'key' => 'status',
+					'key'   => 'status',
 					'value' => 'private',
 				),
-			)
+			),
 		);
-		$args = apply_filters( 'sunshine_customer_get_galleries_args', $args );
+		$args      = apply_filters( 'sunshine_customer_get_galleries_args', $args );
 		$galleries = sunshine_get_galleries( $args );
 		return $galleries;
 	}
@@ -571,19 +578,22 @@ class SPC_Customer extends WP_User {
 	*/
 
 	public function increase_order_count( $amount = 1 ) {
-		$order_count = absint( $this->get_meta( 'order_count' ) );
+		$order_count  = absint( $this->get_meta( 'order_count' ) );
 		$order_count += $amount;
 		$this->update_meta( 'order_count', $order_count );
+		SPC()->log( 'Customer ' . $this->get_id() . ' increased order count by ' . $amount . ' to ' . $order_count );
 	}
 
 	public function decrease_order_count( $amount = 1 ) {
-		$order_count = absint( $this->get_meta( 'order_count' ) );
+		$order_count  = absint( $this->get_meta( 'order_count' ) );
 		$order_count -= $amount;
 		$this->update_meta( 'order_count', $order_count );
+		SPC()->log( 'Customer ' . $this->get_id() . ' decreased order count by ' . $amount . ' to ' . $order_count );
 	}
 
 	public function set_order_count( $amount ) {
 		$this->update_meta( 'order_count', absint( $amount ) );
+		SPC()->log( 'Customer ' . $this->get_id() . ' set order count to ' . $amount );
 	}
 
 	public function get_order_count() {
@@ -592,19 +602,22 @@ class SPC_Customer extends WP_User {
 	}
 
 	public function increase_order_totals( $amount ) {
-		$order_totals = floatval( $this->get_meta( 'order_totals' ) );
+		$order_totals  = floatval( $this->get_meta( 'order_totals' ) );
 		$order_totals += $amount;
 		$this->update_meta( 'order_totals', $order_totals );
+		SPC()->log( 'Customer ' . $this->get_id() . ' increased order totals by ' . $amount . ' to ' . $order_totals );
 	}
 
 	public function decrease_order_totals( $amount ) {
-		$order_totals = floatval( $this->get_meta( 'order_totals' ) );
+		$order_totals  = floatval( $this->get_meta( 'order_totals' ) );
 		$order_totals -= $amount;
 		$this->update_meta( 'order_totals', $order_totals );
+		SPC()->log( 'Customer ' . $this->get_id() . ' decreased order totals by ' . $amount . ' to ' . $order_totals );
 	}
 
 	public function set_order_totals( $amount ) {
 		$this->update_meta( 'order_totals', floatval( $amount ) );
+		SPC()->log( 'Customer ' . $this->get_id() . ' set order totals to ' . $amount );
 	}
 
 	public function get_order_totals() {
@@ -612,19 +625,22 @@ class SPC_Customer extends WP_User {
 	}
 
 	public function increase_favorites_count( $amount = 1 ) {
-		$favorites_count = absint( $this->get_meta( 'favorites_count' ) );
+		$favorites_count  = absint( $this->get_meta( 'favorites_count' ) );
 		$favorites_count += $amount;
 		$this->update_meta( 'favorites_count', $favorites_count );
+		SPC()->log( 'Customer ' . $this->get_id() . ' increased favorites count by ' . $amount . ' to ' . $favorites_count );
 	}
 
 	public function decrease_favorites_count( $amount = 1 ) {
-		$favorites_count = absint( $this->get_meta( 'favorites_count' ) );
+		$favorites_count  = absint( $this->get_meta( 'favorites_count' ) );
 		$favorites_count -= $amount;
 		$this->update_meta( 'favorites_count', $favorites_count );
+		SPC()->log( 'Customer ' . $this->get_id() . ' decreased favorites count by ' . $amount . ' to ' . $favorites_count );
 	}
 
 	public function set_favorites_count( $amount ) {
 		$this->update_meta( 'favorites_count', absint( $amount ) );
+		SPC()->log( 'Customer ' . $this->get_id() . ' set favorites count to ' . $amount );
 	}
 
 	public function recalculate_stats() {
@@ -634,17 +650,18 @@ class SPC_Customer extends WP_User {
 
 		$this->set_favorites_count( $this->get_favorites_count() );
 
-		$args   = array(
+		$args  = array(
 			'post_type'      => 'sunshine-order',
 			'posts_per_page' => -1,
 			'author'         => $this->ID,
 		);
-		$query  = new WP_Query( $args );
+		$query = new WP_Query( $args );
 		$this->set_order_count( $query->found_posts );
 
 		$order_totals = 0;
-		while ( $query->have_posts() ) : $query->the_post();
-			$order = new SPC_Order( get_the_ID() );
+		while ( $query->have_posts() ) :
+			$query->the_post();
+			$order         = new SPC_Order( get_the_ID() );
 			$order_totals += $order->get_total_minus_refunds();
 		endwhile;
 		wp_reset_postdata();
@@ -652,6 +669,7 @@ class SPC_Customer extends WP_User {
 		$this->set_order_totals( $order_totals );
 
 		do_action( 'sunshine_customer_recalculate_stats', $this );
+		SPC()->log( 'Customer ' . $this->get_id() . ' recalculated stats' );
 
 	}
 
@@ -668,6 +686,10 @@ class SPC_Customer extends WP_User {
 			}
 		);
 		return $actions;
+	}
+
+	public function get_last_login() {
+		return $this->get_meta( 'last_login' );
 	}
 
 	/*

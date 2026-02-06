@@ -7,7 +7,8 @@ class SPC_Email_Summary extends SPC_Email {
 		$this->class       = get_class( $this );
 		$this->name        = __( 'Summary', 'sunshine-photo-cart' );
 		$this->description = __( 'Weekly email sent with summary of Sunshine sales and stats', 'sunshine-photo-cart' );
-		$this->subject     = sprintf( __( '%s summary', 'sunshine-photo-cart' ), '[sitename]' );
+		/* translators: %s is the site name */
+		$this->subject           = sprintf( __( '%s summary', 'sunshine-photo-cart' ), '[sitename]' );
 		$this->custom_recipients = true;
 
 		add_action( 'sunshine_send_summary', array( $this, 'trigger' ) );
@@ -18,17 +19,17 @@ class SPC_Email_Summary extends SPC_Email {
 
 		// Get order data.
 		$current_after = strtotime( '-7 days' );
-		$args        = array(
+		$args          = array(
 			'status' => sunshine_order_statuses_paid(),
 			'after'  => array(
-				'year'  => date( 'Y', $current_after ),
-				'month' => date( 'n', $current_after ),
-				'day'   => date( 'j', $current_after ),
+				'year'  => gmdate( 'Y', $current_after ),
+				'month' => gmdate( 'n', $current_after ),
+				'day'   => gmdate( 'j', $current_after ),
 			),
 		);
-		$paid_orders = sunshine_get_orders( $args );
+		$paid_orders   = sunshine_get_orders( $args );
 		if ( empty( $paid_orders ) ) {
-			//return; // Don't send this email if we have no orders.
+			// return; // Don't send this email if we have no orders.
 		}
 
 		$paid_total = 0;
@@ -41,27 +42,27 @@ class SPC_Email_Summary extends SPC_Email {
 		}
 
 		// Get customers data.
-		$args = array(
+		$args      = array(
 			'date_query' => array(
-				'after'  => array(
-					'year'  => date( 'Y', $current_after ),
-					'month' => date( 'n', $current_after ),
-					'day'   => date( 'j', $current_after ),
+				'after' => array(
+					'year'  => gmdate( 'Y', $current_after ),
+					'month' => gmdate( 'n', $current_after ),
+					'day'   => gmdate( 'j', $current_after ),
 				),
-			)
+			),
 		);
 		$customers = sunshine_get_customers( $args );
 
 		// Get gallery data.
-		$args = array(
+		$args      = array(
 			'meta_query' => '',
 			'date_query' => array(
-				'after'  => array(
-					'year'  => date( 'Y', $current_after ),
-					'month' => date( 'n', $current_after ),
-					'day'   => date( 'j', $current_after ),
+				'after' => array(
+					'year'  => gmdate( 'Y', $current_after ),
+					'month' => gmdate( 'n', $current_after ),
+					'day'   => gmdate( 'j', $current_after ),
 				),
-			)
+			),
 		);
 		$galleries = sunshine_get_galleries( $args, 'all' );
 
@@ -73,25 +74,25 @@ class SPC_Email_Summary extends SPC_Email {
 		}
 
 		// Did You Know information.
-		$dyk = '';
+		$dyk     = '';
 		$request = wp_safe_remote_get( SUNSHINE_PHOTO_CART_STORE_URL . '/wp-content/didyouknow.json?' . time() );
 		if ( ! is_wp_error( $request ) && 200 === wp_remote_retrieve_response_code( $request ) ) {
 			$request_body = wp_remote_retrieve_body( $request );
-			$dyk_items = json_decode( $request_body, true );
-			$key = array_rand( $dyk_items );
-			$dyk = $dyk_items[ $key ];
+			$dyk_items    = json_decode( $request_body, true );
+			$key          = array_rand( $dyk_items );
+			$dyk          = $dyk_items[ $key ];
 		}
 
 		$args = array(
-			'start_date' => date( get_option( 'date_format' ), $current_after ),
-			'end_date' => date( get_option( 'date_format' ), time() ),
+			'start_date' => gmdate( get_option( 'date_format' ), $current_after ),
+			'end_date'   => gmdate( get_option( 'date_format' ), time() ),
 			'paid_total' => $paid_total,
 			'paid_count' => $paid_count,
-			'avg_order' => ( $paid_total ) ? round( $paid_total / $paid_count, 2 ) : 0,
-			'customers' => ( $customers ) ? count( $customers ) : 0,
-			'galleries' => ( $galleries ) ? count( $galleries ) : 0,
-			'images' => ( $images ) ? $images : 0,
-			'dyk' => $dyk,
+			'avg_order'  => ( $paid_total ) ? round( $paid_total / $paid_count, 2 ) : 0,
+			'customers'  => ( $customers ) ? count( $customers ) : 0,
+			'galleries'  => ( $galleries ) ? count( $galleries ) : 0,
+			'images'     => ( $images ) ? $images : 0,
+			'dyk'        => $dyk,
 		);
 		$this->add_args( $args );
 

@@ -9,7 +9,7 @@
 			<li>
 				<div>
 					<p>Start configuring your store including address, pages, URLs, and more...</p>
-					<a href="<?php echo admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine' ); ?>" class="button">See settings</a>
+					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine' ) ); ?>" class="button">See settings</a>
 				</div>
 			</li>
 		<?php } else { ?>
@@ -20,7 +20,7 @@
 			<li>
 				<div>
 					<p>Configure payment methods to start receiving money</p>
-					<a href="<?php echo admin_url( 'admin.php?page=sunshine&section=payment_methods' ); ?>" class="button">Select payment methods</a>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=sunshine&section=payment_methods' ) ); ?>" class="button">Select payment methods</a>
 				</div>
 			</li>
 		<?php } else { ?>
@@ -31,7 +31,7 @@
 			<li>
 				<div>
 					<p>Configure shipping methods to get orders to customers</p>
-					<a href="<?php echo admin_url( 'admin.php?page=sunshine&section=shipping_methods' ); ?>" class="button">Setup shipping methods</a>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=sunshine&section=shipping_methods' ) ); ?>" class="button">Setup shipping methods</a>
 				</div>
 			</li>
 		<?php } else { ?>
@@ -42,7 +42,7 @@
 			<li>
 				<div>
 					<p>Create products and set prices to start selling</p>
-					<a href="<?php echo admin_url( 'edit.php?post_type=sunshine-product' ); ?>" class="button">Add products</a>
+					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-product' ) ); ?>" class="button">Add products</a>
 				</div>
 			</li>
 		<?php } else { ?>
@@ -53,7 +53,7 @@
 			<li>
 				<div>
 					<p>Customize the look of Sunshine with your logo and other options</p>
-					<a href="<?php echo admin_url( 'admin.php?page=sunshine&section=display' ); ?>" class="button">Configure display & branding options</a>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=sunshine&section=display' ) ); ?>" class="button">Configure display & branding options</a>
 				</div>
 			</li>
 		<?php } else { ?>

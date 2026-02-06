@@ -1,4 +1,8 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly
+}
+
 add_action( 'wp_head', 'sunshine_theme_classic_css' );
 function sunshine_theme_classic_css() {
 

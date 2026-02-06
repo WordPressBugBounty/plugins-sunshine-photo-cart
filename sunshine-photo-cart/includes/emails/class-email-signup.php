@@ -7,7 +7,8 @@ class SPC_Email_Signup extends SPC_Email {
 		$this->class       = get_class( $this );
 		$this->name        = __( 'Sign Up', 'sunshine-photo-cart' );
 		$this->description = __( 'Email sent to customer after account sign up', 'sunshine-photo-cart' );
-		$this->subject     = sprintf( __( 'Your new account on %s', 'sunshine-photo-cart' ), '[sitename]' );
+		/* translators: %s is the site name */
+		$this->subject = sprintf( __( 'Your new account on %s', 'sunshine-photo-cart' ), '[sitename]' );
 
 		$this->add_search_replace(
 			array(
@@ -29,7 +30,7 @@ class SPC_Email_Signup extends SPC_Email {
 
 		$reset_password_url = '';
 		if ( $set_password_notice ) {
-			$key = get_password_reset_key( $customer );
+			$key                = get_password_reset_key( $customer );
 			$reset_password_url = sunshine_get_account_endpoint_url( 'reset-password' );
 			$reset_password_url = add_query_arg(
 				array(
@@ -41,8 +42,8 @@ class SPC_Email_Signup extends SPC_Email {
 		}
 
 		$args = array(
-			'customer' => $customer,
-			'email' => $email,
+			'customer'           => $customer,
+			'email'              => $email,
 			'reset_password_url' => $reset_password_url,
 		);
 		$this->add_args( $args );

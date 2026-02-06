@@ -10,13 +10,10 @@ class SPC_Tool_Reinstall extends SPC_Tool {
 		);
 	}
 
-	function process() {
-		if ( ! current_user_can( 'sunshine_manage_options' ) ) {
-			return false;
-		}
+	protected function do_process() {
 		maybe_sunshine_create_custom_tables();
 		sunshine_base_install();
-		echo '<p>' . __( 'Re-install process successfully run', 'sunshine-photo-cart' ) . '</p>';
+		echo '<p>' . esc_html__( 'Re-install process successfully run', 'sunshine-photo-cart' ) . '</p>';
 	}
 
 }

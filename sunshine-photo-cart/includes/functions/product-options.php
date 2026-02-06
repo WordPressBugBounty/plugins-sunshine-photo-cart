@@ -25,5 +25,6 @@ function sunshine_get_product_option_types() {
 	return array(
 		'select'   => __( 'Select one of many', 'sunshine-photo-cart' ),
 		'checkbox' => __( 'Single checkbox (Yes/No)', 'sunshine-photo-cart' ),
+		'text'     => __( 'Text field', 'sunshine-photo-cart' ),
 	);
 }

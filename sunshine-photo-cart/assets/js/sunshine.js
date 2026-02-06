@@ -139,7 +139,9 @@ jQuery( document ).ready(function($){
         $( '#sunshine--product--details' ).remove();
 
         let product_id = $( this ).data( 'product-id' );
+        let product_type = $( this ).data( 'product-type' );
         let image_id = $( this ).data( 'image-id' );
+		let gallery_id = $( this ).data( 'gallery-id' );
 
         $( '#sunshine--image--add-to-cart--content' ).addClass( 'sunshine--loading' );
 
@@ -151,6 +153,8 @@ jQuery( document ).ready(function($){
                 action: 'sunshine_product_details',
                 product_id: product_id,
                 image_id: image_id,
+                product_type: product_type,
+				gallery_id: gallery_id,
             },
             success: function( result, textStatus, XMLHttpRequest) {
                 if ( result.success ) {
@@ -159,7 +163,7 @@ jQuery( document ).ready(function($){
 					} else {
 						$( '#sunshine--image--add-to-cart--nav, #sunshine--image--add-to-cart--products' ).hide();
 	                    $( '#sunshine--image--add-to-cart--content' ).append( result.data.html );
-	                    $( document ).trigger( 'sunshine_product_details', [ product_id, image_id ] );
+	                    $( document ).trigger( 'sunshine_product_details', [ product_id, product_type, image_id, gallery_id ] );
 					}
                 }
             },
@@ -181,7 +185,7 @@ jQuery( document ).ready(function($){
     });
 
     // Trigger product row to be clickable
-    $( document ).on( 'click', '.sunshine--image--add-to-cart--product-item', function() {
+    $( document ).on( 'click', '.sunshine--image--add-to-cart--product-item, .sunshine--store--product-item', function() {
         $( 'button', this ).trigger( 'click' );
     });
 
@@ -263,6 +267,8 @@ jQuery( document ).ready(function($){
 
         let has_errors = false;
 
+		var button = $( this );
+
         $( '.sunshine--product-options--item' ).removeClass( 'sunshine--option-required' );
 
         // Check all required fields
@@ -341,6 +347,7 @@ jQuery( document ).ready(function($){
                             $( '#sunshine, #sunshine--image-' + image_id ).removeClass( 'sunshine--image--in-cart' );
                         }
                         $( '<div class="sunshine--success"></div>' ).appendTo( '#sunshine--modal--content' ).delay( 1000 ).fadeOut( 500, function(){ $( this ).remove(); } );
+						button.after( '<a href="' + sunshine_photo_cart.cart_url + '" class="sunshine--button-link sunshine--view-cart">' + sunshine_photo_cart.lang.view_cart + '</a>' );
                         $( '#sunshine--image--add-to-cart--products, #sunshine--image--add-to-cart--nav' ).show();
                         $( '#sunshine--product--details' ).remove();
 						if ( result.data.type ) {
@@ -496,8 +503,14 @@ jQuery( document ).ready(function($){
 
 		if ( $(this).is(':checked') ) {
 			var main_el = $( this ).closest( '.sunshine--multi-image-select' );
-			currentTotal = 0;
-			main_el.find('select[name*=qty]').not('#sunshine--multi-image-select--source-favorites select').each(function() {
+			var currentTotal = 0;
+			var processedSelects = new Set();
+			main_el.find('select[name*=qty]').each(function() {
+			    // Skip if we've already processed this select
+			    if (processedSelects.has($(this).attr('name'))) {
+			        return true;
+			    }
+			    processedSelects.add($(this).attr('name'));
 			    var value = parseInt($(this).val());
 			    if (!isNaN(value) && value >= 0) {
 			        currentTotal += value;
@@ -505,8 +518,9 @@ jQuery( document ).ready(function($){
 			});
 			var maxImages = main_el.data( 'image-count' );
 			if ( maxImages && currentTotal >= maxImages  ) {
+				console.log( 'Too many images selected' );
 				$( this ).prop( 'checked', false );
-				alert( 'You have already selected the maximum number of images' );
+				alert( sunshine_photo_cart.lang.max_images );
 				return;
 			}
 		}
@@ -514,6 +528,17 @@ jQuery( document ).ready(function($){
 		var $select = $(this).closest('figure').find('select');
 		var selectedValue = $(this).is(':checked') ? '1' : '0';
 		$select.val(selectedValue).trigger('change');
+
+		// Find any other qty selects with the same name and update to the same value as this selected one.
+		var currentName = $(this).attr('name');
+		var currentValue = $(this).val();
+		$( 'select[name*=qty]' ).each(function() {
+			if ($(this).attr('name') === currentName) {
+				console.log( 'Found another qty select with the same name 2', $( this ).attr( 'name' ) );
+				$(this).val(currentValue);
+			}
+		});
+
 	});
 
 	// On selecting an image within multi-image-select
@@ -529,7 +554,12 @@ jQuery( document ).ready(function($){
         var currentTotal = 0;
 
         // Calculate the current total of selected quantities
-		main_el.find('select[name*=qty]').not('#sunshine--multi-image-select--source-favorites select').each(function() {
+		var processedSelects = new Set();
+		main_el.find('select[name*=qty]').each(function() {
+			if (processedSelects.has($(this).attr('name'))) {
+				return true;
+			}
+			processedSelects.add($(this).attr('name'));
 		    var value = parseInt($(this).val());
 		    if (!isNaN(value) && value >= 0) {
 		        currentTotal += value;
@@ -550,20 +580,40 @@ jQuery( document ).ready(function($){
 			$checkbox.prop('checked', true);
 		}
 
+		// Find any other qty selects with the same name and update to the same value as this selected one.
+		var currentName = $(this).attr('name');
+		var currentValue = $(this).val();
+		$( 'select[name*=qty]' ).each(function() {
+			if ($(this).attr('name') === currentName) {
+				console.log( 'Found another qty select with the same name and updating to ' + currentValue, $( this ).attr( 'name' ) );
+				$(this).val(currentValue);
+				// Also set the checkbox near it to checked if the value is greater than 0 or unchecked if the value is 0
+				if ( currentValue > 0 ) {
+					$(this).closest('figure').find('input[type="checkbox"]').prop('checked', true);
+				} else {
+					$(this).closest('figure').find('input[type="checkbox"]').prop('checked', false);
+				}
+			}
+		});
+
         // Update the hidden input
         var selectedIds = [];
-        main_el.find('.sunshine--multi-image-select--source--list figure').not('#sunshine--multi-image-select--source-favorites figure').each(function() {
+        main_el.find('.sunshine--multi-image-select--source--list figure').each(function() {
             var id = $(this).find('input[type="checkbox"]').val();
 			if ( selectedIds.includes( id ) ) {
 				return true;
 			}
             var count = parseInt($(this).find('select').val());
+			if ( isNaN( count ) ) {
+				count = 1;
+			}
             for (var i = 0; i < count; i++) {
                 selectedIds.push(id);
             }
         });
 
 		$( 'input[name="' + value_target + '"]' ).val( selectedIds.join( ',' ) );
+
 
 		$.ajax({
 			type: 'POST',
@@ -575,6 +625,7 @@ jQuery( document ).ready(function($){
 				ref: ref,
 			},
 			success: function( result, textStatus, XMLHttpRequest) {
+				console.log( 'sunshine_multi_image_select_images_item', result );
 				if ( result.success ) {
 					let $selected_target = $( '#sunshine--multi-image-select--selected-images--' + main_el.data( 'key' ) );
 					$selected_target.html( '' ); // Reset the thumbnail display.
@@ -597,6 +648,7 @@ jQuery( document ).ready(function($){
 
 					// Adjust the options in all selects
 					if ( maxImages > 0 ) {
+						currentTotal = result.data.length;
 						main_el.find('.sunshine--multi-image-select--source--list select').each(function() {
 				            var $select = $(this);
 				            var currentValue = parseInt($select.val());
@@ -605,14 +657,6 @@ jQuery( document ).ready(function($){
 							if ( maxSingleImage ) {
 								maxOptionValue = maxSingleImage;
 							}
-
-							/*
-							if ( maxOptionValue <= 0 ) {
-								$( this ).attr( 'disabled', true );
-							} else {
-								$( this ).attr( 'disabled', false );
-							}
-							*/
 
 				            // Remove options that are not currently selected and exceed the new max limit
 				            $select.find('option').each(function() {
@@ -631,6 +675,7 @@ jQuery( document ).ready(function($){
 
 				        });
 
+						// current total is the number of items in array in the result.data
 						main_el.find( '.sunshine--multi-image-select--counts--selected' ).html( currentTotal );
 						if ( currentTotal >= maxImages ) {
 							main_el.addClass( 'sunshine--completed' );

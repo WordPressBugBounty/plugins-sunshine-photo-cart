@@ -7,7 +7,8 @@ class SPC_Email_Customer_Receipt extends SPC_Email {
 		$this->class       = get_class( $this );
 		$this->name        = __( 'Customer Order Receipt', 'sunshine-photo-cart' );
 		$this->description = __( 'Email receipt sent to customer after successful order', 'sunshine-photo-cart' );
-		$this->subject     = sprintf( __( 'Receipt for %1$s from %2$s', 'sunshine-photo-cart' ), '[order_name]', '[sitename]' );
+		/* translators: %1$s is the order name, %2$s is the site name */
+		$this->subject = sprintf( __( 'Receipt for %1$s from %2$s', 'sunshine-photo-cart' ), '[order_name]', '[sitename]' );
 
 		$this->add_search_replace(
 			array(
@@ -17,6 +18,7 @@ class SPC_Email_Customer_Receipt extends SPC_Email {
 				'first_name'   => '',
 				'last_name'    => '',
 				'status'       => '',
+				'receipt_url'  => '',
 			)
 		);
 
@@ -46,13 +48,19 @@ class SPC_Email_Customer_Receipt extends SPC_Email {
 				'first_name'   => $order->get_customer_first_name(),
 				'last_name'    => $order->get_customer_last_name(),
 				'status'       => $order->get_status_name(),
+				'receipt_url'  => $order->get_received_permalink(),
+				'receipt_link' => '<a href="' . $order->get_received_permalink() . '">' . __( 'View order', 'sunshine-photo-cart' ) . '</a>',
+				'invoice_url'  => $order->get_invoice_permalink(),
+				'invoice_link' => '<a href="' . $order->get_invoice_permalink() . '">' . __( 'View invoice', 'sunshine-photo-cart' ) . '</a>',
 			);
 			$search_replace = apply_filters( 'sunshine_order_email_search_replace', $search_replace, $order );
 			$this->add_search_replace( $search_replace );
 
 			// Send email
 			$result = $this->send();
-
+			if ( $result ) {
+				$order->add_log( 'Email sent to customer: ' . $this->name );
+			}
 		}
 
 	}

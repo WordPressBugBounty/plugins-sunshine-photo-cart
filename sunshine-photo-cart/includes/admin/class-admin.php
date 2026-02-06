@@ -81,7 +81,7 @@ class Sunshine_Admin {
 		add_action( 'add_meta_boxes', array( $this, 'attachment_meta_box_setup' ) );
 
 		// Debugging helpers.
-		add_action( 'admin_notices', array( $this, 'show_post_debug' ) );
+		add_action( 'admin_init', array( $this, 'show_post_debug' ) );
 
 		// Tell people about caching plugin issues.
 		add_action( 'admin_notices', array( $this, 'plugin_conflicts' ) );
@@ -94,6 +94,8 @@ class Sunshine_Admin {
 
 		// Let Sunshine Manager edit images in Sunshine galleries.
 		add_filter( 'user_has_cap', array( $this, 'restrict_media_editing_capabilities' ), 10, 4 );
+
+		add_filter( 'sunshine_price_free_label', '__return_false' );
 
 	}
 
@@ -289,6 +291,9 @@ class Sunshine_Admin {
 			wp_enqueue_script( 'farbtastic' );
 			wp_enqueue_script( 'ajaxq' );
 			wp_enqueue_media();
+
+			// Enqueue jQuery UI tooltip library for Sunshine admin pages.
+			wp_enqueue_script( 'jquery-ui-tooltip' );
 		}
 
 		if ( $this->is_page( 'reports' ) ) {
@@ -367,6 +372,7 @@ class Sunshine_Admin {
 
 		if ( $typenow == 'sunshine-gallery' || $typenow == 'sunshine-product' || $typenow == 'sunshine-order' || $typenow == 'sunshine-product' || isset( $_GET['page'] ) && strpos( $_GET['page'], 'sunshine-photo-cart' ) !== false ) {
 			$rate_text = sprintf(
+				/* translators: %1$s is the URL to the Sunshine Photo Cart website, %2$s is the URL to the WordPress.org plugin reviews page */
 				__( 'Thank you for using <a href="%1$s" target="_blank">Sunshine Photo Cart</a>! Please <a href="%2$s" target="_blank">rate us</a> on <a href="%2$s" target="_blank">WordPress.org</a>', 'sunshine-photo-cart' ),
 				'https://www.sunshinephotocart.com?utm_source=plugin&utm_medium=link&utm_campaign=rate',
 				'https://wordpress.org/support/view/plugin-reviews/sunshine-photo-cart?filter=5#postform'
@@ -491,20 +497,24 @@ class Sunshine_Admin {
 
 	function post_updated_messages( $messages ) {
 		global $post;
-		$messages['sunshine-order'][1]   = __( 'Order Updated', 'sunshine-photo-cart' );
+		$messages['sunshine-order'][1] = __( 'Order Updated', 'sunshine-photo-cart' );
+		/* translators: %s is the URL to view the gallery */
 		$messages['sunshine-gallery'][1] = sprintf( __( '<strong>Gallery updated</strong>, <a href="%s">view gallery</a>', 'sunshine-photo-cart' ), get_permalink( $post->ID ) );
+		/* translators: %s is the URL to view the gallery */
 		$messages['sunshine-gallery'][6] = sprintf( __( '<strong>Gallery created</strong>, <a href="%s">view gallery</a>', 'sunshine-photo-cart' ), get_permalink( $post->ID ) );
 		return $messages;
 	}
 
 	function logging_notice() {
 		if ( SPC()->get_option( 'enable_log' ) ) {
+			/* translators: %s is the URL to settings page */
 			SPC()->notices->add_admin( 'log', sprintf( __( 'Sunshine logging is enabled. <a href="%s">Please disable when no longer in use.</a>', 'sunshine-photo-cart' ), admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine' ) ), 'notice' );
 		}
 	}
 
 	function install_notice() {
 		if ( ! SPC()->get_option( 'install_time' ) ) {
+			/* translators: %s is the URL to installation page */
 			SPC()->notices->add_admin( 'install', sprintf( __( 'Sunshine installation process was skipped. <a href="%s">Please complete the installation process.</a>', 'sunshine-photo-cart' ), admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-install' ) ), 'notice' );
 		}
 	}
@@ -686,9 +696,10 @@ class Sunshine_Admin {
 		$orders      = sunshine_get_orders( array( 'status' => 'new' ) );
 		$order_count = count( $orders );
 		if ( $order_count > 0 ) {
+			/* translators: %1$d is the number of orders, %2$s is the number of orders in plural */
 			$notifications = sprintf( _n( '%s order', '%s orders', $order_count, 'sunshine-photo-cart' ), number_format_i18n( $order_count ) );
 			$counter       = sprintf( '<span class="sunshine-menu-count" aria-hidden="true">%1$d</span><span class="screen-reader-text">%2$s</span>', $order_count, $notifications );
-			// $menu[47][0]  .= ' ' . $counter;
+			$menu[47][0]  .= ' ' . $counter;
 		}
 
 		$sunshine_admin_submenu = array();
@@ -704,11 +715,14 @@ class Sunshine_Admin {
 			$sunshine_admin_submenu[998] = array( __( 'Setup Guide', 'sunshine-photo-cart' ), '<span class="sunshine-menu-highlight-link">' . __( 'Setup Guide', 'sunshine-photo-cart' ) . '</span>', 'sunshine_manage_options', 'sunshine-install', 'sunshine_install_page' );
 		}
 
+		$sunshine_admin_submenu = apply_filters( 'sunshine_admin_menu', $sunshine_admin_submenu );
+
+		$sunshine_admin_submenu[1000] = array( __( 'Get Help', 'sunshine-photo-cart' ), __( 'Get Help', 'sunshine-photo-cart' ), 'sunshine_manage_options', 'https://www.sunshinephotocart.com/support/?utm_source=plugin&utm_medium=link&utm_campaign=menu-help' );
+
 		if ( ! SPC()->is_pro() ) {
-			$sunshine_admin_submenu[999] = array( __( 'Upgrade', 'sunshine-photo-cart' ), '<span class="sunshine-menu-highlight-link">' . __( 'Upgrade', 'sunshine-photo-cart' ) . '</span>', 'sunshine_manage_options', 'https://www.sunshinephotocart.com/upgrade/?utm_source=plugin&utm_medium=link&utm_campaign=menu' );
+			$sunshine_admin_submenu[9999] = array( __( 'Upgrade', 'sunshine-photo-cart' ), '<span class="sunshine-menu-upgrade-link">' . __( 'Upgrade', 'sunshine-photo-cart' ) . '</span>', 'sunshine_manage_options', 'https://www.sunshinephotocart.com/upgrade/?utm_source=plugin&utm_medium=link&utm_campaign=menu-upgrade' );
 		}
 
-		$sunshine_admin_submenu = apply_filters( 'sunshine_admin_menu', $sunshine_admin_submenu );
 		ksort( $sunshine_admin_submenu );
 		foreach ( $sunshine_admin_submenu as $key => $item ) {
 			$page = add_submenu_page( 'edit.php?post_type=sunshine-gallery', $item[0], $item[1], $item[2], $item[3], ( ! empty( $item[4] ) ) ? $item[4] : '', $key );
@@ -765,13 +779,13 @@ class Sunshine_Admin {
 
 			// Add the checkbox field
 			$form_fields['sunshine_disable_purchase'] = array(
-				'label' => __( 'Disable Purchasing', 'textdomain' ),
+				'label' => __( 'Disable Purchasing', 'sunshine-photo-cart' ),
 				'input' => 'html',
 				'html'  => "<input type='checkbox' name='attachments[{$post->ID}][sunshine_disable_purchase]' value='1' " . checked( $disable_purchase, 1, false ) . ' />',
 			);
 
-			$form_fields['sunshine_disable_purchase'] = array(
-				'label' => __( 'Watermark', 'textdomain' ),
+			$form_fields['sunshine_watermark'] = array(
+				'label' => __( 'Watermark', 'sunshine-photo-cart' ),
 				'input' => 'html',
 				'html'  => "<input type='checkbox' name='attachments[{$post->ID}][sunshine_watermark]' value='1' " . checked( $watermark, 1, false ) . ' />',
 			);
@@ -827,11 +841,11 @@ class Sunshine_Admin {
 		$metadata = wp_get_attachment_metadata( $post->ID );
 		if ( ! empty( $metadata['image_meta'] ) ) {
 			foreach ( $metadata['image_meta'] as $key => $value ) {
-				echo '<p><strong>' . $key . ':</strong><br />';
+				echo '<p><strong>' . esc_html( $key ) . ':</strong><br />';
 				if ( is_array( $value ) ) {
-					echo join( ', ', $value );
+					echo esc_html( join( ', ', $value ) );
 				} else {
-					echo $value;
+					echo esc_html( $value );
 				}
 				echo '</p>';
 			}
@@ -843,9 +857,20 @@ class Sunshine_Admin {
 		if ( isset( $_GET['sunshine_debug'] ) && isset( $_GET['post'] ) ) {
 			$meta = get_post_meta( intval( $_GET['post'] ) );
 			echo '<!-- SUNSHINE DEBUG META -->';
-			echo '<div class="notice">';
 			sunshine_dump_var( $meta );
-			echo '</div>';
+
+			// If this is a 'sunshine-gallery' post, get all the images and display paths and file dimensions.
+			if ( get_post_type( $_GET['post'] ) === 'sunshine-gallery' ) {
+				$gallery = sunshine_get_gallery( $_GET['post'] );
+				$images  = $gallery->get_images();
+				foreach ( $images as $image ) {
+					$image_id         = $image->get_id();
+					$image_path       = get_attached_file( $image_id );
+					$image_dimensions = wp_get_attachment_metadata( $image_id );
+					echo '<p>' . esc_html( $image_path ) . ' - ' . esc_html( $image_dimensions['width'] ) . 'x' . esc_html( $image_dimensions['height'] ) . '</p>';
+				}
+			}
+			exit;
 		}
 
 	}

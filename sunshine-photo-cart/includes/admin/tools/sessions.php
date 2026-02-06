@@ -14,24 +14,25 @@ class SPC_Tool_Sessions extends SPC_Tool {
 		global $wpdb;
 		$session_count = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sunshine_sessions" );
 		if ( $session_count ) {
-			echo '<p>You currently have <strong>' . $session_count . ' ' . _n( 'session', 'sessions', $session_count, 'sunshine-photo-cart' ) . '</strong></p>';
+			echo '<p>You currently have <strong>' . esc_html( $session_count ) . ' ' . esc_html( _n( 'session', 'sessions', $session_count, 'sunshine-photo-cart' ) ) . '</strong></p>';
 		} else {
-			echo '<p><em>' . __( 'No sessions found!', 'sunshine-photo-cart' ) . '</em></p>';
+			echo '<p><em>' . esc_html__( 'No sessions found!', 'sunshine-photo-cart' ) . '</em></p>';
 			$this->button_label = '';
 		}
 
 	}
 
-	function process() {
+	protected function do_process() {
 		global $wpdb;
 
-		if ( ! current_user_can( 'sunshine_manage_options' ) ) {
-			return false;
-		}
-
 		$wpdb->query( "DELETE FROM {$wpdb->prefix}sunshine_sessions" );
-		$wpdb->query( "DELETE FROM {$wpdb->prefix}options WHERE option_name LIKE 'sunshine_session_%'" );
-		echo '<p style="color: green;">' . __( 'Sessions cleared', 'sunshine-photo-cart' ) . '</p>';
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->prefix}options WHERE option_name LIKE %s",
+				'sunshine_session_%'
+			)
+		);
+		echo '<p style="color: green;">' . esc_html__( 'Sessions cleared', 'sunshine-photo-cart' ) . '</p>';
 	}
 
 }

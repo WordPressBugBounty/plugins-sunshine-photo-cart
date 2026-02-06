@@ -13,14 +13,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class SPC_Addon_Updater {
 
-	private $api_url              = '';
-	private $api_data             = array();
-	private $plugin_file          = '';
-	private $name                 = '';
-	private $slug                 = '';
-	private $version              = '';
-	private $wp_override          = false;
-	private $beta                 = false;
+	private $api_url     = '';
+	private $api_data    = array();
+	private $plugin_file = '';
+	private $name        = '';
+	private $slug        = '';
+	private $version     = '';
+	private $wp_override = false;
+	private $beta        = false;
 	private $failed_request_cache_key;
 
 	/**
@@ -29,9 +29,9 @@ class SPC_Addon_Updater {
 	 * @uses plugin_basename()
 	 * @uses hook()
 	 *
-	 * @param string  $_api_url     The URL pointing to the custom API endpoint.
-	 * @param string  $_plugin_file Path to the plugin file.
-	 * @param array   $_api_data    Optional data to send with API calls.
+	 * @param string $_api_url     The URL pointing to the custom API endpoint.
+	 * @param string $_plugin_file Path to the plugin file.
+	 * @param array  $_api_data    Optional data to send with API calls.
 	 */
 	public function __construct( $_api_url, $_plugin_file, $_api_data = null ) {
 
@@ -89,7 +89,7 @@ class SPC_Addon_Updater {
 	 *
 	 * @uses api_request()
 	 *
-	 * @param array   $_transient_data Update array build by WordPress.
+	 * @param array $_transient_data Update array build by WordPress.
 	 * @return array Modified update array with custom plugin data.
 	 */
 	public function check_update( $_transient_data ) {
@@ -186,8 +186,8 @@ class SPC_Addon_Updater {
 	/**
 	 * Show the update notification on multisite subsites.
 	 *
-	 * @param string  $file
-	 * @param array   $plugin
+	 * @param string $file
+	 * @param array  $plugin
 	 */
 	public function show_update_notification( $file, $plugin ) {
 
@@ -195,7 +195,6 @@ class SPC_Addon_Updater {
 		if ( is_network_admin() || ! is_multisite() ) {
 			return;
 		}
-
 
 		// Allow single site admins to see that an update is available.
 		if ( ! current_user_can( 'activate_plugins' ) ) {
@@ -223,8 +222,8 @@ class SPC_Addon_Updater {
 
 		printf(
 			'<tr class="plugin-update-tr %3$s" id="%1$s-update" data-slug="%1$s" data-plugin="%2$s">',
-			$this->slug,
-			$file,
+			esc_attr( $this->slug ),
+			esc_attr( $file ),
 			in_array( $this->name, $this->get_active_plugins(), true ) ? 'active' : 'inactive'
 		);
 
@@ -253,7 +252,6 @@ class SPC_Addon_Updater {
 			self_admin_url( 'update.php' )
 		);
 
-
 		printf(
 			/* translators: the plugin name. */
 			esc_html__( 'There is a new version of %1$s available.', 'sunshine-photo-cart' ),
@@ -265,30 +263,21 @@ class SPC_Addon_Updater {
 			esc_html_e( 'Contact your network administrator to install the update.', 'sunshine-photo-cart' );
 		} elseif ( empty( $update_cache->response[ $this->name ]->package ) && ! empty( $changelog_link ) ) {
 			echo ' ';
-			printf(
-				/* translators: 1. opening anchor tag, do not translate 2. the new plugin version 3. closing anchor tag, do not translate. */
-				__( '%1$sView version %2$s details%3$s.', 'sunshine-photo-cart' ),
-				'<a target="_blank" class="thickbox open-plugin-details-modal" href="' . esc_url( $changelog_link ) . '">',
-				esc_html( $update_cache->response[ $this->name ]->new_version ),
-				'</a>'
-			);
+			echo '<a target="_blank" class="thickbox open-plugin-details-modal" href="' . esc_url( $changelog_link ) . '">';
+			/* translators: %s is the new plugin version */
+			printf( esc_html__( 'View version %s details', 'sunshine-photo-cart' ), esc_html( $update_cache->response[ $this->name ]->new_version ) );
+			echo '</a>';
 		} elseif ( ! empty( $changelog_link ) ) {
-			echo ' ';
-			printf(
-				__( '%1$sView version %2$s details%3$s or %4$supdate now%5$s.', 'sunshine-photo-cart' ),
-				'<a target="_blank" class="thickbox open-plugin-details-modal" href="' . esc_url( $changelog_link ) . '">',
-				esc_html( $update_cache->response[ $this->name ]->new_version ),
-				'</a>',
-				'<a target="_blank" class="update-link" href="' . esc_url( wp_nonce_url( $update_link, 'upgrade-plugin_' . $file ) ) . '">',
-				'</a>'
-			);
+			echo ' <a target="_blank" class="thickbox open-plugin-details-modal" href="' . esc_url( $changelog_link ) . '">';
+			/* translators: %s is the new plugin version */
+			printf( esc_html__( 'View version %1$s details', 'sunshine-photo-cart' ), esc_html( $update_cache->response[ $this->name ]->new_version ) );
+			echo '</a> | <a target="_blank" class="update-link" href="' . esc_url( wp_nonce_url( $update_link, 'upgrade-plugin_' . $file ) ) . '">';
+			esc_html_e( 'Update now', 'sunshine-photo-cart' );
+			echo '</a>';
 		} else {
-			printf(
-				' %1$s%2$s%3$s',
-				'<a target="_blank" class="update-link" href="' . esc_url( wp_nonce_url( $update_link, 'upgrade-plugin_' . $file ) ) . '">',
-				esc_html__( 'Update now.', 'sunshine-photo-cart' ),
-				'</a>'
-			);
+			echo ' <a target="_blank" class="update-link" href="' . esc_url( wp_nonce_url( $update_link, 'upgrade-plugin_' . $file ) ) . '">';
+			esc_html_e( 'Update now', 'sunshine-photo-cart' );
+			echo '</a>';
 		}
 
 		do_action( "in_plugin_update_message-{$file}", $plugin, $plugin );
@@ -313,9 +302,9 @@ class SPC_Addon_Updater {
 	 *
 	 * @uses api_request()
 	 *
-	 * @param mixed   $_data
-	 * @param string  $_action
-	 * @param object  $_args
+	 * @param mixed  $_data
+	 * @param string $_action
+	 * @param object $_args
 	 * @return object $_data
 	 */
 	public function plugins_api_filter( $_data, $_action = '', $_args = null ) {
@@ -345,7 +334,7 @@ class SPC_Addon_Updater {
 		// Get the transient where we store the api request for this plugin for 24 hours
 		$edd_api_request_transient = $this->get_cached_version_info();
 
-		//If we have no transient-saved value, run the API, set a fresh transient with the API value, and return that value too right now.
+		// If we have no transient-saved value, run the API, set a fresh transient with the API value, and return that value too right now.
 		if ( empty( $edd_api_request_transient ) ) {
 
 			$api_response = $this->api_request( 'plugin_information', $to_send );
@@ -414,8 +403,8 @@ class SPC_Addon_Updater {
 	/**
 	 * Disable SSL verification in order to prevent download update failures
 	 *
-	 * @param array   $args
-	 * @param string  $url
+	 * @param array  $args
+	 * @param string $url
 	 * @return object $array
 	 */
 	public function http_request_args( $args, $url ) {
@@ -434,8 +423,8 @@ class SPC_Addon_Updater {
 	 * @uses wp_remote_post()
 	 * @uses is_wp_error()
 	 *
-	 * @param string  $_action The requested action.
-	 * @param array   $_data   Parameters for the API action.
+	 * @param string $_action The requested action.
+	 * @param array  $_data   Parameters for the API action.
 	 * @return false|object|void
 	 */
 	private function api_request( $_action, $_data ) {
@@ -647,7 +636,7 @@ class SPC_Addon_Updater {
 			'value'   => wp_json_encode( $value ),
 		);
 
-		update_option( $cache_key, $data, 'no' );
+		update_option( $cache_key, $data, false );
 
 		// Delete the duplicate option
 		delete_option( 'edd_api_request_' . md5( serialize( $this->slug . $this->api_data['license'] . $this->beta ) ) );

@@ -86,6 +86,12 @@ function sunshine_get_settings_fields() {
 			'type' => 'number',
 			'css'  => 'width: 50px;',
 		);
+		$general_fields['3600'] = array(
+			'name'        => __( 'Show currency code', 'sunshine-photo-cart' ),
+			'id'          => 'currency_show_code',
+			'type'        => 'checkbox',
+			'description' => __( 'Display the 3-character currency code (e.g. USD, CAD, AUD) alongside the currency symbol', 'sunshine-photo-cart' ),
+		);
 
 		$general_fields['4000'] = array(
 			'id'   => 'accounts',
@@ -182,7 +188,7 @@ function sunshine_get_settings_fields() {
 		$pages_fields['1000'] = array(
 			'id'          => 'pages',
 			'name'        => __( 'Page Options', 'sunshine-photo-cart' ),
-			'description' => __( 'The following pages need selecting so that Sunshine knows where they are. These pages should have been created upon installation, if not you will need to create them.', 'sunshine-photo-cart' ),
+			'description' => __( 'The following pages need selecting so that Sunshine knows where they are. These pages should have been created upon installation, if not you will need to create them.', 'sunshine-photo-cart' ) . ' <a href="https://www.sunshinephotocart.com/docs/shortcodes/" target="_blank">' . __( 'See required shortcodes', 'sunshine-photo-cart' ) . '</a>',
 			'type'        => 'header',
 		);
 		/*
@@ -549,17 +555,24 @@ function sunshine_get_settings_fields() {
 			'type'        => 'checkbox',
 			'description' => __( 'Do not allow sharing images within a gallery', 'sunshine-photo-cart' ),
 		);
-		$galleries_fields['2801'] = array(
+		$galleries_fields['2802'] = array(
 			'name'        => __( 'Disable Secure File Names', 'sunshine-photo-cart' ),
 			'id'          => 'disable_secure_file_names',
 			'type'        => 'checkbox',
 			'description' => __( 'Disable the feature that adds random strings to image file names for added security', 'sunshine-photo-cart' ),
+		);
+		$galleries_fields['2803'] = array(
+			'name'        => __( 'Enable Open Graph', 'sunshine-photo-cart' ),
+			'id'          => 'open_graph',
+			'type'        => 'checkbox',
+			'description' => __( 'Add Open Graph meta tags to the site for galleries and image pages (your SEO plugin may already be doing this)', 'sunshine-photo-cart' ),
 		);
 
 		$galleries_fields['3000'] = array(
 			'id'          => 'images',
 			'name'        => __( 'Image Options', 'sunshine-photo-cart' ),
 			'type'        => 'header',
+			/* translators: %s is the URL to help documentation */
 			'description' => sprintf( __( 'Making changes to your image sizes does not immediately affect your galleries and you will need to regenerate all images. <a href="%s" target="_blank">Please see this help article</a>', 'sunshine-photo-cart' ), 'http://www.sunshinephotocart.com/docs/thumbnails-not-cropping/' ),
 		);
 		$galleries_fields['3100'] = array(
@@ -773,12 +786,13 @@ function sunshine_get_settings_fields() {
 			'name'        => __( 'Google Maps API Key', 'sunshine-photo-cart' ),
 			'id'          => 'google_maps_api_key',
 			'type'        => 'text',
+			/* translators: %s is the URL to help documentation */
 			'description' => sprintf( __( 'Enter a Google API key to enable address autocomplete at checkout, <a href="%s" target="_blank">learn more here</a>', 'sunshine-photo-cart' ), 'https://www.sunshinephotocart.com/docs/address-autocomplete' ),
 		);
 
 		$checkout_fields['1500'] = array(
-			'id'          => 'order_numbers',
-			'name'        => __( 'Order Numbering', 'sunshine-photo-cart' ),
+			'id'          => 'orders',
+			'name'        => __( 'Orders', 'sunshine-photo-cart' ),
 			'type'        => 'header',
 			'description' => '',
 		);
@@ -787,6 +801,12 @@ function sunshine_get_settings_fields() {
 			'id'          => 'next_order_number',
 			'type'        => 'number',
 			'description' => __( 'Leave blank to use default order numbering, otherwise set the next order number to be used', 'sunshine-photo-cart' ),
+		);
+		$checkout_fields['1502'] = array(
+			'name'        => __( 'Disable Invoice', 'sunshine-photo-cart' ),
+			'id'          => 'disable_invoice',
+			'type'        => 'checkbox',
+			'description' => __( 'Disable invoices with orders', 'sunshine-photo-cart' ),
 		);
 
 		$checkout_fields['2000'] = array(
@@ -1118,8 +1138,13 @@ function sunshine_get_settings_fields() {
 				'description' => '',
 			);
 			$design_fields[3100] = array(
-				'name' => __( 'Custom CSS', 'sunshine-photo-cart' ),
+				'name' => __( 'Custom CSS for frontend', 'sunshine-photo-cart' ),
 				'id'   => 'css',
+				'type' => 'textarea',
+			);
+			$design_fields[3150] = array(
+				'name' => __( 'Custom CSS for emails', 'sunshine-photo-cart' ),
+				'id'   => 'css_email',
 				'type' => 'textarea',
 			);
 			$design_fields[3200] = array(

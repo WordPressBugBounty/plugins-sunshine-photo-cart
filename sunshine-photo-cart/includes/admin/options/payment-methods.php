@@ -33,7 +33,7 @@ function sunshine_payment_methods_display() {
 						<?php echo esc_html( $payment_method_class->get_description() ); ?>
 					</td>
 					<td class="sunshine-actions">
-						<a href="<?php echo admin_url( 'admin.php?page=sunshine&section=payment_methods&payment_method=' . esc_attr( $id ) ); ?>" class="button" <?php echo ( ! $payment_method_class->is_active() ? 'style="display: none;"' : '' ); ?>><?php _e( 'Configure', 'sunshine-photo-cart' ); ?></a>
+						<a href="<?php echo esc_url( admin_url( 'admin.php?page=sunshine&section=payment_methods&payment_method=' . esc_attr( $id ) ) ); ?>" class="button" <?php echo ( ! $payment_method_class->is_active() ? 'style="display: none;"' : '' ); ?>><?php esc_html_e( 'Configure', 'sunshine-photo-cart' ); ?></a>
 					</td>
 				</tr>
 				<?php
@@ -50,11 +50,11 @@ function sunshine_payment_methods_display() {
 			var toggled_id = $( this ).closest( 'tr' ).data( 'id' );
 			$.ajax({
 				type: 'POST',
-				url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+				url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 				data: {
 					action: 'sunshine_activate_payment_method',
 					id: toggled_id,
-					security: "<?php echo wp_create_nonce( 'sunshine_activate_payment_methods' ); ?>"
+					security: "<?php echo esc_js( wp_create_nonce( 'sunshine_activate_payment_methods' ) ); ?>"
 				},
 				success: function( data, textStatus, XMLHttpRequest ) {
 					$( '#sunshine-payment-method-' + toggled_id + ' a' ).toggle();
@@ -76,11 +76,11 @@ function sunshine_payment_methods_display() {
 				});
 				$.ajax({
 					type: 'POST',
-					url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+					url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 					data: {
 						action: 'sunshine_sort_payment_methods',
 						sorted_instances: sorted_instances,
-						security: "<?php echo wp_create_nonce( 'sunshine-sort-payment-methods' ); ?>"
+						security: "<?php echo esc_js( wp_create_nonce( 'sunshine-sort-payment-methods' ) ); ?>"
 					}
 				});
 			}

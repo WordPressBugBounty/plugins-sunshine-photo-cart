@@ -13,12 +13,13 @@ class SPC_Session {
 
 	public function __construct() {
 
+		add_action( 'sunshine_session_garbage_collection', array( $this, 'cleanup' ) );
+
 		if ( ! $this->should_start_session() ) {
 			return;
 		}
 
 		add_action( 'shutdown', array( $this, 'write_data' ), 0 );
-		add_action( 'sunshine_session_garbage_collection', array( $this, 'cleanup' ) );
 
 		if ( ! defined( 'SUNSHINE_SESSION_COOKIE' ) ) {
 			define( 'SUNSHINE_SESSION_COOKIE', 'sunshine3_session' );
@@ -108,7 +109,7 @@ class SPC_Session {
 			'data'       => ( ! empty( $this->data ) ) ? maybe_serialize( $this->data ) : '',
 			'expiration' => $this->expiration,
 		);
-		$result = $wpdb->replace( "{$wpdb->prefix}sunshine_sessions", $session );
+		$result  = $wpdb->replace( "{$wpdb->prefix}sunshine_sessions", $session );
 
 	}
 
@@ -270,19 +271,18 @@ class SPC_Session {
 	public function cleanup() {
 		global $wpdb;
 
-		if ( defined( 'WP_SETUP_CONFIG' ) ) {
+		if ( defined( 'WP_INSTALLING' ) ) {
 			return;
 		}
 
-		if ( ! defined( 'WP_INSTALLING' ) ) {
+		SPC()->log( 'Cleaning up sessions' );
 
-			$now = current_time( 'timestamp' );
-			$wpdb->query( "DELETE FROM {$wpdb->prefix}sunshine_sessions WHERE expiration <= '{$now}'" );
+		$now    = current_time( 'timestamp' );
+		$result = $wpdb->query( "DELETE FROM {$wpdb->prefix}sunshine_sessions WHERE expiration <= '{$now}'" );
+		SPC()->log( 'Deleted ' . $result . ' sessions' );
 
-			// Allow other plugins to hook in to the garbage collection process.
-			do_action( 'sunshine_session_cleanup' );
-
-		}
+		// Allow other plugins to hook in to the garbage collection process.
+		do_action( 'sunshine_session_cleanup' );
 
 	}
 

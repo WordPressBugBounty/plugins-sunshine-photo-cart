@@ -22,54 +22,49 @@ class SPC_Shipping_Method_Flat_Rate extends SPC_Shipping_Method {
 			return;
 		}
 
-		$product_shipping = 0;
-		$cart_items = SPC()->cart->get_cart_items();
-		if ( ! empty( $cart_items ) ) {
-			foreach ( SPC()->cart->get_cart_items() as $item ) {
-				// Add product shipping fee if exists.
-				$item_shipping = $item->product->get_shipping();
-				if ( $item_shipping ) {
-					$product_shipping += floatval( $item_shipping * $item->get_qty() );
-				}
-			}
-		}
+		$price_has_tax = SPC()->get_option( 'price_has_tax' );
+		$tax_rate      = SPC()->cart->get_tax_rate();
 
+		// Get base shipping price and extract tax if needed.
 		$price = floatval( SPC()->get_option( $this->id . '_price_' . $this->instance_id ) );
-		$total = 0;
-		if ( $price_type == 'cart' ) {
-			$this->price = floatval( $price ) + floatval( $product_shipping );
-		} elseif ( ! empty( $this->instance_id ) ) {
-
-			if ( ! empty( $cart_items ) ) {
-
-				foreach ( SPC()->cart->get_cart_items() as $item ) {
-
-					// Determine how we calculate shipping fee: line item or qty
-					if ( $price_type == 'line' ) {
-						$this->price += floatval( $price );
-					} elseif ( $price_type == 'qty' ) {
-						$this->price += floatval( $price * $item->get_qty() );
-					}
-
-				}
-
-				$this->price += $product_shipping;
-
-			}
-
+		if ( 'yes' === $price_has_tax && $this->is_taxable() && $tax_rate ) {
+			// Extract tax from configured price.
+			$price = round( $price / ( $tax_rate['rate'] + 1 ), 2 );
 		}
 
-		if ( $this->price && $this->is_taxable() ) {
-			$tax_rate = SPC()->cart->get_tax_rate();
-			if ( $tax_rate ) {
-				if ( SPC()->get_option( 'price_has_tax' ) == 'yes' ) {
-					$new_total = round( $this->price / ( $tax_rate['rate'] + 1 ), 2 );
-					$this->tax = $this->price - $new_total;
-					$this->price = $new_total;
-				} else {
-					$this->tax = round( $this->price * $tax_rate['rate'], 2 );
+		// Calculate product shipping costs and extract tax if needed.
+		$product_shipping = 0;
+		$cart_items       = SPC()->cart->get_cart_items();
+		if ( ! empty( $cart_items ) ) {
+			foreach ( $cart_items as $item ) {
+				$item_shipping = floatval( $item->product->get_shipping() );
+				if ( $item_shipping ) {
+					// Extract tax from product shipping if needed.
+					if ( 'yes' === $price_has_tax && $this->is_taxable() && $tax_rate ) {
+						$item_shipping = round( $item_shipping / ( $tax_rate['rate'] + 1 ), 2 );
+					}
+					$product_shipping += $item_shipping * $item->get_qty();
 				}
 			}
+		}
+
+		// Build total price based on price_type.
+		if ( $price_type == 'cart' ) {
+			$this->price = $price + $product_shipping;
+		} elseif ( ! empty( $cart_items ) ) {
+			foreach ( $cart_items as $item ) {
+				if ( $price_type == 'line' ) {
+					$this->price += $price;
+				} elseif ( $price_type == 'qty' ) {
+					$this->price += $price * $item->get_qty();
+				}
+			}
+			$this->price += $product_shipping;
+		}
+
+		// Calculate tax on the total base price.
+		if ( $this->price && $this->is_taxable() && $tax_rate ) {
+			$this->tax = round( $this->price * $tax_rate['rate'], 2 );
 		}
 
 	}

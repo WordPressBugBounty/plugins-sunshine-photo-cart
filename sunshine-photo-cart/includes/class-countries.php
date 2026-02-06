@@ -349,7 +349,7 @@ class SPC_Countries {
 					'BD-08' => __( 'Cumilla', 'sunshine-photo-cart' ),
 					'BD-13' => __( 'Dhaka', 'sunshine-photo-cart' ),
 					'BD-14' => __( 'Dinajpur', 'sunshine-photo-cart' ),
-					'BD-15' => __( 'Faridpur ', 'sunshine-photo-cart' ),
+					'BD-15' => __( 'Faridpur', 'sunshine-photo-cart' ),
 					'BD-16' => __( 'Feni', 'sunshine-photo-cart' ),
 					'BD-19' => __( 'Gaibandha', 'sunshine-photo-cart' ),
 					'BD-18' => __( 'Gazipur', 'sunshine-photo-cart' ),
@@ -369,7 +369,7 @@ class SPC_Countries {
 					'BD-32' => __( 'Lalmonirhat', 'sunshine-photo-cart' ),
 					'BD-36' => __( 'Madaripur', 'sunshine-photo-cart' ),
 					'BD-37' => __( 'Magura', 'sunshine-photo-cart' ),
-					'BD-33' => __( 'Manikganj ', 'sunshine-photo-cart' ),
+					'BD-33' => __( 'Manikganj', 'sunshine-photo-cart' ),
 					'BD-39' => __( 'Meherpur', 'sunshine-photo-cart' ),
 					'BD-38' => __( 'Moulvibazar', 'sunshine-photo-cart' ),
 					'BD-35' => __( 'Munshiganj', 'sunshine-photo-cart' ),
@@ -2412,8 +2412,8 @@ class SPC_Countries {
 		if ( ! empty( $countries ) ) {
 			asort( $countries );
 			$required = ( $required ) ? 'required' : '';
-			echo '<select name="' . esc_attr( $name ) . '" ' . $required . '>';
-			echo '<option value="">' . __( 'Select country', 'sunshine-photo-cart' ) . '</option>';
+			echo '<select name="' . esc_attr( $name ) . '" ' . esc_attr( $required ) . '>';
+			echo '<option value="">' . esc_html__( 'Select country', 'sunshine-photo-cart' ) . '</option>';
 			foreach ( $countries as $key => $value ) {
 				echo '<option value="' . esc_attr( $key ) . '" ' . selected( $key, $selected, 0 ) . '>' . esc_html( $value ) . '</option>';
 			}
@@ -2433,7 +2433,7 @@ class SPC_Countries {
 					}
 					echo '</optgroup>';
 				} else {
-					echo '<option value="' . esc_attr( $key ) . '" ' . selected( $state_key, $selected, 0 ) . '>' . ( $escape ? esc_html( $value ) : $value ) . '</option>';
+					echo '<option value="' . esc_attr( $key ) . '" ' . selected( $state_key, $selected, 0 ) . '>' . esc_html( $value ) . '</option>';
 				}
 			}
 		}
@@ -2449,8 +2449,8 @@ class SPC_Countries {
 		}
 		if ( $states ) {
 			$required = ( $required ) ? 'required' : '';
-			echo '<select autocomplete="address-level1" name="' . esc_attr( $name ) . '" ' . $required . '>';
-			echo '<option value="">' . __( 'Select state', 'sunshine-photo-cart' ) . '</option>';
+			echo '<select autocomplete="address-level1" name="' . esc_attr( $name ) . '" ' . esc_attr( $required ) . '>';
+			echo '<option value="">' . esc_html__( 'Select state', 'sunshine-photo-cart' ) . '</option>';
 			foreach ( $states as $code => $name ) {
 				echo '<option value="' . esc_attr( $code ) . '" ' . selected( $selected, $code, 0 ) . '>' . esc_html( $name ) . '</option>';
 			}
@@ -3419,15 +3419,6 @@ class SPC_Countries {
 
 		$fields = array(
 			array(
-				'id'           => 'country',
-				'type'         => 'country',
-				'name'         => __( 'Country', 'sunshine-photo-cart' ),
-				'required'     => true,
-				'default'      => $country,
-				'options'      => SPC()->countries->get_allowed_countries(),
-				'autocomplete' => 'address-level2',
-			),
-			array(
 				'id'       => 'first_name',
 				'type'     => 'text',
 				'name'     => __( 'First Name', 'sunshine-photo-cart' ),
@@ -3444,6 +3435,15 @@ class SPC_Countries {
 				'default'  => SPC()->customer->get_last_name(),
 				'size'     => 'half',
 				'autocomplete' => 'family-name',
+			),
+			array(
+				'id'           => 'country',
+				'type'         => 'country',
+				'name'         => __( 'Country', 'sunshine-photo-cart' ),
+				'required'     => true,
+				'default'      => $country,
+				'options'      => SPC()->countries->get_allowed_countries(),
+				'autocomplete' => 'address-level2',
 			),
 			array(
 				'id'           => 'address1',

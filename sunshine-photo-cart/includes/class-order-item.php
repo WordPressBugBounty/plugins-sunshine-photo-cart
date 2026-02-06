@@ -22,33 +22,43 @@ class SPC_Order_Item extends SPC_Cart_Item {
 			}
 		}
 
+		// Override with saved order data.
 		if ( ! empty( $item['price'] ) ) {
-			$this->price    = $item['price'];
-			$this->subtotal = $this->price * $item['qty'];
+			$this->price = floatval( $item['price'] );
 		}
 
 		if ( ! empty( $item['tax'] ) ) {
-			$this->tax = $item['tax'];
+			$this->tax = floatval( $item['tax'] );
 		}
 
-		// Do all the magic to determine actual price and tax based on order settings.
-		/*
-		if ( $this->price && $this->tax > 0 ) {
-			$order = $this->get_order();
-			$price_has_tax = $order->get_meta_value( 'price_has_tax' );
-			if ( 'yes' == $price_has_tax ) {
-				// Take out tax from current price and lower price adjusting for tax amount.
-				$this->subtotal = $this->subtotal - $this->tax;
-				$this->line_total = floatval( $this->subtotal * $this->qty );
-				$this->total = max( 0, floatval( $this->line_total - ( $this->discount * $this->qty ) ) );
-			}
+		if ( ! empty( $item['discount'] ) ) {
+			$this->discount = floatval( $item['discount'] );
 		}
-		*/
-		$this->tax_total = $this->tax * $this->qty;
 
+		// Calculate discount per item for consistent display.
+		if ( $this->discount > 0 && $this->qty > 0 ) {
+			$this->discount_per_item = $this->discount / $this->qty;
+		}
+
+		// Set options total from saved meta data.
 		if ( ! empty( $this->meta['options'] ) ) {
 			$this->options = $this->meta['options'];
+			// $this->set_options_total(); // Price is already set in the cart item.
 		}
+
+		// Calculate subtotal before discount.
+		$this->subtotal = max( 0, ( $this->price + $this->options_total ) * $this->qty );
+
+		// Store original values before discount for display.
+		$this->original_subtotal  = $this->subtotal;
+		$this->original_tax_total = $this->tax * $this->qty;
+
+		// Calculate tax total.
+		$this->tax_total = $this->tax * $this->qty;
+
+		// Calculate taxable total and total after discount.
+		$this->taxable_total = max( 0, $this->subtotal - $this->discount );
+		$this->total         = $this->taxable_total;
 
 	}
 
@@ -154,11 +164,12 @@ class SPC_Order_Item extends SPC_Cart_Item {
 	}
 
 	public function get_regular_price() {
-		return $this->item['price'];
+		return $this->price;
 	}
 
 	public function get_price() {
-		return ( $this->item['price'] - $this->item['discount'] );
+		$price = (float) $this->price + (float) ( $this->options_total ?? 0 );
+		return $price;
 	}
 
 	public function get_type() {
@@ -217,11 +228,14 @@ class SPC_Order_Item extends SPC_Cart_Item {
 
 	public function set_options_total() {
 		if ( ! empty( $this->meta['options'] ) ) {
+			sunshine_log( $this->meta['options'], 'options' );
 			foreach ( $this->meta['options'] as $option_item ) {
 				if ( ! empty( $option_item['price'] ) ) {
+					sunshine_log( '$ option_item[price]: ' . $option_item['price'] );
 					$this->options_total += $option_item['price'];
 				}
 			}
+			sunshine_log( '$$$ Options total: ' . $this->options_total );
 		}
 	}
 

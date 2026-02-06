@@ -11,24 +11,28 @@ function sunshine_get_images( $args = array() ) {
 	global $wpdb;
 
 	$final_images = array();
-	$args = wp_parse_args( $args, array(
-		'post_type' => 'attachment',
-		//'post_status' => 'any',
-		'meta_key' => 'sunshine_file_name',
-		'nopaging' => 1,
-	));
-	$images = get_posts( $args );
-	//$query = new WP_Query( $args );
-	//sunshine_log( $query->request );
+	$args         = wp_parse_args(
+		$args,
+		array(
+			'post_type' => 'attachment',
+			// 'post_status' => 'any',
+			'meta_key'  => 'sunshine_file_name',
+			'nopaging'  => 1,
+		)
+	);
+	$images       = get_posts( $args );
+	// $query = new WP_Query( $args );
+	// sunshine_log( $query->request );
 	if ( ! empty( $images ) ) {
 		foreach ( $images as $image ) {
 			$final_images[ $image->ID ] = sunshine_get_image( $image->ID );
 		}
 	}
 
+	// Searching for images if we have a search term.
 	if ( ! empty( $args['s'] ) ) {
 
-		$post_parent = ( ! empty( $args['post_parent__in'] ) ) ? "AND {$wpdb->prefix}posts.post_parent IN (" . join( ',', $args['post_parent__in'] ) . ")" : "";
+		$post_parent = ( ! empty( $args['post_parent__in'] ) ) ? "AND {$wpdb->prefix}posts.post_parent IN (" . join( ',', $args['post_parent__in'] ) . ')' : '';
 
 		$query = "
 			SELECT {$wpdb->prefix}posts.*
@@ -77,12 +81,11 @@ function sunshine_get_images( $args = array() ) {
 				$final_images[ $result->ID ] = sunshine_get_image( $result->ID );
 			}
 		}
-
 	}
 
 	if ( ! empty( $final_images ) ) {
 		foreach ( $final_images as $key => $image ) {
-			if ( empty( $image->gallery ) || ! $image->gallery->can_access() ) {
+			if ( empty( $image->gallery ) || ! $image->gallery->can_access() || ! empty( $image->gallery->get_access_type( true ) ) ) {
 				unset( $final_images[ $key ] );
 			}
 		}
@@ -123,10 +126,17 @@ function sunshine_get_image_data() {
 		wp_send_json_error();
 	}
 
-	wp_send_json_success(array(
-		'id' => $image->get_id(),
-		'url' => $image->get_image_url(),
-	));
+	// Verify user has access to the image's gallery.
+	if ( ! $image->can_access() ) {
+		wp_send_json_error( array( 'reason' => __( 'Access denied', 'sunshine-photo-cart' ) ) );
+	}
+
+	wp_send_json_success(
+		array(
+			'id'  => $image->get_id(),
+			'url' => $image->get_image_url(),
+		)
+	);
 	exit;
 
 }

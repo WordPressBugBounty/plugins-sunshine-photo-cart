@@ -1,6 +1,6 @@
 <html>
 <head>
-	<title><?php _e( 'Order item list', 'sunshine-photo-cart' ); ?></title>
+	<title><?php esc_html_e( 'Order item list', 'sunshine-photo-cart' ); ?></title>
 	<style type="text/css">
 	body { font-family: sans-serif; font-size: 16px; }
 	h1 { font-size: 30px; }
@@ -11,13 +11,13 @@
 	</style>
 </head>
 <body>
-	<h1><?php _e( 'Order item list', 'sunshine-photo-cart' ); ?></h1>
+	<h1><?php esc_html_e( 'Order item list', 'sunshine-photo-cart' ); ?></h1>
 	<?php
 	foreach ( $ids as $order_id ) {
 		$order = new SPC_Order( $order_id );
 		$cart  = $order->get_cart();
 		?>
-		<h2><?php echo $order->get_name(); ?></h2>
+		<h2><?php echo esc_html( $order->get_name() ); ?></h2>
 		<table id="sunshine-cart-items">
 		<thead>
 			<tr>
@@ -28,18 +28,18 @@
 		</thead>
 		<tbody>
 		<?php foreach ( $cart as $cart_item ) { ?>
-			<tr class="sunshine-cart-item <?php echo $cart_item->classes(); ?>">
+			<tr class="sunshine-cart-item <?php echo esc_attr( $cart_item->classes() ); ?>">
 				<td class="sunshine-cart-item-image" data-label="<?php esc_attr_e( 'Image', 'sunshine-photo-cart' ); ?>">
-					<?php echo $cart_item->get_image_html( '', '', array( 'width' => '50' ) ); ?>
+					<?php echo wp_kses_post( $cart_item->get_image_html( '', '', array( 'width' => '50' ) ) ); ?>
 				</td>
 				<td class="sunshine-cart-item-name" data-label="<?php esc_attr_e( 'Product', 'sunshine-photo-cart' ); ?>">
-					<div class="sunshine-cart-item-name-image"><?php echo strip_tags( $cart_item->get_image_name() ); ?></div>
-					<div class="sunshine-cart-item-file"><?php echo $cart_item->get_filename(); ?></div>
-					<div class="sunshine-cart-item-name-product"><?php echo $cart_item->get_name(); ?></div>
-					<div class="sunshine-cart-item-comments"><?php echo $cart_item->get_comments(); ?></div>
+					<div class="sunshine-cart-item-name-image"><?php echo esc_html( $cart_item->get_image_name() ); ?></div>
+					<div class="sunshine-cart-item-file"><?php echo esc_html( $cart_item->get_filename() ); ?></div>
+					<div class="sunshine-cart-item-name-product"><?php echo esc_html( $cart_item->get_name() ); ?></div>
+					<div class="sunshine-cart-item-comments"><?php echo wp_kses_post( $cart_item->get_comments() ); ?></div>
 				</td>
 				<td class="sunshine-cart-item-qty" data-label="<?php esc_attr_e( 'Qty', 'sunshine-photo-cart' ); ?>">
-					<?php echo $cart_item->get_qty(); ?>
+					<?php echo esc_html( $cart_item->get_qty() ); ?>
 				</td>
 			</tr>
 		<?php } ?>

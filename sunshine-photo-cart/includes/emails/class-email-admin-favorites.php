@@ -3,16 +3,17 @@ class SPC_Email_Admin_Favorites extends SPC_Email {
 
 	function init() {
 
-		$this->id                = 'admin-favorites';
-		$this->class             = get_class( $this );
-		$this->name              = __( 'Favorites (Admin)', 'sunshine-photo-cart' );
-		$this->description       = __( 'Favorites notification sent by customers to site admin', 'sunshine-photo-cart' );
+		$this->id          = 'admin-favorites';
+		$this->class       = get_class( $this );
+		$this->name        = __( 'Favorites (Admin)', 'sunshine-photo-cart' );
+		$this->description = __( 'Favorites notification sent by customers to site admin', 'sunshine-photo-cart' );
+		/* translators: %1$s is the customer email address, %2$s is the site name */
 		$this->subject           = sprintf( __( 'Favorites submitted by %1$s on %2$s', 'sunshine-photo-cart' ), '[email]', '[sitename]' );
 		$this->custom_recipients = true;
 
 		$this->add_search_replace(
 			array(
-				'email' => '',
+				'email'      => '',
 				'first_name' => '',
 				'last_name'  => '',
 			)
@@ -38,7 +39,7 @@ class SPC_Email_Admin_Favorites extends SPC_Email {
 		$this->add_args( $args );
 
 		$search_replace = array(
-			'email' => SPC()->customer->get_email(),
+			'email'      => SPC()->customer->get_email(),
 			'first_name' => SPC()->customer->get_first_name(),
 			'last_name'  => SPC()->customer->get_last_name(),
 		);

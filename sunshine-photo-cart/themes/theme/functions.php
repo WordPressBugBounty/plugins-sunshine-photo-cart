@@ -1,7 +1,11 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly
+}
+
 add_action( 'sunshine_before_content', 'sunshine_before_content_start_sunshine', 1 );
 function sunshine_before_content_start_sunshine() {
-	echo '<div id="sunshine" class="' . sunshine_classes( false ) . '">';
+	echo '<div id="sunshine" class="' . esc_attr( sunshine_classes( false ) ) . '">';
 }
 
 add_action( 'sunshine_before_content', 'sunshine_before_content_start_main', 3 );
