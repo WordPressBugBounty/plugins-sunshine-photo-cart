@@ -131,6 +131,19 @@ function sunshine_modal_login() {
 		wp_send_json_error( __( 'Invalid login attempt', 'sunshine-photo-cart' ) );
 	}
 
+	// Honeypot check - if this field has a value, it's likely a bot.
+	if ( ! empty( $post_data['sunshine_login_website'] ) ) {
+		SPC()->log( 'Login blocked - spam detected' );
+		wp_send_json_error( __( 'Invalid login attempt', 'sunshine-photo-cart' ) );
+	}
+
+	// Allow 3rd party validation (e.g., captcha).
+	$validation_error = apply_filters( 'sunshine_login_validation', '', $post_data );
+	if ( ! empty( $validation_error ) ) {
+		SPC()->log( 'Login blocked - validation failed: ' . $validation_error );
+		wp_send_json_error( $validation_error );
+	}
+
 	$creds = array(
 		'user_login'    => sanitize_email( $post_data['email'] ),
 		'user_password' => sanitize_text_field( $post_data['password'] ),
@@ -185,6 +198,19 @@ function sunshine_modal_signup() {
 	if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( $_POST['security'], 'sunshine_signup' ) ) {
 		SPC()->log( 'Signup failed nonce' );
 		wp_send_json_error( __( 'Invalid signup attempt', 'sunshine-photo-cart' ) );
+	}
+
+	// Honeypot check - if this field has a value, it's likely a bot.
+	if ( ! empty( $_POST['sunshine_signup_website'] ) ) {
+		SPC()->log( 'Signup blocked - spam detected' );
+		wp_send_json_error( __( 'Invalid signup attempt', 'sunshine-photo-cart' ) );
+	}
+
+	// Allow 3rd party validation (e.g., captcha).
+	$validation_error = apply_filters( 'sunshine_signup_validation', '', $_POST );
+	if ( ! empty( $validation_error ) ) {
+		SPC()->log( 'Signup blocked - validation failed: ' . $validation_error );
+		wp_send_json_error( $validation_error );
 	}
 
 	$email = sanitize_email( $_POST['sunshine_signup_email'] );
@@ -264,6 +290,19 @@ function sunshine_modal_reset_password() {
 	if ( empty( $_POST['security'] ) || ! wp_verify_nonce( $_POST['security'], 'sunshine_reset_password_nonce' ) ) {
 		SPC()->log( 'Password reset failed nonce' );
 		wp_send_json_error( __( 'Invalid password reset attempt', 'sunshine-photo-cart' ) );
+	}
+
+	// Honeypot check - if this field has a value, it's likely a bot.
+	if ( ! empty( $_POST['sunshine_reset_website'] ) ) {
+		SPC()->log( 'Password reset blocked - spam detected' );
+		wp_send_json_error( __( 'Invalid password reset attempt', 'sunshine-photo-cart' ) );
+	}
+
+	// Allow 3rd party validation (e.g., captcha).
+	$validation_error = apply_filters( 'sunshine_lost_password_validation', '', $_POST );
+	if ( ! empty( $validation_error ) ) {
+		SPC()->log( 'Password reset blocked - validation failed: ' . $validation_error );
+		wp_send_json_error( $validation_error );
 	}
 
 	$email = sanitize_email( $_POST['email'] );
@@ -441,6 +480,21 @@ add_action( 'wp', 'sunshine_login_process' );
 function sunshine_login_process() {
 
 	if ( ! isset( $_POST['sunshine_login'] ) || ! wp_verify_nonce( $_POST['sunshine_login'], 'sunshine_login' ) ) {
+		return;
+	}
+
+	// Honeypot check - if this field has a value, it's likely a bot.
+	if ( ! empty( $_POST['sunshine_login_website'] ) ) {
+		SPC()->log( 'Login blocked - spam detected' );
+		SPC()->notices->add( __( 'Invalid login attempt', 'sunshine-photo-cart' ), 'error' );
+		return;
+	}
+
+	// Allow 3rd party validation (e.g., captcha).
+	$validation_error = apply_filters( 'sunshine_login_validation', '', $_POST );
+	if ( ! empty( $validation_error ) ) {
+		SPC()->log( 'Login blocked - validation failed: ' . $validation_error );
+		SPC()->notices->add( $validation_error, 'error' );
 		return;
 	}
 

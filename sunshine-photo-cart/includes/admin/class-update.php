@@ -15,7 +15,7 @@ class SPC_Update {
 			$this->need_update = true;
 		}
 
-		$this->update_actions = array( '3.0', '3.0.17', '3.0.18', '3.5.6' );
+		$this->update_actions = array( '3.0', '3.0.17', '3.0.18', '3.5.6', '3.6.0' );
 
 		add_action( 'admin_init', array( $this, 'update_check' ) );
 		add_action( 'admin_menu', array( $this, 'menu' ) );
@@ -37,6 +37,7 @@ class SPC_Update {
 		add_action( 'sunshine_update_3.0.17', array( $this, 'update_3_0_17' ) );
 		add_action( 'sunshine_update_3.0.18', array( $this, 'update_3_0_18' ) );
 		add_action( 'sunshine_update_3.5.6', array( $this, 'update_3_5_6' ) );
+		add_action( 'sunshine_update_3.6.0', array( $this, 'update_3_6_0' ) );
 
 		add_action( 'activated_plugin', array( $this, 'check_plugin_activation' ), 10, 2 );
 		add_action( 'admin_notices', array( $this, 'show_deactivation_notice' ), 10, 2 );
@@ -186,6 +187,56 @@ class SPC_Update {
 		global $wpdb;
 		// Delete all usermeta with key "sunshine_customer_notes"
 		$wpdb->query( "DELETE FROM {$wpdb->prefix}usermeta WHERE meta_key = 'sunshine_customer_notes'" );
+	}
+
+	function update_3_6_0() {
+		// Migrate disable_favorites to enable_favorites (only if not already migrated).
+		if ( get_option( 'sunshine_enable_favorites' ) === false ) {
+			$disable_favorites = get_option( 'sunshine_disable_favorites' );
+			if ( ! $disable_favorites ) {
+				SPC()->update_option( 'enable_favorites', true );
+			}
+		}
+
+		// Migrate disable_store to allow_store (only if not already migrated).
+		if ( get_option( 'sunshine_allow_store' ) === false ) {
+			$disable_store = get_option( 'sunshine_disable_store' );
+			if ( ! $disable_store ) {
+				SPC()->update_option( 'allow_store', true );
+			}
+		}
+
+		// Migrate disable_gallery_sharing to allow_gallery_sharing.
+		if ( get_option( 'sunshine_allow_gallery_sharing' ) === false ) {
+			$disable_gallery_sharing = get_option( 'sunshine_disable_gallery_sharing' );
+			if ( ! $disable_gallery_sharing ) {
+				SPC()->update_option( 'allow_gallery_sharing', true );
+			}
+		}
+
+		// Migrate disable_image_sharing to allow_image_sharing.
+		if ( get_option( 'sunshine_allow_image_sharing' ) === false ) {
+			$disable_image_sharing = get_option( 'sunshine_disable_image_sharing' );
+			if ( ! $disable_image_sharing ) {
+				SPC()->update_option( 'allow_image_sharing', true );
+			}
+		}
+
+		// Migrate disable_secure_file_names to use_secure_file_names.
+		if ( get_option( 'sunshine_use_secure_file_names' ) === false ) {
+			$disable_secure_file_names = get_option( 'sunshine_disable_secure_file_names' );
+			if ( ! $disable_secure_file_names ) {
+				SPC()->update_option( 'use_secure_file_names', true );
+			}
+		}
+
+		// Regenerate .htaccess to include log file protection rules.
+		sunshine_create_htaccess( true );
+
+		// Generate random log filename if logging is currently enabled.
+		if ( SPC()->get_option( 'enable_log' ) && ! get_option( 'sunshine_log_file_name' ) ) {
+			SPC()->generate_log_filename();
+		}
 	}
 
 	public function update_3_settings_data() {

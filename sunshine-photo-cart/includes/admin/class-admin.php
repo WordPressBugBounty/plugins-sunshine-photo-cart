@@ -5,6 +5,7 @@ class Sunshine_Admin {
 	protected $notices;
 	protected $tabs      = array();
 	private $needs_setup = false;
+	private $remote_promo_displayed = false;
 
 	public function __construct() {
 
@@ -49,7 +50,10 @@ class Sunshine_Admin {
 		// Check that Sunshine has been installed.
 		add_action( 'admin_notices', array( $this, 'install_notice' ), 5 );
 
-		// Promo notices
+		// In-app promos from sunshinephotocart.com
+		add_action( 'admin_notices', array( $this, 'in_app_promos' ), 4 );
+
+		// Promo notices (fallback, shown if no remote promo displayed)
 		add_action( 'admin_notices', array( $this, 'promo_notice' ), 5 );
 
 		// Fal;back image size because we do all custom image sizes.
@@ -88,6 +92,19 @@ class Sunshine_Admin {
 
 		// Clear log.
 		add_action( 'admin_init', array( $this, 'clear_log' ) );
+
+		// Handle logging toggle for random filename generation.
+		add_action( 'update_option_sunshine_enable_log', array( $this, 'handle_log_toggle' ), 10, 2 );
+		add_action( 'add_option_sunshine_enable_log', array( $this, 'handle_log_enabled' ), 10, 2 );
+
+		// Handle error logging toggle.
+		add_action( 'update_option_sunshine_enable_error_log', array( $this, 'handle_error_log_toggle' ), 10, 2 );
+		add_action( 'add_option_sunshine_enable_error_log', array( $this, 'handle_error_log_enabled' ), 10, 2 );
+		add_action( 'admin_init', array( $this, 'clear_error_log' ) );
+
+		// Download log file handlers.
+		add_action( 'admin_post_sunshine_download_log', array( $this, 'download_log' ) );
+		add_action( 'admin_post_sunshine_download_error_log', array( $this, 'download_error_log' ) );
 
 		add_filter( 'install_plugins_tabs', array( $this, 'plugin_search_tabs' ) );
 		add_action( 'admin_init', array( $this, 'plugin_search_tabs_go' ) );
@@ -392,10 +409,38 @@ class Sunshine_Admin {
 	}
 
 	function image_sizes( $image_sizes ) {
+		$delay_processing = SPC()->get_option( 'delay_image_processing' );
+		$is_delaying      = isset( $GLOBALS['sunshine_delaying_image_processing'] ) && $GLOBALS['sunshine_delaying_image_processing'];
+		$post_action      = isset( $_POST['action'] ) ? $_POST['action'] : 'not_set';
+		$request_action   = isset( $_REQUEST['action'] ) ? $_REQUEST['action'] : 'not_set';
+
+		// Check if we're in the initial upload context (sunshine_gallery_upload)
+		$is_initial_upload = ( $post_action === 'sunshine_gallery_upload' || $request_action === 'sunshine_gallery_upload' );
+
+		// Check if we're in a background processing context (cron or async request)
+		$is_cron               = defined( 'DOING_CRON' ) && DOING_CRON;
+		$is_async_request      = ( $request_action === 'spc_process_images' );
+		$is_background_process = ( $is_cron || $is_async_request ) && ! $is_initial_upload;
+
+		// If delay processing is enabled, prevent sizes UNLESS we're in a separate background processing request
+		if ( $delay_processing ) {
+			if ( $is_background_process ) {
+				// We're in actual background processing (cron or separate request), only allow Sunshine sizes
+				$image_sizes = array( 'sunshine-thumbnail', 'sunshine-large' );
+				$image_sizes = apply_filters( 'sunshine_image_sizes', $image_sizes );
+				return $image_sizes;
+			} else {
+				// We're in upload context or during dispatch, prevent sizes
+				return array();
+			}
+		}
+
+		// Otherwise, only limit sizes for Sunshine uploads
 		if ( isset( $_POST['action'] ) && strpos( $_POST['action'], 'sunshine_' ) === 0 ) {
 			$image_sizes = array( 'sunshine-thumbnail', 'sunshine-large' );
 			$image_sizes = apply_filters( 'sunshine_image_sizes', $image_sizes );
 		}
+
 		return $image_sizes;
 	}
 
@@ -519,7 +564,48 @@ class Sunshine_Admin {
 		}
 	}
 
+	/**
+	 * Display in-app promos fetched from sunshinephotocart.com.
+	 */
+	function in_app_promos() {
+		$debug = isset( $_GET['sunshine_refresh_promos'] );
+
+		// Only show on Sunshine admin pages.
+		$screen = get_current_screen();
+
+		if ( $debug ) {
+			SPC()->log( 'In-App Promos: in_app_promos() called, screen: ' . ( $screen ? $screen->id : 'null' ) );
+		}
+
+		if ( ! $screen || ! $this->is_sunshine() ) {
+			if ( $debug ) {
+				SPC()->log( 'In-App Promos: Not a Sunshine page, skipping' );
+			}
+			return;
+		}
+
+		if ( $debug ) {
+			SPC()->log( 'In-App Promos: This is a Sunshine page, loading promos class' );
+		}
+
+		// Include the in-app promos class.
+		require_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/class-in-app-promos.php';
+
+		$promos = new Sunshine_In_App_Promos();
+		$this->remote_promo_displayed = $promos->display();
+	}
+
 	function promo_notice() {
+		// Skip if a remote promo was already displayed.
+		if ( $this->remote_promo_displayed ) {
+			return;
+		}
+
+		// Skip if promos are hidden and user has a plan.
+		if ( SPC()->get_option( 'promos_hide' ) && SPC()->has_plan() ) {
+			return;
+		}
+
 		$install_time = SPC()->get_option( 'install_time' );
 		if ( ! SPC()->get_option( 'license_sunshine-photo-cart-pro' ) && ( ( time() - $install_time ) >= ( DAY_IN_SECONDS * 30 ) ) && ( empty( $_GET['page'] ) || $_GET['page'] != 'sunshine-install' ) ) {
 			$discount_text = '<p>You have been using Sunshine Photo Cart for a while and that\'s great! However, it appears you are not enjoying the awesome features of having a Sunshine Pro bundle license (all the add-ons and 1-on-1 priority support).</p><p><strong>I am doing a limited-time offer of 50% off the first year of a Sunshine Pro annual license!</strong> Sunshine <em>rarely</em> does any kind of discounts.</p>
@@ -909,6 +995,89 @@ class Sunshine_Admin {
 		file_put_contents( SPC()->log_file, '' );
 		SPC()->notices->add_admin( 'clear_log_file', __( 'Log file has been cleared', 'sunshine-photo-cart' ) );
 
+	}
+
+	public function handle_log_toggle( $old_value, $new_value ) {
+		if ( $new_value ) {
+			// Logging was enabled — generate a new random filename.
+			SPC()->generate_log_filename();
+
+			// Clean up old hardcoded log file if it exists.
+			$wp_upload_dir = wp_upload_dir();
+			$old_file      = $wp_upload_dir['basedir'] . '/sunshine/sunshine.txt';
+			if ( file_exists( $old_file ) ) {
+				@unlink( $old_file );
+			}
+		} else {
+			// Logging was disabled — delete log file and stored filename.
+			if ( file_exists( SPC()->log_file ) ) {
+				@unlink( SPC()->log_file );
+			}
+			delete_option( 'sunshine_log_file_name' );
+		}
+	}
+
+	public function handle_log_enabled( $option, $value ) {
+		if ( $value ) {
+			SPC()->generate_log_filename();
+		}
+	}
+
+	public function handle_error_log_toggle( $old_value, $new_value ) {
+		if ( $new_value ) {
+			SPC()->generate_log_filename( 'error_log' );
+		} else {
+			if ( SPC()->error_log_file && file_exists( SPC()->error_log_file ) ) {
+				@unlink( SPC()->error_log_file );
+			}
+			delete_option( 'sunshine_error_log_file_name' );
+		}
+	}
+
+	public function handle_error_log_enabled( $option, $value ) {
+		if ( $value ) {
+			SPC()->generate_log_filename( 'error_log' );
+		}
+	}
+
+	public function clear_error_log() {
+
+		if ( ! isset( $_GET['sunshine_clear_error_log'] ) || ! wp_verify_nonce( $_GET['sunshine_clear_error_log'], 'sunshine_clear_error_log' ) ) {
+			return;
+		}
+
+		if ( SPC()->error_log_file ) {
+			file_put_contents( SPC()->error_log_file, '' );
+		}
+		SPC()->notices->add_admin( 'clear_error_log_file', __( 'Error log file has been cleared', 'sunshine-photo-cart' ) );
+
+	}
+
+	public function download_log() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( __( 'You do not have permission to access this file.', 'sunshine-photo-cart' ) );
+		}
+		check_admin_referer( 'sunshine_download_log' );
+		$this->serve_log_file( SPC()->log_file, 'sunshine-log.txt' );
+	}
+
+	public function download_error_log() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( __( 'You do not have permission to access this file.', 'sunshine-photo-cart' ) );
+		}
+		check_admin_referer( 'sunshine_download_error_log' );
+		$this->serve_log_file( SPC()->error_log_file, 'sunshine-error-log.txt' );
+	}
+
+	private function serve_log_file( $file_path, $download_name ) {
+		if ( empty( $file_path ) || ! file_exists( $file_path ) ) {
+			wp_die( __( 'Log file not found.', 'sunshine-photo-cart' ) );
+		}
+		header( 'Content-Type: text/plain' );
+		header( 'Content-Disposition: attachment; filename="' . $download_name . '"' );
+		header( 'Content-Length: ' . filesize( $file_path ) );
+		readfile( $file_path );
+		exit;
 	}
 
 	public function plugin_search_tabs( $views ) {

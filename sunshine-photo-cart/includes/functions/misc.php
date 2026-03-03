@@ -110,7 +110,22 @@ function is_sunshine( $from = '' ) {
 		$return = 'SUNSHINE-ORDER';
 	}
 
-	if ( has_shortcode( $post->post_content, 'sunshine_galleries' ) || has_shortcode( $post->post_content, 'sunshine_gallery' ) || has_shortcode( $post->post_content, 'sunshine_gallery_password' ) || has_shortcode( $post->post_content, 'sunshine_search' ) ) {
+	// Check for default Sunshine shortcodes
+	$default_shortcodes = array( 'sunshine_galleries', 'sunshine_gallery', 'sunshine_gallery_password', 'sunshine_search' );
+
+	// Allow plugins to register additional shortcodes that should be considered Sunshine pages
+	$sunshine_shortcodes = apply_filters( 'sunshine_shortcodes', $default_shortcodes );
+
+	// Check if any Sunshine shortcode is present
+	$has_shortcode = false;
+	foreach ( $sunshine_shortcodes as $shortcode ) {
+		if ( has_shortcode( $post->post_content, $shortcode ) ) {
+			$has_shortcode = true;
+			break;
+		}
+	}
+
+	if ( $has_shortcode ) {
 		$return = 'SUNSHINE-SHORTCODE';
 	}
 
@@ -558,6 +573,9 @@ function sunshine_create_htaccess( $force = false ) {
 		SPC()->log( 'New htaccess file created' );
 		$escaped_url = preg_replace( '/\./', '\.', $url );
 		$data        = "RewriteEngine on
+
+# Block direct access to log files
+RewriteRule \.(txt|log)$ - [F,L]
 
 # Allow intermediate-sized images without restrictions
 RewriteCond %{REQUEST_URI} ^/.*-\d+x\d+\.(jpg|png|gif)$ [NC]

@@ -6,9 +6,27 @@
 
 <?php
 sunshine_search_form();
+
+// Display matching galleries first.
+$galleries = SPC()->frontend->gallery_search_results;
+if ( ! empty( $galleries ) ) {
+	?>
+	<div class="sunshine--search-galleries">
+		<h2><?php esc_html_e( 'Matching Galleries', 'sunshine-photo-cart' ); ?></h2>
+		<?php sunshine_get_template( 'galleries/galleries', array( 'galleries' => $galleries ) ); ?>
+	</div>
+	<?php
+}
+
+// Display matching images.
 if ( ! empty( $images ) ) {
+	if ( ! empty( $galleries ) ) {
+		?>
+		<h2><?php esc_html_e( 'Matching Images', 'sunshine-photo-cart' ); ?></h2>
+		<?php
+	}
 	sunshine_get_template( 'gallery/images', array( 'images' => $images ) );
-} else {
+} elseif ( empty( $galleries ) ) {
 	sunshine_get_template( 'search/no-images' );
 }
 ?>

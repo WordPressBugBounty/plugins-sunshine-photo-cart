@@ -7,21 +7,48 @@ $can_purchase      = $product->can_purchase();
 ?>
 <div id="sunshine--product--details" class="<?php $product->classes(); ?>" data-product-id="<?php echo esc_attr( $product->get_id() ); ?>" data-image-id="<?php echo esc_attr( $image->get_id() ); ?>">
 
-	<button id="sunshine--product--details--close"><?php esc_html_e( 'Return to products', 'sunshine-photo-cart' ); ?></button>
+	<?php if ( empty( $single_product_mode ) ) : ?>
+		<button id="sunshine--product--details--close"><?php esc_html_e( 'Return to products', 'sunshine-photo-cart' ); ?></button>
+	<?php endif; ?>
 
 	<div id="sunshine--product--details--title"><?php echo esc_html( $product->get_name() ); ?></div>
 	<?php if ( $product->has_image() ) { ?>
-		<div id="sunshine--product--details--image"><?php echo wp_kses_post( $product->get_image_html( 'large' ) ); ?></div>
+		<div id="sunshine--product--details--image"><?php echo wp_kses_post( $product->get_image_html( 'large' ) ?? '' ); ?></div>
 	<?php } ?>
 
 	<?php if ( $product->get_description() ) { ?>
-		<div class="sunshine--product--details--description"><?php echo wp_kses_post( $product->get_description() ); ?></div>
+		<div class="sunshine--product--details--description"><?php echo wp_kses_post( $product->get_description() ?? '' ); ?></div>
 	<?php } ?>
 
 	<?php do_action( 'sunshine_product_details_before_price', $product, $image ); ?>
 
+	<?php if ( ! empty( $bulk_mode ) && ! empty( $images ) && count( $images ) > 1 ) : ?>
+		<div id="sunshine--product--details--image-selection">
+			<div class="sunshine--product--details--image-selection--header">
+				<h4><?php esc_html_e( 'Select images for this product:', 'sunshine-photo-cart' ); ?></h4>
+				<div class="sunshine--product--details--image-selection--actions">
+					<button type="button" class="sunshine--button-link" id="sunshine--product--details--select-all"><?php esc_html_e( 'Select All', 'sunshine-photo-cart' ); ?></button>
+					<button type="button" class="sunshine--button-link" id="sunshine--product--details--select-none"><?php esc_html_e( 'Select None', 'sunshine-photo-cart' ); ?></button>
+				</div>
+			</div>
+			<div class="sunshine--product--details--image-selection--grid">
+				<?php foreach ( $images as $bulk_image ) : ?>
+					<div class="sunshine--product--details--image-selection--item">
+						<label>
+							<input type="checkbox" name="selected_images[]" value="<?php echo esc_attr( $bulk_image->get_id() ); ?>" checked />
+							<div class="sunshine--product--details--image-selection--thumbnail">
+								<?php $bulk_image->output( 'sunshine-thumbnail' ); ?>
+							</div>
+							<span class="sunshine--product--details--image-selection--name"><?php echo esc_html( $bulk_image->get_name() ); ?></span>
+						</label>
+					</div>
+				<?php endforeach; ?>
+			</div>
+		</div>
+	<?php endif; ?>
+
 	<div id="sunshine--product--details--price">
-		<?php echo wp_kses_post( $product->get_price_formatted() ); ?>
+		<?php echo wp_kses_post( $product->get_price_formatted() ?? '' ); ?>
 	</div>
 
 	<?php do_action( 'sunshine_product_details_after_price', $product, $image ); ?>

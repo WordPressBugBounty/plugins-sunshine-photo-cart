@@ -35,6 +35,11 @@
 			required="required"<?php } ?> />
 	</div>
 	<?php do_action( 'sunshine_signup_fields' ); ?>
+	<div class="sunshine--form--field sunshine--furl" aria-hidden="true">
+		<label for="sunshine-signup-website"><?php esc_html_e( 'Website', 'sunshine-photo-cart' ); ?></label>
+		<input type="text" name="sunshine_signup_website" id="sunshine-signup-website" autocomplete="off" tabindex="-1" />
+	</div>
+	<?php do_action( 'sunshine_signup_form_before_submit' ); ?>
 	<div class="sunshine--form--field sunshine--form--field-submit">
 		<button type="submit" class="sunshine--button"><?php esc_html_e( 'Create Account', 'sunshine-photo-cart' ); ?></button>
 	</div>

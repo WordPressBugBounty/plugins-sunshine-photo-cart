@@ -46,7 +46,7 @@ class SPC_Email {
 	public function default_options( $fields ) {
 		$fields['1000']      = array(
 			'id'   => $this->id . '_header',
-			'name' => $this->name,
+			'name' => $this->name . ' <a style="font-size: 12px; font-weight: normal; float: right;" href="' . admin_url( 'admin.php?page=sunshine&section=email' ) . '">' . __( 'Return to email list', 'sunshine-photo-cart' ) . '</a>',
 			'type' => 'header',
 		);
 		$search_replace_keys = $this->get_search_replace_keys();
@@ -346,13 +346,25 @@ class SPC_Email {
 		$emogrifier = new Sunshine_Emogrifier( $content, $css );
 		$content    = $emogrifier->emogrify();
 
+		// Get attachments from filter
+		$attachments = apply_filters( 'sunshine_email_attachments', array(), $this->id, $this->args );
+
 		// Send.
 		foreach ( $this->recipients as $email ) {
-			$result = wp_mail( $email, $subject, $content, $headers );
+			$result = wp_mail( $email, $subject, $content, $headers, $attachments );
 			if ( $result ) {
 				SPC()->log( 'Email sent to ' . $email . ': ' . $subject );
 			} else {
 				SPC()->log( 'FAILED: Email attempt to ' . $email . ': ' . $subject );
+			}
+		}
+
+		// Clean up temporary attachment files
+		if ( ! empty( $attachments ) ) {
+			foreach ( $attachments as $attachment ) {
+				if ( file_exists( $attachment ) && ( strpos( $attachment, sys_get_temp_dir() ) !== false || strpos( $attachment, '.ics' ) !== false ) ) {
+					@unlink( $attachment );
+				}
 			}
 		}
 

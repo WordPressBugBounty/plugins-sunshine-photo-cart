@@ -1,7 +1,7 @@
-<p>Create many galleries, faster with the <strong>Volume Galleries</strong> add-on!</p>
+<p><strong>100 galleries in minutes, not hours.</strong> Perfect for sports leagues, schools, and events.</p>
 <ul>
-	<li>FTP images to your server in any folder hiararchy, new galleries will follow this structure</li>
-	<li>Set a source gallery for all imported galleries to use as basis for imported gallery settings</li>
-	<li>Optional import file for more customized settings for each gallery</li>
-	<li>Automatically create new users and notify them via email as their private gallery is created</li>
+	<li>FTP upload with automatic gallery creation matching your folder structure</li>
+	<li>Use a template gallery for consistent settings across all imports</li>
+	<li>Auto-create customer accounts and send notifications</li>
+	<li>CSV import for custom settings per gallery</li>
 </ul>

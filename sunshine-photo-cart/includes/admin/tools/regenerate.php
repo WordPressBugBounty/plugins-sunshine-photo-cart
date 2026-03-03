@@ -35,35 +35,22 @@ class SPC_Tool_Regenerate extends SPC_Tool {
 		$apply_watermark          = isset( $_GET['apply_watermark'] ) ? sanitize_text_field( wp_unslash( $_GET['apply_watermark'] ) ) : null;
 		$images_without_watermark = 0;
 
-		if ( ! empty( $gallery_id ) ) {
-			$gallery = sunshine_get_gallery( $gallery_id );
-			/* translators: %s is the gallery title */
-			$title = sprintf( __( 'Regenerating images for "%s"', 'sunshine-photo-cart' ), $gallery->get_name() );
-			$count = $gallery->get_image_count();
-
-			// Check for images without watermark in this gallery.
-			if ( ! empty( $watermark_image ) && null === $apply_watermark ) {
+		// Check for images without watermark before proceeding.
+		if ( ! empty( $watermark_image ) && null === $apply_watermark ) {
+			if ( ! empty( $gallery_id ) ) {
+				$gallery   = sunshine_get_gallery( $gallery_id );
 				$image_ids = $gallery->get_image_ids();
-				foreach ( $image_ids as $image_id ) {
-					$watermark_meta = get_post_meta( $image_id, 'sunshine_watermark', true );
-					if ( '0' === $watermark_meta || 0 === $watermark_meta ) {
-						$images_without_watermark++;
+				if ( ! empty( $image_ids ) && is_array( $image_ids ) ) {
+					foreach ( $image_ids as $image_id ) {
+						$watermark_meta = get_post_meta( $image_id, 'sunshine_watermark', true );
+						// Check if watermark is disabled (matches the check in sunshine_watermark_media_upload).
+						if ( 0 === $watermark_meta || '0' === $watermark_meta || false === $watermark_meta ) {
+							$images_without_watermark++;
+						}
 					}
 				}
-			}
-		} else {
-			$title = __( 'Regenerating images', 'sunshine-photo-cart' );
-			$args  = array(
-				'post_type'   => 'attachment',
-				'post_status' => 'any',
-				'nopaging'    => true,
-				'meta_key'    => 'sunshine_file_name',
-			);
-			$query = new WP_Query( $args );
-			$count = $query->found_posts;
-
-			// Check for images without watermark.
-			if ( ! empty( $watermark_image ) && null === $apply_watermark ) {
+			} else {
+				// Check for all images without watermark.
 				$args_no_watermark        = array(
 					'post_type'   => 'attachment',
 					'post_status' => 'any',
@@ -76,8 +63,8 @@ class SPC_Tool_Regenerate extends SPC_Tool {
 						),
 						array(
 							'key'     => 'sunshine_watermark',
-							'value'   => '0',
-							'compare' => '=',
+							'value'   => array( '0', 0 ),
+							'compare' => 'IN',
 						),
 					),
 				);
@@ -86,10 +73,27 @@ class SPC_Tool_Regenerate extends SPC_Tool {
 			}
 		}
 
-		// Show watermark options if needed.
+		// Show watermark options if needed - must happen before any output.
 		if ( ! empty( $watermark_image ) && null === $apply_watermark && $images_without_watermark > 0 ) {
 			$this->show_watermark_options( $images_without_watermark, $gallery_id );
 			return;
+		}
+
+		if ( ! empty( $gallery_id ) ) {
+			$gallery = sunshine_get_gallery( $gallery_id );
+			/* translators: %s is the gallery title */
+			$title = sprintf( __( 'Regenerating images for "%s"', 'sunshine-photo-cart' ), $gallery->get_name() );
+			$count = $gallery->get_image_count();
+		} else {
+			$title = __( 'Regenerating images', 'sunshine-photo-cart' );
+			$args  = array(
+				'post_type'   => 'attachment',
+				'post_status' => 'any',
+				'nopaging'    => true,
+				'meta_key'    => 'sunshine_file_name',
+			);
+			$query = new WP_Query( $args );
+			$count = $query->found_posts;
 		}
 
 		?>
@@ -249,33 +253,104 @@ class SPC_Tool_Regenerate extends SPC_Tool {
 
 		SPC()->log( 'Regenerating image: ' . $image_id );
 
-		// If we have a remote file and we have the offload plugin active.
-		if ( substr( $file_path, 0, 2 ) == 's3' && function_exists( 'as3cf_get_attachment_url' ) ) {
+		$upload_info              = wp_upload_dir();
+		$upload_dir               = $upload_info['basedir'];
+		$downloaded_from_cloud    = false;
+		$sunshine_cloud_offloaded = false;
 
-			$upload_info = wp_upload_dir();
-			$upload_dir  = $upload_info['basedir'];
-			$upload_url  = $upload_info['baseurl'];
+		// Check if file is offloaded via Sunshine Cloud Storage addon.
+		$cloud_storage_key = get_post_meta( $image_id, 'sunshine_cloud_storage_key', true );
+		if ( ! empty( $cloud_storage_key ) && ( ! file_exists( $file_path ) || substr( $file_path, 0, 2 ) == 's3' ) ) {
+			$sunshine_cloud_offloaded = true;
 
+			// Try to download from Sunshine Cloud Storage.
+			if ( class_exists( 'Sunshine_Cloud_Storage_Client' ) ) {
+				$client = Sunshine_Cloud_Storage_Client::instance();
+
+				// Build local path for the downloaded file.
+				$local_path = $upload_dir . '/sunshine/' . $image->get_gallery_id() . '/' . basename( $cloud_storage_key );
+
+				// Ensure directory exists.
+				$local_dir = dirname( $local_path );
+				if ( ! file_exists( $local_dir ) ) {
+					wp_mkdir_p( $local_dir );
+				}
+
+				SPC()->log( 'Cloud Storage: Downloading original file for regeneration: ' . $cloud_storage_key );
+
+				if ( $client->download_file( $cloud_storage_key, $local_path ) ) {
+					$file_path             = $local_path;
+					$downloaded_from_cloud = true;
+					SPC()->log( 'Cloud Storage: Successfully downloaded file for regeneration: ' . $local_path );
+				} else {
+					SPC()->log( 'Cloud Storage: Failed to download file for regeneration: ' . $cloud_storage_key );
+					wp_send_json(
+						array(
+							'status'   => 'error',
+							'file'     => $image->get_name(),
+							'image_id' => $image_id,
+							'error'    => __(
+								'Could not download file from cloud storage for regeneration',
+								'sunshine-photo-cart'
+							),
+						)
+					);
+					return;
+				}
+			} else {
+				SPC()->log( 'Cloud Storage: Client class not available for regeneration' );
+				wp_send_json(
+					array(
+						'status'   => 'error',
+						'file'     => $image->get_name(),
+						'image_id' => $image_id,
+						'error'    => __(
+							'Cloud Storage addon is required to regenerate this offloaded image',
+							'sunshine-photo-cart'
+						),
+					)
+				);
+				return;
+			}
+		} elseif ( substr( $file_path, 0, 2 ) == 's3' && function_exists( 'as3cf_get_attachment_url' ) ) {
+			// If we have a remote file and we have the WP Offload Media plugin active.
 			$remote_url = as3cf_get_attachment_url( $image_id );
 			$orig_image = file_get_contents( $remote_url );
 
 			// Make the new local version of the file the source file path.
 			$file_path = $upload_dir . '/sunshine/' . $image->get_gallery_id() . '/' . basename( $file_path );
-			$save      = file_put_contents( $file_path, $orig_image );
 
-		} else {
+			// Ensure directory exists.
+			$local_dir = dirname( $file_path );
+			if ( ! file_exists( $local_dir ) ) {
+				wp_mkdir_p( $local_dir );
+			}
 
+			$save                  = file_put_contents( $file_path, $orig_image );
+			$downloaded_from_cloud = true;
+		}
+
+		// Only delete existing thumbnails if file exists locally (not downloaded from cloud).
+		if ( ! $downloaded_from_cloud && file_exists( $file_path ) ) {
 			$directory = dirname( $file_path );
 			$file_info = pathinfo( $file_path );
 			$filename  = $file_info['filename']; // This will be 'lee-10'
-			$extension = $file_info['extension']; // This will be 'jpg'
+			$extension = isset( $file_info['extension'] ) ? $file_info['extension'] : '';
 
-			// Find extra images and delete them.
-			$pattern      = $directory . '/' . $filename . '-*x*.' . $extension;
-			$extra_images = glob( $pattern );
-			foreach ( $extra_images as $extra_image ) {
-				wp_delete_file( $extra_image );
+			if ( ! empty( $extension ) ) {
+				// Find extra images and delete them.
+				$pattern      = $directory . '/' . $filename . '-*x*.' . $extension;
+				$extra_images = glob( $pattern );
+				foreach ( $extra_images as $extra_image ) {
+					wp_delete_file( $extra_image );
+				}
 			}
+		}
+
+		// If we downloaded from cloud, update the attached file path so WordPress knows where the file is.
+		// This is important for the cloud storage hook to find the file after regeneration.
+		if ( $downloaded_from_cloud ) {
+			update_attached_file( $image_id, $file_path );
 		}
 
 		$created_timestamp = '';
@@ -298,7 +373,11 @@ class SPC_Tool_Regenerate extends SPC_Tool {
 
 		// Regenerate everything.
 		$new_metadata = wp_generate_attachment_metadata( $image_id, $file_path );
-		$image_meta   = $new_metadata['image_meta'];
+
+		// Ensure intermediate sizes exist even when the image is smaller than the target size.
+		$new_metadata = sunshine_ensure_intermediate_sizes( $image_id, $new_metadata, $file_path );
+
+		$image_meta   = isset( $new_metadata['image_meta'] ) ? $new_metadata['image_meta'] : array();
 		if ( empty( $created_timestamp ) && ! empty( $image_meta['created_timestamp'] ) ) {
 			$created_timestamp = $image_meta['created_timestamp'];
 		}
@@ -311,6 +390,7 @@ class SPC_Tool_Regenerate extends SPC_Tool {
 		// If user chose to apply watermark to all, force watermark on.
 		if ( '1' === $apply_watermark ) {
 			$watermark = 1;
+			update_post_meta( $image_id, 'sunshine_watermark', 1 );
 		} else {
 			$watermark = get_post_meta( $image_id, 'sunshine_watermark', true );
 			if ( $watermark === '' ) {

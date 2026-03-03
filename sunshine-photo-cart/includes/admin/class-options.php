@@ -143,14 +143,21 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 
 					foreach ( $data['fields'] as $field ) {
 
+						if ( empty( $field['id'] ) ) {
+							$field['id'] = sanitize_title( $field['name'] );
+						}
+
 						// Validation callback for field
 						$args = array();
 						if ( isset( $field['callback'] ) ) {
 							$args['sanitize_callback'] = $field['callback'];
-						}
-
-						if ( empty( $field['id'] ) ) {
-							$field['id'] = sanitize_title( $field['name'] );
+						} elseif ( ! empty( $field['requirements'] ) && is_array( $field['requirements'] ) ) {
+							// Use validator for requirements - store field data for validation
+							$option_name               = $this->prefix . $field['id'];
+							$field_copy                = $field; // Copy for closure
+							$args['sanitize_callback'] = function( $value ) use ( $field_copy, $option_name ) {
+								return $this->validate_field_with_requirements( $value, $option_name, $field_copy );
+							};
 						}
 
 						if ( $field['type'] != 'header' ) {
@@ -163,9 +170,14 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 							$class .= ' ' . $field['class'];
 						}
 
+						$label = isset( $field['name'] ) ? $field['name'] : '';
+						if ( ! empty( $field['documentation'] ) ) {
+							$label .= ' <a href="' . esc_url( $field['documentation'] ) . '" target="_blank" title="' . esc_attr__( 'Documentation', 'sunshine-photo-cart' ) . '" class="sunshine-admin-meta-doc"></a>';
+						}
+
 						add_settings_field(
 							$field['id'],
-							$field['name'],
+							$label,
 							array( $this, 'display_field' ),
 							$this->prefix . $data['id'],
 							$data['id'],
@@ -513,13 +525,54 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 
 				case 'header':
 				case 'title':
-					$html .= '<h3>' . wp_kses_post( $field['name'] ) . '</h3>';
+					$html .= '<h3>' . wp_kses_post( $field['name'] );
+					if ( ! empty( $field['documentation'] ) ) {
+						$html .= '<a href="' . esc_url( $field['documentation'] ) . '" target="_blank" title="' . esc_attr__( 'Documentation', 'sunshine-photo-cart' ) . '" class="sunshine-admin-meta-doc sunshine-admin-meta-doc-right"></a>';
+					}
+					$html .= '</h3>';
 					break;
 
 				case 'html':
 					if ( ! empty( $field['html'] ) ) {
 						$html .= wp_kses_post( $field['html'] );
 					}
+					break;
+
+				case 'duration':
+					$duration_value = is_array( $option_value ) ? $option_value : array();
+					$number_val     = isset( $duration_value['number'] ) ? $duration_value['number'] : '';
+					$unit_val       = isset( $duration_value['unit'] ) ? $duration_value['unit'] : 'months';
+					$units          = array(
+						'days'   => __( 'day(s)', 'sunshine-photo-cart' ),
+						'weeks'  => __( 'week(s)', 'sunshine-photo-cart' ),
+						'months' => __( 'month(s)', 'sunshine-photo-cart' ),
+						'years'  => __( 'year(s)', 'sunshine-photo-cart' ),
+					);
+					$html             .= '<input type="number" min="1" step="1" style="width: 80px;" name="' . esc_attr( $option_name ) . '[number]" value="' . esc_attr( $number_val ) . '" /> ';
+					$html             .= '<select name="' . esc_attr( $option_name ) . '[unit]">';
+					foreach ( $units as $ukey => $ulabel ) {
+						$html .= '<option value="' . esc_attr( $ukey ) . '"' . selected( $unit_val, $ukey, false ) . '>' . esc_html( $ulabel ) . '</option>';
+					}
+					$html             .= '</select>';
+					$this->show_submit = true;
+					break;
+
+				case 'promo':
+					$html .= '<div class="sunshine-settings-promo">';
+					$html .= wp_kses_post( $field['description'] );
+					$html .= '<p class="sunshine-settings-promo-links">';
+					if ( ! SPC()->has_plan() ) {
+						if ( ! empty( $field['url'] ) ) {
+							$html .= '<a href="' . esc_url( $field['url'] ) . '?utm_source=plugin&utm_medium=link&utm_campaign=settingspromo" target="_blank" class="button-primary">' . esc_html__( 'See upgrade options', 'sunshine-photo-cart' ) . '</a>';
+						}
+					} else {
+						$html .= '<a href="' . esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-addons' ) ) . '" class="button-primary">' . esc_html__( 'Activate this add-on', 'sunshine-photo-cart' ) . '</a>';
+					}
+					if ( ! empty( $field['url'] ) ) {
+						$html .= ' <a href="' . esc_url( $field['url'] ) . '" target="_blank" class="button">' . esc_html__( 'Learn more', 'sunshine-photo-cart' ) . '</a>';
+					}
+					$html .= '</p>';
+					$html .= '</div>';
 					break;
 
 				case 'license':
@@ -546,6 +599,10 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 			$html_safe = $field['before'] . $html . $field['after'];
 
 			switch ( $field['type'] ) {
+
+				case 'promo':
+					// Description already rendered in promo case above.
+					break;
 
 				case 'checkbox':
 				case 'radio':
@@ -694,8 +751,10 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 				$i = 0;
 				foreach ( $section_data['fields'] as $field ) {
 					if ( ! empty( $field['conditions'] ) && is_array( $field['conditions'] ) ) {
+						// Filter to valid conditions only
+						$valid_conditions = array();
 						foreach ( $field['conditions'] as $condition ) {
-							if ( empty( $condition['compare'] ) || empty( $condition['value'] ) || empty( $condition['field'] ) || empty( $condition['action'] ) ) {
+							if ( empty( $condition['compare'] ) || ! isset( $condition['value'] ) || empty( $condition['field'] ) || empty( $condition['action'] ) ) {
 								continue;
 							}
 							if ( ! in_array( $condition['action'], array( 'show', 'hide' ) ) ) {
@@ -704,42 +763,63 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 							if ( ! in_array( $condition['compare'], array( '==', '!=', '<', '>', '<=', '>=' ) ) ) {
 								continue;
 							}
+							$valid_conditions[] = $condition;
+						}
+
+						if ( ! empty( $valid_conditions ) ) {
 							$i++;
+							$action_target = ( isset( $valid_conditions[0]['action_target'] ) ) ? $valid_conditions[0]['action_target'] : '.sunshine-settings-' . $field['id'];
 							?>
-							var condition_field_value_<?php echo esc_js( $i ); ?> = sunshine_get_condition_field_value( '<?php echo esc_js( $condition['field'] ); ?>' );
-							function condition_field_action_<?php echo esc_js( $i ); ?>( value ) {
-								<?php
-								$action_target          = ( isset( $condition['action_target'] ) ) ? $condition['action_target'] : '.sunshine-settings-' . $field['id'];
-								$true_action            = ( $condition['action'] == 'show' ) ? 'show' : 'hide';
-								$false_action           = ( $condition['action'] == 'show' ) ? 'hide' : 'show';
-								$comparison_string_safe = '';
-								if ( is_array( $condition['value'] ) ) { // If value is an array, need to compare against each array value
-									$comparison_strings = array();
-									foreach ( $condition['value'] as $value ) {
-										$comparison_strings[] = '( value ' . esc_js( $condition['compare'] ) . ' "' . esc_js( $value ) . '" )';
+
+							// Conditions for field: <?php echo esc_js( $field['id'] ); ?>
+
+							function sunshine_evaluate_conditions_<?php echo esc_js( $i ); ?>() {
+								var show = true;
+								<?php foreach ( $valid_conditions as $ci => $condition ) {
+									$comparison_string_safe = '';
+									if ( is_array( $condition['value'] ) ) {
+										$comparison_strings = array();
+										foreach ( $condition['value'] as $value ) {
+											$comparison_strings[] = '( val ' . esc_js( $condition['compare'] ) . ' "' . esc_js( $value ) . '" )';
+										}
+										$comparison_string_safe = join( ' || ', $comparison_strings );
+									} else {
+										$comparison_string_safe = 'val ' . esc_js( $condition['compare'] ) . ' "' . esc_js( $condition['value'] ) . '"';
 									}
-									$comparison_string_safe = join( ' || ', $comparison_strings );
-								} else {
-									$comparison_string_safe = 'value ' . esc_js( $condition['compare'] ) . ' "' . esc_js( $condition['value'] ) . '"';
-								}
+									$is_show = ( $condition['action'] == 'show' );
 								?>
-								if ( <?php echo $comparison_string_safe; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> ) {
-									console.log( value + ' true' );
-									jQuery( '<?php echo esc_js( $action_target ); ?>' ).closest( 'tr' ).<?php echo esc_js( $true_action ); ?>();
+								var val = sunshine_get_condition_field_value( '<?php echo esc_js( $condition['field'] ); ?>' );
+								<?php if ( $is_show ) { ?>
+								if ( !( <?php echo $comparison_string_safe; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> ) ) { show = false; }
+								<?php } else { ?>
+								if ( <?php echo $comparison_string_safe; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> ) { show = false; }
+								<?php } ?>
+								<?php } ?>
+								if ( show ) {
+									jQuery( '<?php echo esc_js( $action_target ); ?>' ).closest( 'tr' ).show();
 								} else {
-									console.log( value + ' false' );
-									jQuery( '<?php echo esc_js( $action_target ); ?>' ).closest( 'tr' ).<?php echo esc_js( $false_action ); ?>();
+									jQuery( '<?php echo esc_js( $action_target ); ?>' ).closest( 'tr' ).hide();
 								}
 							}
 
-							// Default action
-							condition_field_action_<?php echo esc_js( $i ); ?>( condition_field_value_<?php echo esc_js( $i ); ?> );
+							// Initial evaluation
+							sunshine_evaluate_conditions_<?php echo esc_js( $i ); ?>();
 
-							// On change action
-							jQuery( '.sunshine-settings-<?php echo esc_js( $condition['field'] ); ?> input, .sunshine-settings-<?php echo esc_js( $condition['field'] ); ?> select' ).on( 'change', function(){
-								condition_field_value_<?php echo esc_js( $i ); ?> = sunshine_get_condition_field_value( '<?php echo esc_js( $condition['field'] ); ?>' );
-								condition_field_action_<?php echo esc_js( $i ); ?>( condition_field_value_<?php echo esc_js( $i ); ?> );
+							// Re-evaluate when any referenced field changes
+							<?php
+							$bound_fields = array();
+							foreach ( $valid_conditions as $condition ) {
+								if ( ! in_array( $condition['field'], $bound_fields ) ) {
+									$bound_fields[] = $condition['field'];
+								}
+							}
+							foreach ( $bound_fields as $bound_field ) {
+							?>
+							jQuery( '.sunshine-settings-<?php echo esc_js( $bound_field ); ?> input, .sunshine-settings-<?php echo esc_js( $bound_field ); ?> select' ).on( 'change', function(){
+								sunshine_evaluate_conditions_<?php echo esc_js( $i ); ?>();
 							});
+							<?php } ?>
+
 							<?php
 						}
 					}
@@ -892,6 +972,187 @@ if ( ! class_exists( 'SPC_Settings_API' ) ) {
 			if ( $flush ) {
 				flush_rewrite_rules();
 			}
+		}
+
+		/**
+		 * Validate a field value based on its requirements
+		 *
+		 * @param mixed  $value Field value.
+		 * @param string $option_name Full option name.
+		 * @param array  $field Field definition.
+		 * @return mixed Validated value or original value if validation fails.
+		 */
+		private function validate_field_with_requirements( $value, $option_name, $field ) {
+			if ( empty( $field['requirements'] ) || ! is_array( $field['requirements'] ) ) {
+				return $value;
+			}
+
+			foreach ( $field['requirements'] as $requirement ) {
+				if ( ! $this->check_requirement( $value, $requirement, $field ) ) {
+					$message = ! empty( $requirement['message'] ) ? $requirement['message'] : __( 'Validation failed', 'sunshine-photo-cart' );
+					add_settings_error(
+						$option_name,
+						'validation_error',
+						$message,
+						'error'
+					);
+					// Return old value to prevent saving invalid data.
+					return get_option( $option_name, $value );
+				}
+			}
+
+			return $value;
+		}
+
+		/**
+		 * Check if a requirement passes
+		 *
+		 * @param mixed $value Current field value.
+		 * @param array $requirement Requirement definition.
+		 * @param array $field Field definition.
+		 * @return bool True if requirement passes, false otherwise.
+		 */
+		private function check_requirement( $value, $requirement, $field ) {
+			if ( ! empty( $requirement['callback'] ) && is_callable( $requirement['callback'] ) ) {
+				// Custom callback validation.
+				return call_user_func( $requirement['callback'], $value, $requirement, $field );
+			}
+
+			if ( empty( $requirement['type'] ) || empty( $requirement['field'] ) ) {
+				return true; // Skip invalid requirements.
+			}
+
+			$compare_field_name = $this->prefix . $requirement['field'];
+			$compare_value      = isset( $_POST[ $compare_field_name ] ) ? wp_unslash( $_POST[ $compare_field_name ] ) : get_option( $compare_field_name );
+
+			// Get compare field definition to check its type.
+			$compare_field = $this->get_field_by_id( $requirement['field'] );
+
+			// Handle dimension fields (array with 'w' and 'h' keys).
+			if ( 'dimensions' === $field['type'] && is_array( $value ) ) {
+				// If comparing with another dimensions field, use dimension validation.
+				if ( $compare_field && 'dimensions' === $compare_field['type'] && is_array( $compare_value ) ) {
+					return $this->validate_dimensions( $value, $compare_value, $requirement );
+				}
+				// If comparing with non-dimension, validate as numeric.
+				return $this->validate_comparison( $value, $compare_value, $requirement['type'] );
+			}
+
+			// Handle numeric comparisons.
+			return $this->validate_comparison( $value, $compare_value, $requirement['type'] );
+		}
+
+		/**
+		 * Validate dimension fields
+		 *
+		 * @param array $value Current dimension value (array with 'w' and 'h' keys).
+		 * @param mixed $compare_value Value to compare against.
+		 * @param array $requirement Requirement definition.
+		 * @return bool True if validation passes.
+		 */
+		private function validate_dimensions( $value, $compare_value, $requirement ) {
+			if ( ! is_array( $compare_value ) || empty( $compare_value['w'] ) || empty( $compare_value['h'] ) ) {
+				return true; // Can't compare if compare value is invalid.
+			}
+
+			if ( empty( $value['w'] ) || empty( $value['h'] ) ) {
+				return true; // Empty values are handled by required validation.
+			}
+
+			$property = ! empty( $requirement['property'] ) ? $requirement['property'] : 'both';
+
+			switch ( $property ) {
+				case 'w':
+				case 'width':
+					return $this->validate_comparison( intval( $value['w'] ), intval( $compare_value['w'] ), $requirement['type'] );
+
+				case 'h':
+				case 'height':
+					return $this->validate_comparison( intval( $value['h'] ), intval( $compare_value['h'] ), $requirement['type'] );
+
+				case 'both':
+				case 'area':
+					$current_area = intval( $value['w'] ) * intval( $value['h'] );
+					$compare_area = intval( $compare_value['w'] ) * intval( $compare_value['h'] );
+					return $this->validate_comparison( $current_area, $compare_area, $requirement['type'] );
+
+				case 'each':
+					$width_valid  = $this->validate_comparison( intval( $value['w'] ), intval( $compare_value['w'] ), $requirement['type'] );
+					$height_valid = $this->validate_comparison( intval( $value['h'] ), intval( $compare_value['h'] ), $requirement['type'] );
+					return $width_valid && $height_valid;
+
+				default:
+					return true;
+			}
+		}
+
+		/**
+		 * Validate comparison based on type
+		 *
+		 * @param mixed  $value Current value.
+		 * @param mixed  $compare_value Value to compare against.
+		 * @param string $type Comparison type (>, <, >=, <=, ==, !=).
+		 * @return bool True if comparison passes.
+		 */
+		private function validate_comparison( $value, $compare_value, $type ) {
+			$value         = is_numeric( $value ) ? floatval( $value ) : $value;
+			$compare_value = is_numeric( $compare_value ) ? floatval( $compare_value ) : $compare_value;
+
+			switch ( $type ) {
+				case '>':
+				case 'greater_than':
+					return $value > $compare_value;
+
+				case '>=':
+				case 'greater_than_or_equal':
+					return $value >= $compare_value;
+
+				case '<':
+				case 'less_than':
+					return $value < $compare_value;
+
+				case '<=':
+				case 'less_than_or_equal':
+					return $value <= $compare_value;
+
+				case '==':
+				case '===':
+				case 'equal':
+					return $value == $compare_value;
+
+				case '!=':
+				case '!==':
+				case 'not_equal':
+					return $value != $compare_value;
+
+				default:
+					return true; // Unknown type, pass validation.
+			}
+		}
+
+		/**
+		 * Get field definition by field ID
+		 *
+		 * @param string $field_id Field ID.
+		 * @return array|null Field definition or null if not found.
+		 */
+		private function get_field_by_id( $field_id ) {
+			if ( empty( $this->settings ) ) {
+				return null;
+			}
+
+			foreach ( $this->settings as $section ) {
+				if ( empty( $section['fields'] ) ) {
+					continue;
+				}
+				foreach ( $section['fields'] as $field ) {
+					if ( ! empty( $field['id'] ) && $field['id'] === $field_id ) {
+						return $field;
+					}
+				}
+			}
+
+			return null;
 		}
 
 	}

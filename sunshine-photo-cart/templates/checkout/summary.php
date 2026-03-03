@@ -103,3 +103,5 @@
 		</tr>
 	</table>
 </div>
+
+<?php do_action( 'sunshine_after_order_review_summary' ); ?>

@@ -849,7 +849,7 @@ class SPC_Order extends Sunshine_Data {
 		if ( ! empty( $items ) ) {
 			foreach ( $items as $item ) {
 				$cost  += floatval( $item->get_meta_value( 'cost' ) ) * intval( $item->get_qty() );
-				$price += floatval( $item->get_price() ) * intval( $item->get_qty() );
+				$price += floatval( $item->get_total() );
 			}
 		}
 		if ( $this->get_refunds() ) {

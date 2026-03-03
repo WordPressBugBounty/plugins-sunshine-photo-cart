@@ -93,6 +93,7 @@
 .sunshine--icon--cart-2:before,
 .sunshine--icon--add-shopping-cart:before,
 .sunshine--icon--add-shopping-cart-2:before,
+.sunshine--icon--cloud:before,
 .icons8,
 [data-icons8]:before {
   display: inline-block;
@@ -325,4 +326,7 @@
 }
 .sunshine--icon--add-shopping-cart-2:before {
   content: "\f14c";
+}
+.sunshine--icon--cloud:before {
+  content: "\f14d";
 }

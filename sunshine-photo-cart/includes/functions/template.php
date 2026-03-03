@@ -214,7 +214,7 @@ function sunshine_classes( $echo = true ) {
 	if ( SPC()->frontend->is_image() ) {
 		$classes[] = 'sunshine--image';
 		$classes[] = 'sunshine--image-' . SPC()->frontend->current_image->get_id();
-		if ( SPC()->frontend->current_image->is_favorite() ) {
+		if ( SPC()->customer->has_favorite( SPC()->frontend->current_image->get_id() ) ) {
 			$classes[] = 'sunshine--image--is-favorite';
 		}
 		if ( SPC()->frontend->current_image->in_cart() ) {
@@ -278,6 +278,14 @@ function sunshine_gallery_rows() {
 function sunshine_gallery_images_per_page() {
 	return SPC()->get_option( 'per_page', 16 );
 	// return SPC()->get_option( 'columns' ) * SPC()->get_option( 'rows' );
+}
+
+function sunshine_galleries_per_page() {
+	return SPC()->get_option( 'galleries_per_page', 0 );
+}
+
+function sunshine_galleries_pagination_style() {
+	return SPC()->get_option( 'galleries_pagination', SPC()->get_option( 'pagination' ) );
 }
 
 function sunshine_gallery_pagination( $gallery = '', $echo = true, $class = 'sunshine--pagination' ) {
@@ -371,6 +379,92 @@ function sunshine_gallery_pagination_load() {
 				'html' => $html,
 			)
 		);
+	}
+
+	wp_send_json_error();
+
+}
+
+function sunshine_galleries_pagination( $gallery_count = 0, $echo = true, $class = 'sunshine--pagination' ) {
+
+	$per_page = sunshine_galleries_per_page();
+
+	// If per_page is 0 or empty, no pagination needed
+	if ( empty( $per_page ) || $per_page <= 0 ) {
+		return;
+	}
+
+	if ( $gallery_count <= $per_page ) {
+		return;
+	}
+
+	$format = sunshine_galleries_pagination_style();
+
+	$html = '<nav class="' . esc_attr( $class ) . ' sunshine--pagination--' . esc_attr( $format ) . '">';
+
+	if ( empty( $format ) || $format == 'numbers' ) {
+
+		$page_number = ( isset( $_GET['galleries_pagination'] ) ) ? intval( $_GET['galleries_pagination'] ) : 1;
+
+		$base_url = sunshine_current_url( false );
+		$pages    = ceil( $gallery_count / $per_page );
+		if ( $page_number > 1 ) {
+			$prev_page = $page_number - 1;
+			$url       = add_query_arg( 'galleries_pagination', $prev_page, $base_url );
+			$html     .= '<a href="' . esc_url( $url ) . '">' . esc_html( apply_filters( 'sunshine_pagination_previous_label', '&laquo; ' . __( 'Previous', 'sunshine-photo-cart' ) ) ) . '</a> ';
+		}
+		for ( $i = 1; $i <= $pages; $i++ ) {
+			$current_class = ( $page_number == $i || ( $page_number == 0 && $i == 1 ) ) ? 'current' : '';
+			$url           = add_query_arg( 'galleries_pagination', $i, $base_url );
+			$html         .= '<a href="' . esc_url( $url ) . '" class="' . esc_attr( $current_class ) . '">' . esc_html( $i ) . '</a> ';
+		}
+		if ( $page_number < $pages ) {
+			$next_page = $page_number + 1;
+			$url       = add_query_arg( 'galleries_pagination', $next_page, $base_url );
+			$html     .= ' <a href="' . esc_url( $url ) . '">' . esc_html( apply_filters( 'sunshine_pagination_next_label', __( 'Next', 'sunshine-photo-cart' ) . '  &raquo;' ) ) . '</a>';
+		}
+	} else {
+
+		$total_pages = ceil( $gallery_count / $per_page );
+
+		$html .= '<button id="sunshine--galleries-pagination--load-more" class="sunshine--button button" data-page="1" data-total="' . esc_attr( $total_pages ) . '">' . esc_html__( 'Load more', 'sunshine-photo-cart' ) . '</button>';
+
+	}
+
+	$html .= '</nav>';
+
+	if ( $echo ) {
+		echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	} else {
+		return $html;
+	}
+
+}
+
+add_action( 'wp_ajax_sunshine_galleries_pagination', 'sunshine_galleries_pagination_load' );
+add_action( 'wp_ajax_nopriv_sunshine_galleries_pagination', 'sunshine_galleries_pagination_load' );
+function sunshine_galleries_pagination_load() {
+
+	check_ajax_referer( 'sunshinephotocart', 'security' );
+
+	$per_page   = sunshine_galleries_per_page();
+	$page       = intval( $_POST['page'] );
+	$offset     = $per_page * $page;
+	$galleries  = sunshine_get_galleries( array( 'post_parent' => 0 ), 'view' );
+
+	if ( $galleries ) {
+		$galleries_slice = array_slice( $galleries, $offset, $per_page );
+		if ( ! empty( $galleries_slice ) ) {
+			$html = '';
+			foreach ( $galleries_slice as $gallery ) {
+				$html .= sunshine_get_template_html( 'galleries/gallery-item', array( 'gallery' => $gallery ) );
+			}
+			wp_send_json_success(
+				array(
+					'html' => $html,
+				)
+			);
+		}
 	}
 
 	wp_send_json_error();
@@ -542,7 +636,7 @@ function sunshine_image_status( $image ) {
 	$status[] = '<span class="sunshine--image--is-favorite"></span>';
 	$status[] = '<span class="sunshine--image--in-cart"></span>';
 	$status[] = '<span class="sunshine--image--has-comments"></span>';
-	$status   = apply_filters( 'sunshine_image_status', $status, $image );
+	$status = apply_filters( 'sunshine_image_status', $status, $image );
 	if ( ! empty( $status ) ) {
 		echo '<div class="sunshine--image-status">' . wp_kses_post( join( '', $status ) ) . '</div>';
 	}

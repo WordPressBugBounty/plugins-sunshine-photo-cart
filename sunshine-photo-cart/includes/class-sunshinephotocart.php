@@ -6,6 +6,7 @@ final class Sunshine_Photo_Cart {
 
 	protected static $_instance = null;
 	public $log_file;
+	public $error_log_file;
 	public $customer = null;
 	public $session;
 	public $cart;
@@ -24,6 +25,7 @@ final class Sunshine_Photo_Cart {
 	public $plan;
 	public $frontend;
 	public $active_addons = array();
+	private $previous_error_handler = null;
 
 	public static function instance() {
 		if ( is_null( self::$_instance ) ) {
@@ -166,6 +168,8 @@ final class Sunshine_Photo_Cart {
 		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/class-addon-update.php';
 		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/class-license.php';
 		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/tracking.php';
+		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/class-privacy.php';
+		new SPC_Privacy();
 
 		// Various admin functions
 		if ( is_admin() ) {
@@ -174,6 +178,7 @@ final class Sunshine_Photo_Cart {
 			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/class-admin.php';
 			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/class-update.php';
 			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/sunshine-gallery.php';
+			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/gallery-navigator.php';
 			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/sunshine-product.php';
 			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/sunshine-product-category.php';
 			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/sunshine-order.php';
@@ -224,9 +229,18 @@ final class Sunshine_Photo_Cart {
 
 	public function init() {
 
-		// Set log file
-		$wp_upload_dir  = wp_upload_dir();
-		$this->log_file = $wp_upload_dir['basedir'] . '/sunshine/sunshine.txt';
+		// Set log files
+		$wp_upload_dir = wp_upload_dir();
+		$log_file_name = get_option( 'sunshine_log_file_name' );
+		if ( $log_file_name ) {
+			$this->log_file = $wp_upload_dir['basedir'] . '/sunshine/' . $log_file_name;
+		} else {
+			$this->log_file = $wp_upload_dir['basedir'] . '/sunshine/sunshine.txt';
+		}
+		$error_log_file_name = get_option( 'sunshine_error_log_file_name' );
+		if ( $error_log_file_name ) {
+			$this->error_log_file = $wp_upload_dir['basedir'] . '/sunshine/' . $error_log_file_name;
+		}
 
 		$this->prefix = apply_filters( 'sunshine_prefix', 'sunshine_' );
 
@@ -289,6 +303,10 @@ final class Sunshine_Photo_Cart {
 		*/
 
 		do_action( 'sunshine_after_init' );
+
+		if ( $this->get_option( 'enable_error_log' ) && $this->error_log_file ) {
+			$this->register_error_handlers();
+		}
 
 	}
 
@@ -642,10 +660,91 @@ final class Sunshine_Photo_Cart {
 
 	public function store_enabled() {
 		$enabled = true;
-		if ( $this->get_option( 'disable_store' ) || SPC()->get_option( 'proofing' ) ) {
+		if ( ! $this->get_option( 'allow_store' ) || SPC()->get_option( 'proofing' ) ) {
 			$enabled = false;
 		}
 		return $enabled;
+	}
+
+	public function generate_log_filename( $type = 'log' ) {
+		$random    = wp_generate_password( 16, false );
+		$prefix    = ( $type === 'error_log' ) ? 'sunshine-errors-' : 'sunshine-';
+		$file_name = $prefix . $random . '.txt';
+		$option    = ( $type === 'error_log' ) ? 'sunshine_error_log_file_name' : 'sunshine_log_file_name';
+		update_option( $option, $file_name, false );
+
+		$wp_upload_dir = wp_upload_dir();
+		$file_path     = $wp_upload_dir['basedir'] . '/sunshine/' . $file_name;
+
+		if ( $type === 'error_log' ) {
+			$this->error_log_file = $file_path;
+		} else {
+			$this->log_file = $file_path;
+		}
+
+		return $file_name;
+	}
+
+	public function register_error_handlers() {
+		$this->previous_error_handler = set_error_handler( array( $this, 'php_error_handler' ) );
+		register_shutdown_function( array( $this, 'php_fatal_error_handler' ) );
+	}
+
+	public function php_error_handler( $errno, $errstr, $errfile, $errline ) {
+		if ( ! ( error_reporting() & $errno ) ) {
+			if ( is_callable( $this->previous_error_handler ) ) {
+				return call_user_func( $this->previous_error_handler, $errno, $errstr, $errfile, $errline );
+			}
+			return false;
+		}
+
+		$error_types = array(
+			E_NOTICE          => 'PHP Notice',
+			E_WARNING         => 'PHP Warning',
+			E_DEPRECATED      => 'PHP Deprecated',
+			E_USER_NOTICE     => 'PHP User Notice',
+			E_USER_WARNING    => 'PHP User Warning',
+			E_USER_DEPRECATED => 'PHP User Deprecated',
+			E_STRICT          => 'PHP Strict',
+		);
+
+		$type = isset( $error_types[ $errno ] ) ? $error_types[ $errno ] : 'PHP Error ' . $errno;
+
+		$message = sprintf( '[%s] %s in %s on line %d', $type, $errstr, $errfile, $errline );
+
+		$log_message = current_time( 'y-m-d H:i:s' ) . ': ' . $message . "\n";
+		$fp          = fopen( $this->error_log_file, 'a' );
+		if ( $fp ) {
+			fwrite( $fp, $log_message );
+			fclose( $fp );
+		}
+
+		if ( is_callable( $this->previous_error_handler ) ) {
+			return call_user_func( $this->previous_error_handler, $errno, $errstr, $errfile, $errline );
+		}
+
+		return false;
+	}
+
+	public function php_fatal_error_handler() {
+		$error = error_get_last();
+		if ( $error === null ) {
+			return;
+		}
+
+		$fatal_types = array( E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR );
+		if ( ! in_array( $error['type'], $fatal_types ) ) {
+			return;
+		}
+
+		$message = sprintf( '[PHP Fatal Error] %s in %s on line %d', $error['message'], $error['file'], $error['line'] );
+
+		$log_message = current_time( 'y-m-d H:i:s' ) . ': ' . $message . "\n";
+		$fp          = @fopen( $this->error_log_file, 'a' );
+		if ( $fp ) {
+			fwrite( $fp, $log_message );
+			fclose( $fp );
+		}
 	}
 
 }

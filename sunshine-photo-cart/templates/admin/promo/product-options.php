@@ -1,6 +1,6 @@
-<p>Let your customers customize products with available options - great for allowing paper types, frames, retouching, and more!</p>
+<p><strong>Upgrades = higher profits.</strong> Offer paper types, frames, retouching, and more.</p>
 <ul>
-	<li>Define custom pricing for each option on each product - total price flexibility!</li>
-	<li>Add images for each option to give a more clear picture of what it is</li>
-	<li>Make options required or optional</li>
+	<li>Set custom pricing per option - metallic paper at a premium, matte at standard</li>
+	<li>Add preview images so customers know exactly what they're choosing</li>
+	<li>Make options required or optional per product</li>
 </ul>

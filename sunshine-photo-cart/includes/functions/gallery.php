@@ -62,6 +62,14 @@ function sunshine_get_galleries( $custom_args = array(), $conditional_method = '
 
 }
 
+function sunshine_get_galleries_count( $custom_args = array(), $conditional_method = 'access' ) {
+	$galleries = sunshine_get_galleries( $custom_args, $conditional_method );
+	if ( $galleries ) {
+		return count( $galleries );
+	}
+	return 0;
+}
+
 function sunshine_get_gallery_descendants( $gallery_id, $status = 'publish' ) {
 	$children  = array();
 	$galleries = get_posts(

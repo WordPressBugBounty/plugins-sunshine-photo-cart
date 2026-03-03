@@ -164,7 +164,12 @@ function sunshine_base_install() {
 		'proofing'                        => false,
 		'show_image_data'                 => '',
 		'disable_favorites'               => false,
+		'enable_favorites'                => true,
 		'disable_sharing'                 => false,
+		'allow_store'                     => true,
+		'allow_gallery_sharing'           => true,
+		'allow_image_sharing'             => true,
+		'use_secure_file_names'           => true,
 
 		'thumbnail_size'                  => array(
 			'w' => 400,

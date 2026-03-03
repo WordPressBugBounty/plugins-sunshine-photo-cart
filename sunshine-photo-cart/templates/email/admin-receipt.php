@@ -80,7 +80,7 @@ if ( ! empty( $message ) ) {
 							<th>
 								<?php esc_html_e( 'Discounts', 'sunshine-photo-cart' ); ?>
 								<?php
-								$discounts = $order->get_discounts();
+								$discounts = $order->get_discount_names();
 								if ( ! empty( $discounts ) ) {
 									echo '<br><em>(' . esc_html( join( ', ', $discounts ) ) . ')</em>';
 								}
@@ -88,6 +88,14 @@ if ( ! empty( $message ) ) {
 							</th>
 							<td><?php echo wp_kses_post( $order->get_discount_formatted() ); ?></td>
 						</tr>
+						<?php } ?>
+						<?php if ( $order->get_fees() ) { ?>
+						<?php foreach ( $order->get_fees() as $fee ) { ?>
+						<tr class="order-fee">
+							<th><?php echo esc_html( $fee['name'] ); ?></th>
+							<td><?php echo wp_kses_post( sunshine_price( $fee['amount'] ) ); ?></td>
+						</tr>
+						<?php } ?>
 						<?php } ?>
 						<?php if ( $order->get_credits() > 0 ) { ?>
 						<tr id="order-credits">
@@ -128,6 +136,8 @@ if ( ! empty( $message ) ) {
 		<?php echo wp_kses_post( $order->get_customer_notes() ); ?>
 	</div>
 <?php } ?>
+
+<?php do_action( 'sunshine_email_receipt_after_order_notes', $order ); ?>
 
 <?php
 $items      = $order->get_items();

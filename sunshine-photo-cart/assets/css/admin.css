@@ -60,7 +60,8 @@ a#sunshine-header--link--support:before { content: "\f147"; }
 #menu-posts-sunshine-product img,
 #menu-posts-sunshine-gallery img,
 #menu-posts-sunshine-order img,
-#toplevel_page_sunshine_admin img { max-height: 20px; width: auto; }
+#toplevel_page_sunshine_admin img,
+#toplevel_page_sunshine-sessions img { max-height: 20px; width: auto; }
 
 .sunshine-menu-highlight-link { color: var(--accent-alt); font-weight: bold !important; }
 .sunshine-menu-upgrade-link { display: block; background: var(--accent-alt); color: #000; text-align: center; font-size: 11px; text-transform: uppercase; padding: 5px 10px; border-radius: 3px; }
@@ -231,6 +232,7 @@ body.sunshine #wpbody .wp-list-table tbody span.sunshine--id { color: var(--medi
 .post-type-sunshine-gallery #visibilityx { display: none; }
 
 #sunshine-gallery-image-errors li { background: red; padding: 5px 10px; color: #FFF; margin: 0 0 3px 0; }
+#sunshine-gallery-image-errors li a { color: #FFF; }
 
 #sunshine-gallery-image-list { display: flex; flex-wrap: wrap; max-height: 290px; overflow: scroll; }
 #sunshine-gallery-image-list li { width: 120px; position: relative; margin: 4px; background: #f8f8f8; font-size: 12px; text-align: center; }
@@ -281,6 +283,8 @@ body.sunshine #wpbody .wp-list-table tbody span.sunshine--id { color: var(--medi
 #sunshine-settings-menu li#sunshine-settings-menu-integrations a:before { content: "\f13c"; }
 #sunshine-settings-menu li#sunshine-settings-menu-license a:before { content: "\f132"; }
 #sunshine-settings-menu li#sunshine-settings-menu-data a:before { content: "\f148"; }
+#sunshine-settings-menu li#sunshine-settings-menu-cloud_storage a:before { content: "\f14d"; }
+#sunshine-settings-menu li#sunshine-settings-menu-privacy a:before { content: "\f105"; }
 
 /*
 #sunshine-settings-menu-icon { display: inline-block; margin: 0 10px 0 0; }
@@ -470,17 +474,55 @@ input:checked + .sunshine-switch-slider:before {
 .sunshine-meta-fields td { padding: 10px; border-bottom: 1px solid #EFEFEF; }
 .sunshine-meta-fields tr:last-child th,
 .sunshine-meta-fields tr:last-child td { border: none; }
-a.sunshine-admin-meta-doc:before { content: "\f135"; font-family: "SunshineIcons"; color: var(--light); }
+a.sunshine-admin-meta-doc:before { content: "\f135"; font-family: "SunshineIcons"; color: #999; }
 a.sunshine-admin-meta-doc { text-decoration: none; }
+a.sunshine-admin-meta-doc:hover:before { color: #0073aa; }
+a.sunshine-admin-meta-doc-right { float: right; }
 
 tr.sunshine-meta-field-upgrade td { background: var(--light); font-size: 12px; }
 tr.sunshine-meta-field-upgrade td:before { content: "\f133"; font-family: "SunshineIcons"; color: var(--accent-alt); display: inline-block; margin-right: 5px; font-size: 14px; }
 
+.sunshine-meta-field-promo {  border-bottom: 5px solid #FFF;}
 .sunshine-meta-field-promo td { background: var(--light); padding: 20px 35px; }
 .sunshine-meta-field-promo td p { font-size: 18px; }
 .sunshine-meta-field-promo td p.sunshine-meta-field-promo-links { font-size: 14px; margin-top: 25px; }
 .sunshine-meta-field-promo td li { font-size: 15px; padding-left: 23px; position: relative; }
 .sunshine-meta-field-promo td li:before { position: absolute; left: 0; top: 0; content: "\f117"; font-family: "SunshineIcons"; color: var(--accent); }
+
+/* In-App Promo Notices */
+.sunshine-in-app-promo {
+  display: flex;
+  align-items: flex-start;
+  background: linear-gradient(135deg, var(--light) 0%, #FFF 100%);
+  border: 1px solid var(--medium-light);
+  border-left: 4px solid var(--accent);
+  border-radius: 4px;
+  padding: 20px 45px 20px 25px;
+  margin: 20px 20px 20px 0;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.sunshine-in-app-promo-image { flex-shrink: 0; margin-right: 20px; }
+.sunshine-in-app-promo-image img { max-width: 120px; height: auto; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+.sunshine-in-app-promo-content { flex: 1; }
+.sunshine-in-app-promo-title { margin: 0 0 8px 0; font-size: 18px; font-weight: 700; color: var(--strong); line-height: 1.3; }
+.sunshine-in-app-promo-text { margin: 0 0 15px 0; font-size: 14px; line-height: 1.6; color: var(--medium); }
+.sunshine-in-app-promo-cta { margin: 0; display: flex; align-items: center; gap: 10px; }
+.sunshine-in-app-promo-cta .button-primary { background: var(--accent) !important; border-color: var(--accent) !important; text-transform: uppercase; font-weight: 600; font-size: 12px; padding: 6px 16px; }
+.sunshine-in-app-promo-cta .button-primary:hover { background: var(--accent-alt) !important; border-color: var(--accent-alt) !important; }
+.sunshine-in-app-promo-cta .notice-dismiss-button { background: var(--light) !important; border: 1px solid var(--medium-light) !important; color: var(--medium) !important; font-size: 12px; cursor: pointer; padding: 6px 12px; border-radius: 3px; }
+.sunshine-in-app-promo-cta .notice-dismiss-button:hover { background: var(--medium-light) !important; color: var(--strong) !important; }
+.sunshine-in-app-promo .notice-dismiss { position: absolute; top: 12px; right: 12px; padding: 0; background: none; border: none; cursor: pointer; color: var(--medium-light); }
+.sunshine-in-app-promo .notice-dismiss:before { background: none; color: var(--medium); font-size: 16px; }
+.sunshine-in-app-promo .notice-dismiss:hover:before { color: var(--strong); }
+
+/* Responsive adjustments for in-app promos */
+@media screen and (max-width: 782px) {
+  .sunshine-in-app-promo { flex-direction: column; padding: 20px; }
+  .sunshine-in-app-promo-image { margin-right: 0; margin-bottom: 15px; }
+  .sunshine-in-app-promo-image img { max-width: 100%; }
+  .sunshine-in-app-promo-cta { flex-wrap: wrap; }
+}
 
 .sunshine-price-levels { display: flex; gap: 15px; align-items: center; }
 .sunshine-price-levels label { font-size: 12px; font-weight: bold; display: block; }
@@ -581,6 +623,7 @@ tr.sunshine-meta-field-upgrade td:before { content: "\f133"; font-family: "Sunsh
 #sunshine-order-buttons a.delete { color: red; }
 #sunshine-order-buttons a.delete:before { content: "\f10c"; font-family: "SunshineIcons"; display: inline-block; margin-right: 5px; }
 a.invoice:before { content: "\f11e"; font-family: "SunshineIcons"; display: inline-block; margin-right: 5px; }
+a.download-all:before { content: "\f107"; font-family: "SunshineIcons"; display: inline-block; margin-right: 5px; }
 
 #sunshine-order-general label { font-weight: bold; }
 #sunshine-order-general p#order-status-change-notify label { font-weight: normal; }
@@ -988,3 +1031,13 @@ a.sunshine-install--continue { text-decoration: none; border: 1px solid #CCC; bo
 .sunshine-tooltip-ui .ui-tooltip-content {
 	color: #333;
 }
+
+/* Settings Page Promos */
+.sunshine-settings-promo { background: var(--light); padding: 20px 25px; border-radius: 5px; margin: 10px 0; }
+.sunshine-settings-promo p { font-size: 16px; margin: 0 0 10px 0; }
+.sunshine-settings-promo p:first-child { font-size: 18px; }
+.sunshine-settings-promo ul { margin: 0 0 15px 0; padding: 0; list-style: none; }
+.sunshine-settings-promo li { font-size: 15px; padding-left: 23px; position: relative; margin: 0 0 5px 0; }
+.sunshine-settings-promo li:before { position: absolute; left: 0; top: 0; content: "\f117"; font-family: "SunshineIcons"; color: var(--accent); }
+.sunshine-settings-promo-links { margin-top: 15px !important; }
+.sunshine-settings-promo-links .button { margin-right: 10px; }

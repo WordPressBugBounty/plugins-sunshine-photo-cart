@@ -54,8 +54,19 @@ class SPC_Image extends Sunshine_Data {
 			$name = $this->get_file_name();
 		} elseif ( $show == 'title' ) {
 			$name = $this->name;
+		} elseif ( $show == 'caption' ) {
+			$name = $this->get_caption();
 		}
 		return apply_filters( 'sunshine_image_name', $name, $this );
+	}
+
+	/**
+	 * Get the image caption (post_excerpt from EXIF metadata).
+	 *
+	 * @return string The image caption or empty string.
+	 */
+	public function get_caption() {
+		return $this->get_data_value( 'post_excerpt' ) ?: '';
 	}
 
 	public function get_file_name() {
@@ -138,6 +149,7 @@ class SPC_Image extends Sunshine_Data {
 			),
 		);
 		*/
+		$output = apply_filters( 'sunshine_image_output', $output, $this, $size );
 		if ( $echo ) {
 			echo wp_kses_post( $output );
 			return;
@@ -272,6 +284,12 @@ class SPC_Image extends Sunshine_Data {
 		$size_info = image_get_intermediate_size( $this->get_id(), $size );
 		if ( empty( $size_info ) ) {
 			$size_info = image_get_intermediate_size( $this->get_id(), 'full' );
+		}
+		if ( empty( $size_info ) ) {
+			$size_info = array(
+				'width'  => sunshine_get_thumbnail_dimension( 'w' ),
+				'height' => sunshine_get_thumbnail_dimension( 'h' ),
+			);
 		}
 		return $size_info;
 	}

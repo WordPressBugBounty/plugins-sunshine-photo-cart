@@ -1,7 +1,16 @@
 <?php
+// Get price level from image or first image in bulk mode.
+$price_level = ! empty( $image ) ? $image->get_price_level() : ( ! empty( $images ) ? $images[0]->get_price_level() : 0 );
+
+// Get allowed product types - exclude packages in bulk mode.
+$allowed_types = sunshine_get_allowed_product_types_for_image();
+if ( ! empty( $bulk_mode ) && ! empty( $images ) && count( $images ) > 1 ) {
+	$allowed_types = array_diff( $allowed_types, array( 'package' ) );
+}
+
 // foreach category
 foreach ( $categories as $category ) {
-	$products = sunshine_get_products( $image->get_price_level(), $category->get_id(), sunshine_get_allowed_product_types_for_image() );
+	$products = sunshine_get_products( $price_level, $category->get_id(), $allowed_types );
 	if ( ! empty( $products ) ) {
 		?>
 
@@ -16,8 +25,10 @@ foreach ( $categories as $category ) {
 					sunshine_get_template(
 						'image/product-item',
 						array(
-							'product' => $product,
-							'image'   => $image,
+							'product'   => $product,
+							'image'     => $image,
+							'images'    => ! empty( $images ) ? $images : null,
+							'bulk_mode' => ! empty( $bulk_mode ) ? $bulk_mode : false,
 						)
 					);
 				}

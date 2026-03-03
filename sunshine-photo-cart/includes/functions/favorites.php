@@ -1,5 +1,47 @@
 <?php
 
+/**
+ * Session-based guest favorites helpers.
+ */
+function sunshine_get_session_favorite_ids() {
+	$favorites = SPC()->session->get( 'favorites' );
+	if ( ! empty( $favorites ) && is_array( $favorites ) ) {
+		return array_map( 'intval', $favorites );
+	}
+	return array();
+}
+
+function sunshine_add_session_favorite( $image_id ) {
+	$favorites = sunshine_get_session_favorite_ids();
+	$image_id  = intval( $image_id );
+	if ( ! in_array( $image_id, $favorites, true ) ) {
+		$favorites[] = $image_id;
+		SPC()->session->set( 'favorites', $favorites );
+		do_action( 'sunshine_add_favorite', $image_id );
+	}
+	return count( $favorites );
+}
+
+function sunshine_delete_session_favorite( $image_id ) {
+	$favorites = sunshine_get_session_favorite_ids();
+	$key       = array_search( intval( $image_id ), $favorites, true );
+	if ( $key !== false ) {
+		unset( $favorites[ $key ] );
+		$favorites = array_values( $favorites );
+		SPC()->session->set( 'favorites', $favorites );
+		do_action( 'sunshine_delete_favorite', $image_id );
+	}
+	return count( $favorites );
+}
+
+function sunshine_has_session_favorite( $image_id ) {
+	return in_array( intval( $image_id ), sunshine_get_session_favorite_ids(), true );
+}
+
+function sunshine_clear_session_favorites() {
+	SPC()->session->delete( 'favorites' );
+}
+
 add_filter( 'sunshine_account_require_login_message', 'sunshine_account_require_login_message_favorites', 10, 2 );
 function sunshine_account_require_login_message_favorites( $message, $vars ) {
 
@@ -14,46 +56,134 @@ function sunshine_account_require_login_message_favorites( $message, $vars ) {
 add_action( 'sunshine_after_login', 'sunshine_after_login_add_to_favorites' );
 add_action( 'sunshine_after_signup', 'sunshine_after_login_add_to_favorites' );
 function sunshine_after_login_add_to_favorites( $user_id ) {
+	// Single pending favorite (from modal flow).
 	$image_id = SPC()->session->get( 'add_to_favorites' );
 	if ( $image_id ) {
-		SPC()->customer->add_favorite( $image_id );
+		SPC()->customer->add_favorite( intval( $image_id ) );
 		SPC()->session->delete( 'add_to_favorites' );
-		SPC()->notices->add( __( 'Image added to favorites', 'sunshine-photo-cart' ) );
-		$image = sunshine_get_image( $image_id );
-		SPC()->log( $image->get_name() . ' in ' . $image->get_gallery()->get_name() . ' added to favorites by ' . SPC()->customer->get_id() );
+	}
+
+	// Also check for pending favorite from guest choice flow.
+	$pending = SPC()->session->get( 'pending_favorite' );
+	if ( $pending ) {
+		SPC()->customer->add_favorite( intval( $pending ) );
+		SPC()->session->delete( 'pending_favorite' );
+	}
+
+	// Merge all session-based guest favorites into account.
+	$session_favorites = sunshine_get_session_favorite_ids();
+	if ( ! empty( $session_favorites ) ) {
+		foreach ( $session_favorites as $fav_id ) {
+			SPC()->customer->add_favorite( $fav_id );
+		}
+		sunshine_clear_session_favorites();
+		SPC()->session->delete( 'guest_favorites_mode' );
+		SPC()->notices->add( __( 'Your selections have been saved to your account', 'sunshine-photo-cart' ) );
+		SPC()->log( 'Merged ' . count( $session_favorites ) . ' session favorites into account for user ' . $user_id );
 	}
 }
 
+add_action( 'sunshine_modal_display_guest_favorites', 'sunshine_modal_display_guest_favorites' );
+function sunshine_modal_display_guest_favorites() {
+	if ( ! empty( $_POST['image_id'] ) ) {
+		SPC()->session->set( 'pending_favorite', intval( $_POST['image_id'] ) );
+	}
+	$result = array( 'html' => sunshine_get_template_html( 'favorites/guest-choice' ) );
+	wp_send_json_success( $result );
+}
+
 add_action( 'wp_ajax_sunshine_add_to_favorites', 'sunshine_add_to_favorites' );
+add_action( 'wp_ajax_nopriv_sunshine_add_to_favorites', 'sunshine_add_to_favorites' );
 function sunshine_add_to_favorites() {
-	if ( ! is_user_logged_in() ) {
-		return false;
-		exit;
+	sunshine_modal_check_security();
+
+	$image_id = isset( $_POST['image_id'] ) ? intval( $_POST['image_id'] ) : 0;
+	if ( ! $image_id ) {
+		wp_send_json_error( __( 'Invalid image', 'sunshine-photo-cart' ) );
 	}
-	$action = '';
-	if ( isset( $_POST['image_id'] ) ) {
-		$image_id = intval( $_POST['image_id'] );
-		$image    = sunshine_get_image( $image_id );
-		if ( $image->can_view() ) {
-			if ( SPC()->customer->has_favorite( $image_id ) ) {
-				$count  = SPC()->customer->delete_favorite( $image_id );
-				$action = 'DELETE';
-				SPC()->log( $image->get_name() . ' in ' . $image->get_gallery()->get_name() . ' removed from favorites by ' . SPC()->customer->get_id() );
-			} else {
-				$count  = SPC()->customer->add_favorite( $image_id );
-				$action = 'ADD';
-				SPC()->log( $image->get_name() . ' in ' . $image->get_gallery()->get_name() . ' added to favorites by ' . SPC()->customer->get_id() );
-			}
-			wp_send_json_success(
-				array(
-					'action' => $action,
-					'count'  => SPC()->customer->get_favorite_count(),
-				)
-			);
+
+	$image = sunshine_get_image( $image_id );
+	if ( ! $image->exists() || ! $image->can_view() ) {
+		wp_send_json_error( __( 'Could not add image to favorites', 'sunshine-photo-cart' ) );
+	}
+
+	$src = wp_get_attachment_image_url( $image_id, 'sunshine-thumbnail' );
+
+	if ( is_user_logged_in() ) {
+		if ( SPC()->customer->has_favorite( $image_id ) ) {
+			SPC()->customer->delete_favorite( $image_id );
+			$action = 'DELETE';
+			SPC()->log( $image->get_name() . ' in ' . $image->get_gallery()->get_name() . ' removed from favorites by ' . SPC()->customer->get_id() );
+		} else {
+			SPC()->customer->add_favorite( $image_id );
+			$action = 'ADD';
+			SPC()->log( $image->get_name() . ' in ' . $image->get_gallery()->get_name() . ' added to favorites by ' . SPC()->customer->get_id() );
 		}
+		wp_send_json_success(
+			array(
+				'action'   => $action,
+				'count'    => SPC()->customer->get_favorite_count(),
+				'image_id' => $image_id,
+				'src'      => $src,
+			)
+		);
 	}
-	SPC()->log( 'Failed adding to favorites - User ID: ' . get_current_user_id() . ', Image ID: ' . $image_id );
-	wp_send_json_error( __( 'Could not add image to favorites', 'sunshine-photo-cart' ) );
+
+	// Guest user.
+	if ( ! SPC()->session->get( 'guest_favorites_mode' ) ) {
+		SPC()->session->set( 'pending_favorite', $image_id );
+		wp_send_json_success(
+			array(
+				'action'   => 'REQUIRE_GUEST_CHOICE',
+				'image_id' => $image_id,
+			)
+		);
+	}
+
+	// Guest mode active — toggle via session.
+	if ( sunshine_has_session_favorite( $image_id ) ) {
+		$count  = sunshine_delete_session_favorite( $image_id );
+		$action = 'DELETE';
+	} else {
+		$count  = sunshine_add_session_favorite( $image_id );
+		$action = 'ADD';
+	}
+	wp_send_json_success(
+		array(
+			'action'   => $action,
+			'count'    => $count,
+			'image_id' => $image_id,
+			'src'      => $src,
+		)
+	);
+}
+
+add_action( 'wp_ajax_nopriv_sunshine_guest_favorites_mode', 'sunshine_guest_favorites_mode' );
+function sunshine_guest_favorites_mode() {
+	sunshine_modal_check_security();
+
+	SPC()->session->set( 'guest_favorites_mode', 1 );
+
+	$pending  = SPC()->session->get( 'pending_favorite' );
+	$count    = 0;
+	$src      = '';
+	$image_id = 0;
+
+	if ( $pending ) {
+		$image_id = intval( $pending );
+		$count    = sunshine_add_session_favorite( $image_id );
+		$src      = wp_get_attachment_image_url( $image_id, 'sunshine-thumbnail' );
+		SPC()->session->delete( 'pending_favorite' );
+	}
+
+	wp_send_json_success(
+		array(
+			'action'   => 'ADD',
+			'count'    => $count,
+			'image_id' => $image_id,
+			'src'      => $src,
+		)
+	);
 }
 
 // add_action( 'before_delete_post', 'sunshine_cleanup_favorites' );
@@ -62,6 +192,7 @@ function sunshine_cleanup_favorites( $post_id ) {
 	if ( $post_type != 'sunshine-gallery' ) {
 		return;
 	}
+	$image_ids = array();
 	$args   = array(
 		'post_type'   => 'attachment',
 		'post_parent' => $post_id,
@@ -72,12 +203,15 @@ function sunshine_cleanup_favorites( $post_id ) {
 		$image_ids[] = $image->ID;
 	}
 	if ( ! empty( $image_ids ) ) {
-		$delete_ids = implode( $image_ids, ', ' );
-		$query      = "
-			DELETE FROM $wpdb->usermeta
-			WHERE meta_key = 'sunshine_favorite'
-			AND meta_value in ($delete_ids)
-		";
+		$image_ids     = array_map( 'intval', $image_ids );
+		$placeholders  = implode( ', ', array_fill( 0, count( $image_ids ), '%d' ) );
+		$prepared_args = array_merge( array( 'sunshine_favorite' ), $image_ids );
+		$query         = $wpdb->prepare(
+			"DELETE FROM $wpdb->usermeta
+			WHERE meta_key = %s
+			AND meta_value IN ($placeholders)",
+			$prepared_args
+		);
 		$wpdb->query( $query );
 	}
 }
@@ -159,9 +293,8 @@ function sunshine_favorites_check_availability() {
 	}
 	$removed_items = false;
 	foreach ( SPC()->customer->get_favorite_ids() as $favorite_id ) {
-		$image     = get_post( $favorite_id );
-		$image_url = get_attached_file( $favorite_id );
-		if ( ! $image || ! file_exists( $image_url ) ) {
+		$image = get_post( $favorite_id );
+		if ( ! $image ) {
 			SPC()->customer->delete_favorite( $favorite_id );
 			$removed_items = true;
 		}

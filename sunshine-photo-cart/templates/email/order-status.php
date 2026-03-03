@@ -109,6 +109,8 @@ if ( ! empty( $message ) ) {
 	</div>
 <?php } ?>
 
+<?php do_action( 'sunshine_email_order_status_after_order_notes', $order ); ?>
+
 <div id="order-customer">
 	<h3><?php esc_html_e( 'Customer Information', 'sunshine-photo-cart' ); ?></h3>
 	<p><?php echo esc_html( $order->get_customer_name() ); ?></p>

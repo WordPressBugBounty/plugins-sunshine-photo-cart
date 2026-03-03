@@ -134,13 +134,33 @@ jQuery( document ).on( 'sunshine_reload_checkout', function( event, data ) {
 
 jQuery( document ).on( 'sunshine_payment_processing', function( event, data ) {
 	const { payment_method, resolve, reject } = data;
-	
+
 	if ( payment_method === 'stripe' ) {
+
+		// Prevent double submission - check if already processing
+		var $submitBtn = jQuery('#sunshine--checkout--submit');
+		if ($submitBtn.data('stripe-processing')) {
+			console.log('Stripe payment already in progress, ignoring duplicate submission');
+			reject(new Error('Payment already in progress'));
+			return;
+		}
+
+		// Mark as processing and disable button to prevent duplicate clicks
+		$submitBtn.data('stripe-processing', true);
+		var originalButtonText = $submitBtn.html();
+		$submitBtn.prop('disabled', true).html('Processing payment...');
+
+		// Helper function to reset button state on error
+		function resetButtonState() {
+			$submitBtn.data('stripe-processing', false);
+			$submitBtn.prop('disabled', false).html(originalButtonText);
+		}
 
 		// Validate Stripe elements state before proceeding
 		if (!sunshine_stripe_elements) {
 			jQuery( '#sunshine-stripe-payment-errors' ).html( '<div style="background:red;padding:15px;color:#FFF;margin:10px 0;">' + spc_stripe_vars.strings.elements_not_available + '</div>' );
 			sunshine_checkout_updating_done();
+			resetButtonState();
 			reject( new Error( 'Stripe elements not available' ) );
 			return;
 		}
@@ -148,6 +168,7 @@ jQuery( document ).on( 'sunshine_payment_processing', function( event, data ) {
 		if (!sunshine_stripe_payment_element) {
 			jQuery( '#sunshine-stripe-payment-errors' ).html( '<div style="background:red;padding:15px;color:#FFF;margin:10px 0;">' + spc_stripe_vars.strings.payment_element_not_available + '</div>' );
 			sunshine_checkout_updating_done();
+			resetButtonState();
 			reject( new Error( 'Stripe payment element not available' ) );
 			return;
 		}
@@ -155,6 +176,7 @@ jQuery( document ).on( 'sunshine_payment_processing', function( event, data ) {
 		if (!sunshine_stripe_element_mounted) {
 			jQuery( '#sunshine-stripe-payment-errors' ).html( '<div style="background:red;padding:15px;color:#FFF;margin:10px 0;">' + spc_stripe_vars.strings.payment_element_not_mounted + '</div>' );
 			sunshine_checkout_updating_done();
+			resetButtonState();
 			reject( new Error( 'Stripe payment element not mounted' ) );
 			return;
 		}
@@ -162,6 +184,7 @@ jQuery( document ).on( 'sunshine_payment_processing', function( event, data ) {
 		if (!sunshine_stripe_payment_intent_created) {
 			jQuery( '#sunshine-stripe-payment-errors' ).html( '<div style="background:red;padding:15px;color:#FFF;margin:10px 0;">' + spc_stripe_vars.strings.payment_intent_not_created + '</div>' );
 			sunshine_checkout_updating_done();
+			resetButtonState();
 			reject( new Error( 'Stripe payment intent not created' ) );
 			return;
 		}
@@ -172,6 +195,7 @@ jQuery( document ).on( 'sunshine_payment_processing', function( event, data ) {
 		const paymentTimeout = setTimeout(() => {
 			jQuery('#sunshine-stripe-payment-errors').html('<div style="background:red;padding:15px;color:#FFF;margin:10px 0;">Payment processing is taking longer than expected. Please wait or refresh the page and try again.</div>');
 			sunshine_checkout_updating_done();
+			resetButtonState();
 			reject(new Error('Payment confirmation timeout'));
 		}, 15000); // 15 second timeout for payment confirmation
 
@@ -201,6 +225,7 @@ jQuery( document ).on( 'sunshine_payment_processing', function( event, data ) {
 			if ( result.error ) {
 				jQuery( '#sunshine-stripe-payment-errors').html( '<div style="background:red;padding:15px;color:#FFF;margin:10px 0;">' + result.error.message + '</div>' );
 				sunshine_checkout_updating_done();
+				resetButtonState();
 				reject( result );
 				return;
 			}
@@ -209,6 +234,7 @@ jQuery( document ).on( 'sunshine_payment_processing', function( event, data ) {
 			if ( ! result.paymentIntent ) {
 				jQuery( '#sunshine-stripe-payment-errors' ).html( '<div style="background:red;padding:15px;color:#FFF;margin:10px 0;">' + spc_stripe_vars.strings.payment_not_processed + '</div>' );
 				sunshine_checkout_updating_done();
+				resetButtonState();
 				reject( new Error( 'No payment intent returned' ) );
 				return;
 			}

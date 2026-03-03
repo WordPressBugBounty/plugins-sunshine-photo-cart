@@ -1,5 +1,6 @@
-<p>Set different prices for each gallery with the <strong>Price Levels</strong> add-on!</p>
+<p><strong>Weddings pay more than minis.</strong> Set pricing per gallery to match what each client type will pay.</p>
 <ul>
-	<li>Tailor your pricing and which products are offered to meet the unique needs of different clients or event types, allowing for specialized product collections.</li>
-	<li>Maximized income by strategically setting price levels, you can optimize your pricing to better align with various market demands and client expectations.</li>
+	<li>Create pricing tiers: Standard, Premium, Wedding, Corporate</li>
+	<li>Same products, different prices based on gallery assignment</li>
+	<li>Maximize revenue without managing multiple product catalogs</li>
 </ul>

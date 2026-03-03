@@ -20,6 +20,7 @@ class SPC_Discount extends Sunshine_Data {
 		'allowed_galleries'     => '',
 		'disallowed_galleries'  => '',
 		'min_amount'            => '',
+		'min_quantity'          => '',
 		'max_uses'              => '',
 		'max_uses_per_person'   => '',
 		'use_count'             => '',
@@ -81,6 +82,10 @@ class SPC_Discount extends Sunshine_Data {
 
 	public function get_min_amount() {
 		return apply_filters( 'sunshine_discount_min_amount', floatval( $this->meta['min_amount'] ), $this );
+	}
+
+	public function get_min_quantity() {
+		return apply_filters( 'sunshine_discount_min_quantity', intval( $this->meta['min_quantity'] ), $this );
 	}
 
 	public function is_solo() {
@@ -208,6 +213,11 @@ class SPC_Discount extends Sunshine_Data {
 
 		$min_amount = $this->get_min_amount();
 		if ( $min_amount && SPC()->cart->get_subtotal() < $min_amount ) {
+			return false;
+		}
+
+		$min_quantity = $this->get_min_quantity();
+		if ( $min_quantity && SPC()->cart->get_item_count() < $min_quantity ) {
 			return false;
 		}
 

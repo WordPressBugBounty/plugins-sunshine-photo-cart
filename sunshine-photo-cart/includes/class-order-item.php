@@ -46,8 +46,14 @@ class SPC_Order_Item extends SPC_Cart_Item {
 			// $this->set_options_total(); // Price is already set in the cart item.
 		}
 
+		// Ensure options_total is set and is a float
+		if ( ! isset( $this->options_total ) ) {
+			$this->options_total = 0;
+		}
+		$this->options_total = (float) $this->options_total;
+
 		// Calculate subtotal before discount.
-		$this->subtotal = max( 0, ( $this->price + $this->options_total ) * $this->qty );
+		$this->subtotal = max( 0, ( (float) $this->price + (float) $this->options_total ) * (float) $this->qty );
 
 		// Store original values before discount for display.
 		$this->original_subtotal  = $this->subtotal;
@@ -270,13 +276,14 @@ class SPC_Order_Item extends SPC_Cart_Item {
 
 	public function get_extra() {
 		do_action( 'sunshine_order_item_extra', $this );
+		return ''; // Return empty string instead of null
 	}
 
 	public function get_comments() {
 		if ( ! empty( $this->meta['comments'] ) ) {
 			return $this->meta['comments'];
 		}
-		return false;
+		return ''; // Return empty string instead of false
 	}
 
 }

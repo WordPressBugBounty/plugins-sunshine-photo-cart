@@ -73,14 +73,22 @@ class SPC_Email_Summary extends SPC_Email {
 			}
 		}
 
-		// Did You Know information.
-		$dyk     = '';
-		$request = wp_safe_remote_get( SUNSHINE_PHOTO_CART_STORE_URL . '/wp-content/didyouknow.json?' . time() );
-		if ( ! is_wp_error( $request ) && 200 === wp_remote_retrieve_response_code( $request ) ) {
-			$request_body = wp_remote_retrieve_body( $request );
-			$dyk_items    = json_decode( $request_body, true );
-			$key          = array_rand( $dyk_items );
-			$dyk          = $dyk_items[ $key ];
+		// Did You Know information (cached for 1 week).
+		$dyk       = '';
+		$dyk_items = get_transient( 'sunshine_dyk_items' );
+		if ( false === $dyk_items ) {
+			$request = wp_safe_remote_get( SUNSHINE_PHOTO_CART_STORE_URL . '/wp-content/didyouknow.json' );
+			if ( ! is_wp_error( $request ) && 200 === wp_remote_retrieve_response_code( $request ) ) {
+				$request_body = wp_remote_retrieve_body( $request );
+				$dyk_items    = json_decode( $request_body, true );
+				if ( ! empty( $dyk_items ) ) {
+					set_transient( 'sunshine_dyk_items', $dyk_items, WEEK_IN_SECONDS );
+				}
+			}
+		}
+		if ( ! empty( $dyk_items ) ) {
+			$key = array_rand( $dyk_items );
+			$dyk = $dyk_items[ $key ];
 		}
 
 		$args = array(

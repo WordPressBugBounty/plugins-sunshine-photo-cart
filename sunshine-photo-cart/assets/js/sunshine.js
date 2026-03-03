@@ -42,16 +42,33 @@ function sunshine_close_modal() {
 	jQuery( '#sunshine--modal--overlay, #sunshine--modal' ).remove();
 }
 
+// Favorites tray data — initialized from server-side localized data
+var sunshine_favorites_tray = ( typeof sunshine_photo_cart !== 'undefined' && sunshine_photo_cart.favorites ) ? sunshine_photo_cart.favorites : [];
+
 function sunshine_add_favorite( image_id ) {
+
+	// Guest without guest_favorites_mode: show the guest choice modal
+	if ( ! parseInt( sunshine_photo_cart.is_logged_in ) && ! parseInt( sunshine_photo_cart.guest_favorites_mode ) ) {
+		sunshine_show_guest_favorites_modal( image_id );
+		return;
+	}
+
 	jQuery.ajax({
 		type: 'POST',
 		url: sunshine_photo_cart.ajax_url,
 		data: {
 			action: 'sunshine_add_to_favorites',
 			image_id: image_id,
+			security: sunshine_photo_cart.security,
 		},
 		success: function( result, textStatus, XMLHttpRequest) {
 			if ( result.success ) {
+
+				if ( result.data.action == 'REQUIRE_GUEST_CHOICE' ) {
+					sunshine_show_guest_favorites_modal( image_id );
+					return;
+				}
+
 				if ( result.data.action == 'ADD' ) {
 
 					jQuery( document ).trigger( 'sunshine_add_favorite', [ image_id ] );
@@ -59,6 +76,11 @@ function sunshine_add_favorite( image_id ) {
 					jQuery( '#sunshine--image-' + image_id + ', .sunshine--image-' + image_id ).addClass( 'sunshine--image--is-favorite' );
 					if ( ! jQuery( '.sunshine--main-menu .sunshine--favorites .sunshine--favorites--count' ).length ) {
 						jQuery( '.sunshine--main-menu .sunshine--favorites' ).append( '<span class="sunshine--count sunshine--favorites--count">' + result.data.count + '</span>' );
+					}
+
+					// Add to tray
+					if ( result.data.src ) {
+						sunshine_favorites_tray.push({ id: parseInt( result.data.image_id ), src: result.data.src });
 					}
 
 				} else if ( result.data.action == 'DELETE' ) {
@@ -78,9 +100,17 @@ function sunshine_add_favorite( image_id ) {
 						}
 					});
 
+					// Remove from tray
+					sunshine_favorites_tray = sunshine_favorites_tray.filter( function( img ) {
+						return img.id != image_id;
+					});
+
 				}
 				jQuery( '#sunshine--action-menu li.sunshine--favorites a, #sunshine--image-' + image_id + ' li.sunshine--favorites a' ).toggleClass( 'sunshine-favorite' );
 				jQuery( '.sunshine--favorites--count' ).html( parseInt( result.data.count ) );
+
+				sunshine_update_favorites_tray();
+
 			} else {
 				alert( result.data );
 			}
@@ -89,6 +119,43 @@ function sunshine_add_favorite( image_id ) {
 			alert( sunshine_photo_cart.lang.error );
 		}
 	});
+}
+
+function sunshine_update_favorites_tray() {
+	var $widget = jQuery( '#sunshine--selection-tray-widget' );
+	var $minimized = jQuery( '#sunshine--selection-tray-minimized' );
+	if ( ! $widget.length ) {
+		return;
+	}
+	if ( sunshine_favorites_tray.length > 0 ) {
+		$widget.addClass( 'sunshine--has-images' );
+		$minimized.addClass( 'sunshine--has-images' );
+	} else {
+		$widget.removeClass( 'sunshine--has-images' );
+		$minimized.removeClass( 'sunshine--has-images' );
+	}
+	jQuery( '#sunshine--selection-tray-widget--count' ).text( sunshine_favorites_tray.length );
+	jQuery( '#sunshine--selection-tray-minimized--count' ).text( sunshine_favorites_tray.length );
+
+	var html = '';
+	sunshine_favorites_tray.forEach( function( image ) {
+		html += '<div class="sunshine--selection-tray-widget--image" data-image-id="' + image.id + '">';
+		html += '<img src="' + image.src + '" alt="" />';
+		html += '<button class="sunshine--selection-tray-widget--delete" data-image-id="' + image.id + '"></button>';
+		html += '</div>';
+	});
+	jQuery( '#sunshine--selection-tray-widget--images' ).html( html );
+}
+
+function sunshine_show_guest_favorites_modal( image_id ) {
+	// Store image_id so we can use it after the guest enables guest mode
+	jQuery( 'body' ).data( 'sunshine-pending-favorite', image_id );
+
+	// Open modal via standard system — PHP template renders all content
+	sunshine_open_modal({
+		hook: 'guest_favorites',
+		image_id: image_id,
+	}, sunshine_photo_cart.lang.continue_as_guest );
 }
 
 jQuery( document ).ready(function($){
@@ -101,6 +168,8 @@ jQuery( document ).ready(function($){
 		let label = $( this ).text();
 		sunshine_open_modal( data, label );
 
+		// Always prevent default - the modal will handle the download via event handler
+		// This prevents both the default download AND the programmatic click from firing
 		if ( ! data.allowhref ) {
 			e.preventDefault()
 			return false; // Disable link, whatever it is
@@ -142,20 +211,30 @@ jQuery( document ).ready(function($){
         let product_type = $( this ).data( 'product-type' );
         let image_id = $( this ).data( 'image-id' );
 		let gallery_id = $( this ).data( 'gallery-id' );
+		let bulk_mode = $( '#sunshine--image--add-to-cart' ).data( 'bulk-mode' );
 
         $( '#sunshine--image--add-to-cart--content' ).addClass( 'sunshine--loading' );
+
+		// Prepare request data
+		var requestData = {
+			action: 'sunshine_product_details',
+			product_id: product_id,
+			image_id: image_id,
+			product_type: product_type,
+			gallery_id: gallery_id,
+			security: sunshine_photo_cart.security,
+		};
+
+		// If in bulk mode with selection tray, pass imageIds
+		if ( bulk_mode && sunshine_favorites_tray && sunshine_favorites_tray.length > 0 ) {
+			requestData.imageIds = sunshine_favorites_tray.map( img => img.id ).join( ',' );
+		}
 
         // Then run ajax request
         $.ajax({
             type: 'POST',
             url: sunshine_photo_cart.ajax_url,
-            data: {
-                action: 'sunshine_product_details',
-                product_id: product_id,
-                image_id: image_id,
-                product_type: product_type,
-				gallery_id: gallery_id,
-            },
+            data: requestData,
             success: function( result, textStatus, XMLHttpRequest) {
                 if ( result.success ) {
 					if ( result.data.url ) {
@@ -184,6 +263,20 @@ jQuery( document ).ready(function($){
         $( '#sunshine--product--details' ).remove();
     });
 
+	// Select all images in bulk product details
+	$( document ).on( 'click', '#sunshine--product--details--select-all', function(e) {
+		e.preventDefault();
+		$( '#sunshine--product--details--image-selection input[type="checkbox"]' ).prop( 'checked', true );
+		return false;
+	});
+
+	// Select none images in bulk product details
+	$( document ).on( 'click', '#sunshine--product--details--select-none', function(e) {
+		e.preventDefault();
+		$( '#sunshine--product--details--image-selection input[type="checkbox"]' ).prop( 'checked', false );
+		return false;
+	});
+
     // Trigger product row to be clickable
     $( document ).on( 'click', '.sunshine--image--add-to-cart--product-item, .sunshine--store--product-item', function() {
         $( 'button', this ).trigger( 'click' );
@@ -209,7 +302,8 @@ jQuery( document ).ready(function($){
                 image_id: image_id,
                 product_id: product_id,
                 gallery_id: gallery_id,
-                qty: qty
+                qty: qty,
+				security: sunshine_photo_cart.security
             },
             success: function( result, textStatus, XMLHttpRequest) {
                 if ( result.success ) {
@@ -270,6 +364,15 @@ jQuery( document ).ready(function($){
 		var button = $( this );
 
         $( '.sunshine--product-options--item' ).removeClass( 'sunshine--option-required' );
+		$( '.sunshine--error' ).remove();
+
+		// Check if in bulk mode with image selection
+		if ( $( '#sunshine--product--details--image-selection' ).length ) {
+			if ( $( '#sunshine--product--details--image-selection input[type="checkbox"]:checked' ).length === 0 ) {
+				$( '#sunshine--product--details--image-selection' ).before( '<div class="sunshine--error">' + 'Please select at least one image' + '</div>' );
+				return false;
+			}
+		}
 
         // Check all required fields
         $( '.sunshine--product-options--item input:required, .sunshine--product-options--item input[type="hidden"]' ).each(function(){
@@ -292,8 +395,10 @@ jQuery( document ).ready(function($){
             let image_id = $( this ).data( 'image-id' );
             let gallery_id = $( this ).data( 'gallery-id' );
             let product_id = $( this ).data( 'product-id' );
+            let price_level = $( this ).data( 'price-level' );
             let qty = parseInt( $( '#sunshine--modal--content .sunshine--qty' ).val() );
 			let comments;
+			let bulk_mode = $( '#sunshine--image--add-to-cart' ).data( 'bulk-mode' );
 
             let options = {};
             let option_id;
@@ -322,15 +427,36 @@ jQuery( document ).ready(function($){
             // Mini cart set to loading
             $( '#sunshine--modal--content' ).addClass( 'sunshine--loading' );
 
+			// Use bulk add to cart action if in bulk mode
+			let action = bulk_mode ? 'sunshine_modal_add_favorites_to_cart' : 'sunshine_modal_add_item_to_cart';
+
 			var data = {
-				action: 'sunshine_modal_add_item_to_cart',
+				action: action,
 				image_id: image_id,
 				gallery_id: gallery_id,
 				product_id: product_id,
+				price_level: price_level,
 				options: options,
 				comments: comments,
-				qty: qty
+				qty: qty,
+				security: sunshine_photo_cart.security
 			};
+
+			// If selection tray mode, add imageIds
+			if ( bulk_mode && sunshine_favorites_tray && sunshine_favorites_tray.length > 0 ) {
+				// Check if there are selected images from checkboxes in product details
+				if ( $( '#sunshine--product--details--image-selection input[type="checkbox"]:checked' ).length > 0 ) {
+					// Use only the checked images
+					var selected_image_ids = [];
+					$( '#sunshine--product--details--image-selection input[type="checkbox"]:checked' ).each( function() {
+						selected_image_ids.push( $( this ).val() );
+					});
+					data.imageIds = selected_image_ids.join( ',' );
+				} else {
+					// Use all selection tray images
+					data.imageIds = sunshine_favorites_tray.map( img => img.id ).join( ',' );
+				}
+			}
 
             // Then run ajax request
             $.ajax({
@@ -346,12 +472,26 @@ jQuery( document ).ready(function($){
                         } else {
                             $( '#sunshine, #sunshine--image-' + image_id ).removeClass( 'sunshine--image--in-cart' );
                         }
-                        $( '<div class="sunshine--success"></div>' ).appendTo( '#sunshine--modal--content' ).delay( 1000 ).fadeOut( 500, function(){ $( this ).remove(); } );
-						button.after( '<a href="' + sunshine_photo_cart.cart_url + '" class="sunshine--button-link sunshine--view-cart">' + sunshine_photo_cart.lang.view_cart + '</a>' );
-                        $( '#sunshine--image--add-to-cart--products, #sunshine--image--add-to-cart--nav' ).show();
-                        $( '#sunshine--product--details' ).remove();
+
+						// If single product mode, show success and close modal automatically
+						var singleProductAttr = $( '#sunshine--image--add-to-cart' ).data( 'single-product' );
+						if ( singleProductAttr === 'true' || singleProductAttr === true ) {
+							$( '<div class="sunshine--success"></div>' ).appendTo( '#sunshine--modal--content' );
+							setTimeout( function() {
+								sunshine_close_modal();
+							}, 1000 );
+						} else {
+							$( '<div class="sunshine--success"></div>' ).appendTo( '#sunshine--modal--content' ).delay( 1000 ).fadeOut( 500, function(){ $( this ).remove(); } );
+							button.after( '<a href="' + sunshine_photo_cart.cart_url + '" class="sunshine--button-link sunshine--view-cart">' + sunshine_photo_cart.lang.view_cart + '</a>' );
+							$( '#sunshine--image--add-to-cart--products, #sunshine--image--add-to-cart--nav' ).show();
+							$( '#sunshine--product--details' ).remove();
+						}
 						if ( result.data.type ) {
 							$( document ).trigger( 'sunshine_after_add_to_cart', [ data, result.data ] );
+						}
+						// In bulk mode, show how many items were added
+						if ( bulk_mode && result.data.added_count ) {
+							$( document ).trigger( 'sunshine_after_bulk_add_to_cart', [ result.data.added_count ] );
 						}
                     } else {
                         alert( result.data );
@@ -798,26 +938,44 @@ jQuery( document ).ready(function($){
 
         e.preventDefault();
 
-        // Remove error just in case it exists
-        $( '.sunshine--error' ).remove();
+        var $form = $( this );
 
-        let email = $( 'input[name="sunshine_login_email"]' ).val();
-        let password = $( 'input[name="sunshine_login_password"]' ).val();
-        let security = $( 'input[name="sunshine_login"]' ).val();
+        // Remove error just in case it exists
+        $form.find( '.sunshine--error' ).remove();
+
+        // Serialize all form inputs for extensibility (custom fields, captcha, etc.)
+        var data = {};
+        $form.find( 'input, select, textarea' ).each(function(){
+            var $input = $( this );
+            var name = $input.attr( 'name' );
+            if ( ! name ) {
+                return;
+            }
+            if ( $input.attr( 'type' ) === 'checkbox' ) {
+                data[ name ] = $input.is( ':checked' ) ? 1 : 0;
+            } else if ( $input.attr( 'type' ) === 'radio' ) {
+                if ( $input.is( ':checked' ) ) {
+                    data[ name ] = $input.val();
+                }
+            } else {
+                data[ name ] = $input.val();
+            }
+        });
+
+        // Add AJAX action and remap field names for backend compatibility
+        data.action = 'sunshine_modal_login';
+        data.email = data.sunshine_login_email || '';
+        data.password = data.sunshine_login_password || '';
+        data.security = data.sunshine_login || '';
 
         // Form set to loading
-        $( '#sunshine--account--login-form' ).addClass( 'sunshine--loading' );
+        $form.addClass( 'sunshine--loading' );
 
         // Then run ajax request
         $.ajax({
             type: 'POST',
             url: sunshine_photo_cart.ajax_url,
-            data: {
-                action: 'sunshine_modal_login',
-                email: email,
-                password: password,
-                security: security
-            },
+            data: data,
             success: function( result, textStatus, XMLHttpRequest) {
                 if ( result.success ) {
 					if ( result.data.redirect ) {
@@ -827,14 +985,14 @@ jQuery( document ).ready(function($){
 	                    document.location.reload();
 					}
                 } else {
-                    $( '#sunshine--account--login-form' ).prepend( '<div class="sunshine--error">' + result.data + ' </div>');
+                    $form.prepend( '<div class="sunshine--error">' + result.data + ' </div>');
                 }
             },
             error: function( MLHttpRequest, textStatus, errorThrown ) {
 				alert( sunshine_photo_cart.lang.error );
             }
         }).always(function(){
-            $( '#sunshine--account--login-form' ).removeClass( 'sunshine--loading' );
+            $form.removeClass( 'sunshine--loading' );
         });
 
         return false;
@@ -847,28 +1005,36 @@ jQuery( document ).ready(function($){
 
         e.preventDefault();
 
+        var $form = $( this );
+
         // Remove error just in case it exists
-        $( '.sunshine--error' ).remove();
+        $form.find( '.sunshine--error' ).remove();
 
-        let email = $( 'input[name="sunshine_signup_email"]' ).val();
-        let password = $( 'input[name="sunshine_signup_password"]' ).val();
-        let security = $( 'input[name="sunshine_signup"]' ).val();
+        // Serialize all form inputs for extensibility (custom fields, captcha, etc.)
+        var data = {};
+        $form.find( 'input, select, textarea' ).each(function(){
+            var $input = $( this );
+            var name = $input.attr( 'name' );
+            if ( ! name ) {
+                return;
+            }
+            if ( $input.attr( 'type' ) === 'checkbox' ) {
+                data[ name ] = $input.is( ':checked' ) ? 1 : 0;
+            } else if ( $input.attr( 'type' ) === 'radio' ) {
+                if ( $input.is( ':checked' ) ) {
+                    data[ name ] = $input.val();
+                }
+            } else {
+                data[ name ] = $input.val();
+            }
+        });
 
-		// Get all extra fields
-		var data = {
-			action: 'sunshine_modal_signup',
-			security: security,
-		};
-		$( '#sunshine--account--signup-form .sunshine--form--field input' ).each(function( item ){
-			if ( $( this ).attr( 'type' ) == 'checkbox' ) {
-				data[ $( this ).attr( 'name' ) ] = ( $(this).is(':checked') ) ? 1 : 0;
-			} else {
-				data[ $( this ).attr( 'name' ) ] = $( this ).val();
-			}
-		});
+        // Add AJAX action and remap field names for backend compatibility
+        data.action = 'sunshine_modal_signup';
+        data.security = data.sunshine_signup || '';
 
         // Form set to loading
-        $( '#sunshine--account--signup-form' ).addClass( 'sunshine--loading' );
+        $form.addClass( 'sunshine--loading' );
 
         // Then run ajax request
         $.ajax({
@@ -880,14 +1046,14 @@ jQuery( document ).ready(function($){
                     // Refresh the page, email should have been triggered
                     document.location.reload();
                 } else {
-                    $( '#sunshine--account--signup-form' ).prepend( '<div class="sunshine--error">' + result.data + ' </div>');
+                    $form.prepend( '<div class="sunshine--error">' + result.data + ' </div>');
                 }
             },
             error: function( MLHttpRequest, textStatus, errorThrown ) {
 				alert( sunshine_photo_cart.lang.error );
             }
         }).always(function(){
-            $( '#sunshine--account--signup-form' ).removeClass( 'sunshine--loading' );
+            $form.removeClass( 'sunshine--loading' );
         });
 
         return false;
@@ -900,37 +1066,56 @@ jQuery( document ).ready(function($){
 
         e.preventDefault();
 
-        // Remove error just in case it exists
-        $( '.sunshine--error' ).remove();
+        var $form = $( this );
 
-        let email = $( 'input[name="sunshine_reset_password_email"]' ).val();
-        let security = $( 'input[name="sunshine_reset_password_nonce"]' ).val();
+        // Remove error just in case it exists
+        $form.find( '.sunshine--error' ).remove();
+
+        // Serialize all form inputs for extensibility (custom fields, captcha, etc.)
+        var data = {};
+        $form.find( 'input, select, textarea' ).each(function(){
+            var $input = $( this );
+            var name = $input.attr( 'name' );
+            if ( ! name ) {
+                return;
+            }
+            if ( $input.attr( 'type' ) === 'checkbox' ) {
+                data[ name ] = $input.is( ':checked' ) ? 1 : 0;
+            } else if ( $input.attr( 'type' ) === 'radio' ) {
+                if ( $input.is( ':checked' ) ) {
+                    data[ name ] = $input.val();
+                }
+            } else {
+                data[ name ] = $input.val();
+            }
+        });
+
+        // Add AJAX action and remap field names for backend compatibility
+        data.action = 'sunshine_modal_reset_password';
+        data.email = data.sunshine_reset_password_email || '';
+        data.security = data.sunshine_reset_password_nonce || '';
 
         // Form set to loading
-        $( '#sunshine--account--reset-password-form' ).addClass( 'sunshine--loading' );
+        $form.addClass( 'sunshine--loading' );
 
         // Then run ajax request
         $.ajax({
             type: 'POST',
             url: sunshine_photo_cart.ajax_url,
-            data: {
-                action: 'sunshine_modal_reset_password',
-                email: email,
-                security: security
-            },
+            data: data,
             success: function( result, textStatus, XMLHttpRequest) {
                 if ( result.success ) {
                     // Refresh the page, email should have been triggered
                     document.location.reload();
                 } else {
-                    $( '#sunshine--account--reset-password-form' ).prepend( '<div class="sunshine--error">' + result.data + ' </div>');
+                    $form.prepend( '<div class="sunshine--error">' + result.data + ' </div>');
                 }
             },
             error: function( MLHttpRequest, textStatus, errorThrown ) {
 				alert( sunshine_photo_cart.lang.error );
             }
         }).always(function(){
-            $( '#sunshine--account--reset-password-form' ).removeClass( 'sunshine--loading' );
+            $form.removeClass( 'sunshine--loading' );
         });
 
         return false;
@@ -1055,6 +1240,50 @@ jQuery( document ).ready(function($){
 
     });
 
+    // Galleries pagination - Load more button
+    $( '#sunshine--galleries-pagination--load-more' ).on( 'click', function(){
+        let button = $( this );
+        let page = $( this ).data( 'page' );
+        let total = $( this ).data( 'total' );
+
+        button.addClass( 'sunshine--loading' );
+
+        $.ajax({
+            type: 'POST',
+            url: sunshine_photo_cart.ajax_url,
+            data: {
+                action: 'sunshine_galleries_pagination',
+                page: page,
+                security: sunshine_photo_cart.security,
+            },
+            success: function( result, textStatus, XMLHttpRequest) {
+                if ( result.success ) {
+                    page++;
+                    button.data( 'page', page );
+                    if ( page >= total ) {
+                        button.hide();
+                    }
+                    if ( typeof $sunshine_galleries_masonry !== 'undefined' ) { // Masonry reload
+                        var $content = $( result.data.html );
+                        $sunshine_galleries_masonry.append( $content ).masonry( 'appended', $content );
+                        $sunshine_galleries_masonry.imagesLoaded( function() {
+                            $sunshine_galleries_masonry.masonry({transitionDuration: 0});
+                        });
+                    } else { // All others
+                        $( '#sunshine--gallery-items' ).append( result.data.html );
+                    }
+                }
+            },
+            error: function( MLHttpRequest, textStatus, errorThrown ) {
+                alert( sunshine_photo_cart.lang.error );
+            },
+            complete: function(){
+                button.removeClass( 'sunshine--loading' );
+            }
+        });
+
+    });
+
     $( 'body' ).on( 'submit', '#sunshine--modal--content #sunshine--download--required-data', function(e){
 
         e.preventDefault();
@@ -1106,10 +1335,101 @@ jQuery( document ).ready(function($){
 
     });
 
-    $( document ).on( 'download_free_image download_credit_image download_history_image download_free_gallery download_order_files download_order_item download', function(){
+    $( document ).on( 'download_free_image download_credit_image download_history_image download_free_gallery download_order_files download_order_item download_order_all download', function(e){
         var download_trigger = document.getElementById( "sunshine--download--trigger" );
-        if ( download_trigger ) {
-            download_trigger.click();
+        var progress_text = document.getElementById( "sunshine--download--progress-text" );
+		if ( download_trigger ) {
+			// Trigger the actual download by clicking the hidden link
+			download_trigger.click();
+		}
+		if ( download_trigger && progress_text ) {
+            var download_url = download_trigger.href;
+            var streamingStarted = false;
+            var progressXhr = null;
+            var startTime = Date.now();
+            var isOffloaded = false; // Will be determined by delay before first progress
+            
+            // Initialize - always start with "Preparing download..." (handles offloaded images)
+            var preparingText = ( typeof sunshine_photo_cart !== 'undefined' && sunshine_photo_cart.lang && sunshine_photo_cart.lang.preparing_download ) ? sunshine_photo_cart.lang.preparing_download : 'Preparing download...';
+            progress_text.textContent = preparingText;
+            
+            // Use parallel fetch request to track progress (we'll abort it, just using it for progress tracking)
+            // The actual download is already handled by the link's download attribute
+            progressXhr = new XMLHttpRequest();
+            progressXhr.open( 'GET', download_url, true );
+            progressXhr.responseType = 'blob';
+            
+            // Track download progress - switch to actual download progress once streaming starts
+            progressXhr.addEventListener( 'progress', function( e ) {
+                // First progress event means streaming has started
+                if ( ! streamingStarted && e.loaded > 0 ) {
+                    streamingStarted = true;
+                    var timeElapsed = Date.now() - startTime;
+                    
+                    // If progress started quickly (< 500ms), assume non-offloaded, use "Downloading..."
+                    // If it took longer, assume offloaded, use "Download started"
+                    if ( timeElapsed < 500 ) {
+                        isOffloaded = false;
+                    } else {
+                        isOffloaded = true;
+                    }
+                }
+                
+                var mbLoaded = ( e.loaded / 1024 / 1024 ).toFixed( 1 );
+                
+                if ( e.lengthComputable ) {
+                    // Total size known - show MB/MB with percentage
+                    var mbTotal = ( e.total / 1024 / 1024 ).toFixed( 1 );
+                    var percentComplete = Math.round( ( e.loaded / e.total ) * 100 );
+                    
+                    if ( isOffloaded ) {
+                        // Offloaded images: "Download started" + file size
+                        var downloadStartedText = ( typeof sunshine_photo_cart !== 'undefined' && sunshine_photo_cart.lang && sunshine_photo_cart.lang.download_started ) ? sunshine_photo_cart.lang.download_started : 'Download started';
+                        progress_text.textContent = downloadStartedText + ' - ' + mbLoaded + ' MB / ' + mbTotal + ' MB (' + percentComplete + '%)';
+                    } else {
+                        // Non-offloaded: "Downloading..." + file size
+                        var downloadingText = ( typeof sunshine_photo_cart !== 'undefined' && sunshine_photo_cart.lang && sunshine_photo_cart.lang.downloading ) ? sunshine_photo_cart.lang.downloading : 'Downloading...';
+                        progress_text.textContent = downloadingText + ' ' + mbLoaded + ' MB / ' + mbTotal + ' MB (' + percentComplete + '%)';
+                    }
+                } else {
+                    // Total size unknown (streaming zip) - show MB downloaded
+                    if ( isOffloaded ) {
+                        // Offloaded images: "Download started" + file size
+                        var downloadStartedText = ( typeof sunshine_photo_cart !== 'undefined' && sunshine_photo_cart.lang && sunshine_photo_cart.lang.download_started ) ? sunshine_photo_cart.lang.download_started : 'Download started';
+                        progress_text.textContent = downloadStartedText + ' - ' + mbLoaded + ' MB';
+                    } else {
+                        // Non-offloaded: "Downloading..." + file size
+                        var downloadingText = ( typeof sunshine_photo_cart !== 'undefined' && sunshine_photo_cart.lang && sunshine_photo_cart.lang.downloading ) ? sunshine_photo_cart.lang.downloading : 'Downloading...';
+                        progress_text.textContent = downloadingText + ' ' + mbLoaded + ' MB';
+                    }
+                }
+            } );
+            
+            // When progress request completes, abort it (we don't need the blob, native download handles it)
+            progressXhr.addEventListener( 'load', function() {
+                if ( progressXhr.status === 200 ) {
+                    // Abort the progress tracking request - native download is handling the actual file
+                    progressXhr.abort();
+                    
+                    // Show success message
+                    var completeText = ( typeof sunshine_photo_cart !== 'undefined' && sunshine_photo_cart.lang && sunshine_photo_cart.lang.download_complete ) ? sunshine_photo_cart.lang.download_complete : 'Download complete!';
+                    
+                    if ( progressXhr.response && progressXhr.response.size > 0 ) {
+                        var finalMb = ( progressXhr.response.size / 1024 / 1024 ).toFixed( 1 );
+                        progress_text.textContent = completeText + ' (' + finalMb + ' MB)';
+                    } else {
+                        progress_text.textContent = completeText;
+                    }
+                }
+            } );
+            
+            // Handle errors - fallback to native download
+            progressXhr.addEventListener( 'error', function() {
+                progress_text.textContent = 'Download failed. Please try again.';
+            } );
+            
+            // Start the progress tracking request
+            progressXhr.send();
         }
     });
 
@@ -1152,39 +1472,205 @@ jQuery( document ).ready(function($){
 	    $( '#sunshine--cart--update-button input' ).prop( 'disabled', false );
 	});
 
+	/* Favorites Tray */
 
-});
+	// Initialize tray display from server data
+	sunshine_update_favorites_tray();
 
-/* Infinite scroll on galleries */
+	// Clean up old localStorage selection tray data
+	localStorage.removeItem( 'sunshine_favorites_tray' );
 
-// Select the pagination button
-const sunshine_pagination_button = document.querySelector('#sunshine--pagination--load-more');
+	// Check for stored minimized state
+	if ( localStorage.getItem( 'sunshine_tray_minimized' ) === '1' ) {
+		$( '#sunshine--selection-tray-widget' ).addClass( 'sunshine--minimized' );
+		$( '#sunshine--selection-tray-minimized' ).addClass( 'sunshine--show' );
+	}
 
-// Check if button exists
-if (sunshine_pagination_button) {
-	// Create Intersection Observer
-	const sunshine_observer = new IntersectionObserver((entries) => {
-		entries.forEach(entry => {
-			if (entry.isIntersecting) {
-				// Get the parent element
-				const parentElement = entry.target.closest('.sunshine--pagination--auto');
-				if (parentElement) {
+	// Copy position class to minimized tab
+	if ( $( '#sunshine--selection-tray-widget' ).hasClass( 'sunshine--selection-tray-bottom_left' ) ) {
+		$( '#sunshine--selection-tray-minimized' ).addClass( 'sunshine--selection-tray-bottom_left' );
+	}
 
-					// Increment the current page
-					let currentPage = parseInt(sunshine_pagination_button.getAttribute('data-page'), 10);
-					const totalPage = parseInt(sunshine_pagination_button.getAttribute('data-total'), 10);
+	// Minimize tray
+	$( document ).on( 'click', '#sunshine--selection-tray-widget--minimize', function(e) {
+		e.preventDefault();
+		$( '#sunshine--selection-tray-widget' ).addClass( 'sunshine--minimized' );
+		$( '#sunshine--selection-tray-minimized' ).addClass( 'sunshine--show' );
+		localStorage.setItem( 'sunshine_tray_minimized', '1' );
+		return false;
+	});
 
-						sunshine_pagination_button.setAttribute('data-page', currentPage);
+	// Expand tray from minimized tab
+	$( document ).on( 'click', '#sunshine--selection-tray-minimized', function(e) {
+		e.preventDefault();
+		$( '#sunshine--selection-tray-widget' ).removeClass( 'sunshine--minimized' );
+		$( '#sunshine--selection-tray-minimized' ).removeClass( 'sunshine--show' );
+		localStorage.removeItem( 'sunshine_tray_minimized' );
+		return false;
+	});
 
-						// Trigger the button click
-						sunshine_pagination_button.click();
-						currentPage++;
+	// Delete single item from selection tray
+	$( document ).on( 'click', '.sunshine--selection-tray-widget--delete', function(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		var image_id = $( this ).data( 'image-id' );
+		sunshine_add_favorite( image_id ); // Toggle removes it
+		return false;
+	});
 
+	// Toggle login/signup in guest favorites modal
+	$( document ).on( 'click', '#sunshine--guest-favorites-modal--toggle-login', function(e) {
+		e.preventDefault();
+		var $signup = $( '#sunshine--guest-favorites-modal--signup' );
+		var $login = $( '#sunshine--guest-favorites-modal--login' );
+		if ( $login.is( ':visible' ) ) {
+			$login.hide();
+			$signup.show();
+			$( this ).text( sunshine_photo_cart.lang.already_have_account );
+		} else {
+			$signup.hide();
+			$login.show();
+			$( this ).text( sunshine_photo_cart.lang.back_to_signup );
+		}
+		return false;
+	});
+
+	// Continue as guest — hide forms and show session notice
+	$( document ).on( 'click', '#sunshine--guest-favorites-modal--continue-guest', function(e) {
+		e.preventDefault();
+		$( '#sunshine--guest-favorites-modal--signup' ).hide();
+		$( '#sunshine--guest-favorites-modal--login' ).hide();
+		$( '#sunshine--guest-favorites-modal--toggle-login' ).parent().hide();
+		$( '.sunshine--guest-favorites-modal--or' ).hide();
+		$( this ).hide();
+		var $notice = $( '#sunshine--guest-favorites-modal--notice' );
+		$notice.html( '<p>' + sunshine_photo_cart.lang.guest_favorites_notice + '</p><p><a href="#" id="sunshine--guest-favorites-modal--got-it" class="sunshine--button">' + sunshine_photo_cart.lang.continue + '</a></p>' ).show();
+		return false;
+	});
+
+	// I understand — enable guest mode and add the pending favorite
+	$( document ).on( 'click', '#sunshine--guest-favorites-modal--got-it', function(e) {
+		e.preventDefault();
+		var image_id = $( 'body' ).data( 'sunshine-pending-favorite' );
+
+		$.ajax({
+			type: 'POST',
+			url: sunshine_photo_cart.ajax_url,
+			data: {
+				action: 'sunshine_guest_favorites_mode',
+				image_id: image_id,
+				security: sunshine_photo_cart.security,
+			},
+			success: function( result ) {
+				if ( result.success ) {
+					sunshine_photo_cart.guest_favorites_mode = 1;
+
+					// Add to tray
+					if ( result.data.src ) {
+						sunshine_favorites_tray.push({ id: parseInt( result.data.image_id ), src: result.data.src });
+						sunshine_update_favorites_tray();
+					}
+
+					$( '#sunshine--image-' + image_id + ', .sunshine--image-' + image_id ).addClass( 'sunshine--image--is-favorite' );
+					$( '#sunshine--action-menu li.sunshine--favorites a, #sunshine--image-' + image_id + ' li.sunshine--favorites a' ).addClass( 'sunshine-favorite' );
+
+					// Update lightbox favorite button if lightbox is active
+					if ( typeof sunshine_favorites !== 'undefined' ) {
+						sunshine_favorites.push( parseInt( image_id ) );
+						$( '#sunshine--lightbox--favorite' ).addClass( 'is-favorite' );
+					}
+
+					sunshine_close_modal();
 				}
 			}
 		});
-	}, { rootMargin: '0px' });
+		return false;
+	});
 
-	// Start observing
-	sunshine_observer.observe(sunshine_pagination_button);
-}
+	// Link from guest notice back to signup
+	$( document ).on( 'click', '#sunshine--guest-to-signup', function(e) {
+		e.preventDefault();
+		$( '#sunshine--guest-favorites-modal--notice' ).hide();
+		$( '#sunshine--guest-favorites-modal--signup' ).show();
+		$( '#sunshine--guest-favorites-modal--login' ).hide();
+		$( '#sunshine--guest-favorites-modal--toggle-login' ).text( sunshine_photo_cart.lang.already_have_account ).parent().show();
+		$( '.sunshine--guest-favorites-modal--or' ).show();
+		$( '#sunshine--guest-favorites-modal--continue-guest' ).show();
+		return false;
+	});
+
+
+});
+
+/* Infinite scroll - wait for DOM to be ready */
+document.addEventListener('DOMContentLoaded', function() {
+
+	/* Infinite scroll on images */
+
+	// Select the pagination button
+	const sunshine_pagination_button = document.querySelector('#sunshine--pagination--load-more');
+
+	// Check if button exists
+	if (sunshine_pagination_button) {
+		// Create Intersection Observer
+		const sunshine_observer = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					// Get the parent element
+					const parentElement = entry.target.closest('.sunshine--pagination--auto');
+					if (parentElement) {
+
+						// Increment the current page
+						let currentPage = parseInt(sunshine_pagination_button.getAttribute('data-page'), 10);
+						const totalPage = parseInt(sunshine_pagination_button.getAttribute('data-total'), 10);
+
+							sunshine_pagination_button.setAttribute('data-page', currentPage);
+
+							// Trigger the button click using jQuery
+							jQuery('#sunshine--pagination--load-more').trigger('click');
+							currentPage++;
+
+					}
+				}
+			});
+		}, { rootMargin: '0px' });
+
+		// Start observing
+		sunshine_observer.observe(sunshine_pagination_button);
+	}
+
+	/* Infinite scroll on galleries list */
+
+	// Select the galleries pagination button
+	const sunshine_galleries_pagination_button = document.querySelector('#sunshine--galleries-pagination--load-more');
+
+	// Check if button exists
+	if (sunshine_galleries_pagination_button) {
+		// Create Intersection Observer
+		const sunshine_galleries_observer = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					// Get the parent element
+					const parentElement = entry.target.closest('.sunshine--pagination--auto');
+					if (parentElement) {
+
+						// Increment the current page
+						let currentPage = parseInt(sunshine_galleries_pagination_button.getAttribute('data-page'), 10);
+						const totalPage = parseInt(sunshine_galleries_pagination_button.getAttribute('data-total'), 10);
+
+							sunshine_galleries_pagination_button.setAttribute('data-page', currentPage);
+
+							// Trigger the button click using jQuery
+							jQuery('#sunshine--galleries-pagination--load-more').trigger('click');
+							currentPage++;
+
+					}
+				}
+			});
+		}, { rootMargin: '0px' });
+
+		// Start observing
+		sunshine_galleries_observer.observe(sunshine_galleries_pagination_button);
+	}
+
+});

@@ -173,26 +173,28 @@ function sunshine_single_gallery_display( $gallery = '' ) {
 	remove_filter( 'the_content', array( SPC()->frontend, 'the_content' ) );
 	$content = apply_filters( 'the_content', $content );
 	if ( ! empty( $content ) ) {
-		echo '<div id="sunshine--content">' . wp_kses_post( $content ) . '</div>';
+		echo '<div id="sunshine--content">' . $content . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped - already filtered by "the_content" which is exactly how the_content() works in core.
 	}
 	add_filter( 'the_content', array( SPC()->frontend, 'the_content' ) );
 
 	$child_galleries = $gallery->get_child_galleries();
+	$images          = $gallery->get_images();
+
 	if ( $child_galleries ) {
 		sunshine_get_template( 'galleries/galleries', array( 'galleries' => $child_galleries ) );
-	} else {
-		$images = $gallery->get_images();
-		if ( ! empty( $images ) ) {
-			sunshine_get_template(
-				'gallery/images',
-				array(
-					'gallery' => $gallery,
-					'images'  => $images,
-				)
-			);
-		} else {
-			sunshine_get_template( 'gallery/no-images', array( 'gallery' => $gallery ) );
-		}
+	}
+
+	$images = $gallery->get_images();
+	if ( ! empty( $images ) ) {
+		sunshine_get_template(
+			'gallery/images',
+			array(
+				'gallery' => $gallery,
+				'images'  => $images,
+			)
+		);
+	} elseif ( empty( $child_galleries ) ) {
+		sunshine_get_template( 'gallery/no-images', array( 'gallery' => $gallery ) );
 	}
 
 }
@@ -323,18 +325,15 @@ function sunshine_display_order_totals() {
 add_action( 'sunshine_favorites', 'sunshine_display_favorites' );
 function sunshine_display_favorites() {
 
-	// If we have a custom key, let's pull from that
+	// If we have a custom key, let's pull from that.
 	if ( isset( $_GET['favorites_key'] ) ) {
-
 		$images = sunshine_get_favorites_by_key( sanitize_text_field( $_GET['favorites_key'] ), false );
-		$count  = count( $images );
-
 	} else {
-		$count  = SPC()->customer->get_favorite_count();
+		// Works for both logged-in users and guests.
 		$images = SPC()->customer->get_favorites();
 	}
 
-	if ( ! $count ) {
+	if ( empty( $images ) ) {
 		sunshine_get_template( 'favorites/empty' );
 	} else {
 		sunshine_get_template( 'favorites/favorites', array( 'images' => $images ) );

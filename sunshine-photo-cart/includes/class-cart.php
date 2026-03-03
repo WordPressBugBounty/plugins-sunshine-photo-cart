@@ -1704,6 +1704,10 @@ class SPC_Cart {
 					if ( empty( $field['id'] ) ) {
 						continue;
 					}
+					// Allow 3rd party content before submit button (e.g., captcha).
+					if ( $field['id'] === 'sunshine--checkout--submit' ) {
+						do_action( 'sunshine_checkout_before_submit' );
+					}
 					$this->show_checkout_field( $field['id'], $field );
 				}
 				echo '</div>';
@@ -2129,6 +2133,13 @@ class SPC_Cart {
 
 		$order = sunshine_get_order( $order_id );
 
+		// CRITICAL: Check if order is already paid to prevent double processing
+		// This can happen if form is submitted multiple times or user refreshes during processing.
+		if ( $order->is_paid() ) {
+			SPC()->log( 'Order ' . $order_id . ' is already paid, skipping processing and returning existing order' );
+			return $order;
+		}
+
 		$data = $this->get_checkout_data();
 
 		/*
@@ -2160,6 +2171,9 @@ class SPC_Cart {
 			SPC()->log( 'Not doing post process in process_order' );
 		}
 
+		SPC()->log( 'Doing sunshine_checkout_create_order' );
+		do_action( 'sunshine_checkout_create_order', $order, $data );
+
 		if ( apply_filters( 'sunshine_order_clear_cart', true, $order ) ) {
 			// Clear checkout data from session data.
 			SPC()->session->set( 'checkout_data', '' );
@@ -2167,9 +2181,6 @@ class SPC_Cart {
 			SPC()->cart->empty_cart();
 			SPC()->log( 'Cleared cart' );
 		}
-
-		SPC()->log( 'Doing sunshine_checkout_create_order' );
-		do_action( 'sunshine_checkout_create_order', $order, $data );
 
 		SPC()->log( 'Setting checkout order id to empty' );
 		SPC()->session->set( 'checkout_order_id', '' );
@@ -2219,6 +2230,12 @@ class SPC_Cart {
 		}
 
 		SPC()->session->set( 'checkout_order_id', '' );
+
+		// Clear Stripe payment intent data to prevent reuse in next checkout.
+		// This is a safety measure in case the Stripe payment method doesn't clear its own session.
+		SPC()->session->set( 'stripe_payment_intent_id', '' );
+		SPC()->session->set( 'stripe_client_secret', '' );
+		SPC()->session->set( 'stripe_idempotency_key', '' );
 
 	}
 

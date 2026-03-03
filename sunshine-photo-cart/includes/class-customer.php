@@ -30,6 +30,15 @@ class SPC_Customer extends WP_User {
 		return $this->ID;
 	}
 
+	/**
+	 * Check if this is a guest customer (not logged in).
+	 *
+	 * @return bool True if guest, false if logged in.
+	 */
+	public function is_guest() {
+		return $this->ID === 0;
+	}
+
 	public function add_meta( $key, $value ) {
 		if ( $this->ID > 0 ) {
 			if ( is_serialized( $value ) ) {
@@ -194,6 +203,9 @@ class SPC_Customer extends WP_User {
 	 * @return array An array of favorite image IDs.
 	 */
 	public function get_favorite_ids() {
+		if ( $this->is_guest() ) {
+			return sunshine_get_session_favorite_ids();
+		}
 		return $this->favorite_ids;
 	}
 
@@ -203,6 +215,22 @@ class SPC_Customer extends WP_User {
 	 * @return array|false An array of favorite image objects or false if no favorites.
 	 */
 	public function get_favorites() {
+		// For guests, don't use cache since session can change.
+		if ( $this->is_guest() ) {
+			$favorite_ids = $this->get_favorite_ids();
+			if ( empty( $favorite_ids ) ) {
+				return false;
+			}
+			$favorites = array();
+			foreach ( $favorite_ids as $favorite_id ) {
+				$image = sunshine_get_image( $favorite_id );
+				if ( $image && $image->exists() && $image->can_view() ) {
+					$favorites[] = $image;
+				}
+			}
+			return ! empty( $favorites ) ? $favorites : false;
+		}
+
 		if ( ! empty( $this->favorites ) ) {
 			return $this->favorites;
 		}
@@ -235,8 +263,13 @@ class SPC_Customer extends WP_User {
 	 * @param int $image_id The ID of the image to add to favorites.
 	 */
 	public function add_favorite( $image_id ) {
-
 		$image_id = intval( $image_id );
+
+		if ( $this->is_guest() ) {
+			sunshine_add_session_favorite( $image_id );
+			return;
+		}
+
 		if ( ! in_array( $image_id, $this->favorite_ids, true ) ) {
 			$this->favorite_ids[] = $image_id;
 			$this->update_meta( 'favorites', $this->favorite_ids ); // TODO: Use the class function here and throughout for get/set/delete user meta
@@ -253,6 +286,10 @@ class SPC_Customer extends WP_User {
 	 * @param int $image_id The ID of the image to remove from favorites.
 	 */
 	public function delete_favorite( $image_id ) {
+		if ( $this->is_guest() ) {
+			sunshine_delete_session_favorite( $image_id );
+			return;
+		}
 
 		$key = array_search( $image_id, $this->favorite_ids, true );
 		if ( $key !== false ) {
@@ -271,10 +308,8 @@ class SPC_Customer extends WP_User {
 	 * @return bool True if the customer has favorites, false otherwise.
 	 */
 	public function has_favorites() {
-		if ( ! empty( $this->favorite_ids ) ) {
-			return true;
-		}
-		return false;
+		$favorite_ids = $this->get_favorite_ids();
+		return ! empty( $favorite_ids );
 	}
 
 	/**
@@ -284,10 +319,8 @@ class SPC_Customer extends WP_User {
 	 * @return bool True if the image is a favorite, false otherwise.
 	 */
 	public function has_favorite( $image_id ) {
-		if ( ! empty( $this->favorite_ids ) && in_array( $image_id, $this->favorite_ids ) ) {
-			return true;
-		}
-		return false;
+		$favorite_ids = $this->get_favorite_ids();
+		return ! empty( $favorite_ids ) && in_array( intval( $image_id ), $favorite_ids, true );
 	}
 
 	/**
@@ -296,16 +329,22 @@ class SPC_Customer extends WP_User {
 	 * @return int The number of favorite images.
 	 */
 	public function get_favorite_count() {
-		if ( empty( $this->favorite_ids ) ) {
-			return 0;
-		}
-		return count( $this->favorite_ids );
+		return count( $this->get_favorite_ids() );
 	}
 
 	/**
 	 * Clear all of the customer's favorites.
 	 */
 	public function clear_favorites() {
+		if ( $this->is_guest() ) {
+			$favorite_ids = $this->get_favorite_ids();
+			foreach ( $favorite_ids as $image_id ) {
+				do_action( 'sunshine_delete_favorite', $image_id );
+			}
+			sunshine_clear_session_favorites();
+			return;
+		}
+
 		$favorite_ids = $this->get_favorite_ids();
 		if ( ! empty( $favorite_ids ) ) {
 			foreach ( $favorite_ids as $image_id ) {

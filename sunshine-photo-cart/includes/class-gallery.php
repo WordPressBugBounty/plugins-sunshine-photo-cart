@@ -174,6 +174,12 @@ class SPC_Gallery extends Sunshine_Data {
 		if ( empty( $size_info ) ) {
 			$size_info = image_get_intermediate_size( $this->get_featured_image_id(), 'full' );
 		}
+		if ( empty( $size_info ) ) {
+			$size_info = array(
+				'width'  => sunshine_get_thumbnail_dimension( 'w' ),
+				'height' => sunshine_get_thumbnail_dimension( 'h' ),
+			);
+		}
 		return $size_info;
 	}
 
@@ -206,6 +212,13 @@ class SPC_Gallery extends Sunshine_Data {
 	}
 	*/
 	public function get_image_ids() {
+		// Force fresh read from database to avoid stale cache issues when multiple uploads happen quickly
+		// Clear WordPress meta cache to ensure we get the latest value
+		wp_cache_delete( $this->id, 'post_meta' );
+		// Clear object's cached meta to force reload
+		if ( isset( $this->meta['images'] ) ) {
+			unset( $this->meta['images'] );
+		}
 		$image_ids = $this->get_meta_value( 'images' );
 		if ( empty( $image_ids ) ) {
 			$image_ids = array();
@@ -222,6 +235,7 @@ class SPC_Gallery extends Sunshine_Data {
 		$image_ids   = $this->get_image_ids();
 		$image_ids[] = $image_id;
 		$this->set_image_ids( $image_ids );
+		return $image_ids;
 	}
 
 	public function set_image_ids( $image_ids ) {
@@ -229,6 +243,8 @@ class SPC_Gallery extends Sunshine_Data {
 			$image_ids = array_unique( $image_ids );
 		}
 		$this->update_meta_value( 'images', $image_ids );
+		// Clear WordPress meta cache to ensure fresh reads for new gallery instances
+		wp_cache_delete( $this->id, 'post_meta' );
 	}
 
 	public function get_image_count() {
@@ -492,11 +508,11 @@ class SPC_Gallery extends Sunshine_Data {
 	}
 
 	public function allow_gallery_sharing() {
-		return ! $this->disable_gallery_sharing;
+		return $this->allow_gallery_sharing;
 	}
 
 	public function allow_image_sharing() {
-		return ! $this->disable_image_sharing;
+		return $this->allow_image_sharing;
 	}
 
 	public function get_store_url() {

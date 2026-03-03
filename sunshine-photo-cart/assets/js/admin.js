@@ -81,8 +81,8 @@ jQuery( document ).ready(function($) {
 		$( '.sunshine-admin-meta-box-tabs input' ).removeAttr( 'required' );
 	}
 
-	$( '.sunshine-notice.is-dismissible .notice-dismiss, .sunshine-notice.is-dismissible .notice-dismiss-button' ).on( 'click', function(){
-		var notice = $( this ).closest( '.sunshine-notice' );
+	$( '.sunshine-notice.is-dismissible .notice-dismiss, .sunshine-notice.is-dismissible .notice-dismiss-button, .sunshine-in-app-promo.is-dismissible .notice-dismiss, .sunshine-in-app-promo.is-dismissible .notice-dismiss-button' ).on( 'click', function(){
+		var notice = $( this ).closest( '.sunshine-notice, .sunshine-in-app-promo' );
 		var data = {
             'action': 'sunshine_notice_dismiss',
             'notice': notice.data( 'notice' )

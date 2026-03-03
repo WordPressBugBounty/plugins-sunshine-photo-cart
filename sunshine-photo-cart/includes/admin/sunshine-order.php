@@ -342,6 +342,11 @@ class SPC_Admin_Order {
 			/* translators: %s is the status name */
 			$actions[ 'sunshine_order_status_' . $status->get_key() ] = sprintf( __( 'Change status to: %s', 'sunshine-photo-cart' ), $status->get_name() );
 		}
+
+		if ( SPC()->get_option( 'privacy_allow_bulk_remove' ) ) {
+			$actions['sunshine_order_remove_personal_data'] = __( 'Remove personal data', 'sunshine-photo-cart' );
+		}
+
 		return $actions;
 
 	}
@@ -374,6 +379,11 @@ class SPC_Admin_Order {
 			echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
 			exit();
+		} elseif ( $action == 'sunshine_order_remove_personal_data' ) {
+			foreach ( $ids as $order_id ) {
+				SPC_Privacy::anonymize_order( intval( $order_id ) );
+				$changed++;
+			}
 		}
 
 		$redirect_to = add_query_arg(
@@ -412,7 +422,9 @@ class SPC_Admin_Order {
 				echo esc_html( $order->get_date() );
 				break;
 			case 'customer':
-				if ( $order->get_customer_id() ) {
+				if ( get_post_meta( $post_id, '_sunshine_personal_data_removed', true ) ) {
+					echo '<em>' . esc_html__( 'Personal data removed', 'sunshine-photo-cart' ) . '</em>';
+				} elseif ( $order->get_customer_id() ) {
 					echo '<a href="' . esc_url( admin_url( 'user-edit.php?user_id=' . esc_attr( $order->get_customer_id() ) ) ) . '">' . esc_html( $order->get_customer_name() ) . '</a>';
 				} else {
 					echo esc_html( $order->get_customer_name() );
@@ -603,6 +615,9 @@ class SPC_Admin_Order {
 		<div id="sunshine-order-addresses">
 			<div id="sunshine-order-general">
 				<h3><?php esc_html_e( 'Customer', 'sunshine-photo-cart' ); ?></h3>
+				<?php if ( get_post_meta( $order->get_id(), '_sunshine_personal_data_removed', true ) ) { ?>
+					<p><em><?php esc_html_e( 'Personal data removed', 'sunshine-photo-cart' ); ?></em></p>
+				<?php } else { ?>
 				<p>
 					<?php if ( $order->get_customer_id() ) { ?>
 						<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-customers&customer=' . esc_attr( $order->get_customer_id() ) ) ); ?>"><?php echo esc_html( $order->get_customer_name() ); ?></a>
@@ -619,6 +634,7 @@ class SPC_Admin_Order {
 					}
 					?>
 				</p>
+				<?php } ?>
 				<h3><?php esc_html_e( 'Order Status', 'sunshine-photo-cart' ); ?></h3>
 				<p>
 					<select id="order-status" name="order_status">
@@ -645,7 +661,9 @@ class SPC_Admin_Order {
 			</div>
 			<div id="sunshine-order-shipping">
 				<h3><?php esc_html_e( 'Shipping', 'sunshine-photo-cart' ); ?></h3>
-				<?php if ( $order->has_shipping_address() ) { ?>
+				<?php if ( get_post_meta( $order->get_id(), '_sunshine_personal_data_removed', true ) ) { ?>
+					<p><em><?php esc_html_e( 'Personal data removed', 'sunshine-photo-cart' ); ?></em></p>
+				<?php } elseif ( $order->has_shipping_address() ) { ?>
 					<p><?php echo wp_kses_post( $order->get_shipping_address_formatted() ); ?></p>
 				<?php } else { ?>
 					<p><?php esc_html_e( 'No shipping address collected for this order', 'sunshine-photo-cart' ); ?>
@@ -654,14 +672,12 @@ class SPC_Admin_Order {
 			</div>
 			<div id="sunshine-order-billing">
 				<h3><?php esc_html_e( 'Billing', 'sunshine-photo-cart' ); ?></h3>
-				<?php if ( $order->has_billing_address() ) { ?>
+				<?php if ( get_post_meta( $order->get_id(), '_sunshine_personal_data_removed', true ) ) { ?>
+					<p><em><?php esc_html_e( 'Personal data removed', 'sunshine-photo-cart' ); ?></em></p>
+				<?php } elseif ( $order->has_billing_address() ) { ?>
 					<p><?php echo wp_kses_post( $order->get_billing_address_formatted() ); ?></p>
 				<?php } else { ?>
 					<p><?php esc_html_e( 'No billing address collected for this order', 'sunshine-photo-cart' ); ?>
-				<?php } ?>
-				<?php if ( $order->get_vat() ) { ?>
-					<p><strong><?php echo ( SPC()->get_option( 'vat_label' ) ) ? esc_html( SPC()->get_option( 'vat_label' ) ) : esc_html__( 'EU VAT Number', 'sunshine-photo-cart' ); ?></strong><br />
-					<?php echo esc_html( $order->get_vat() ); ?></p>
 				<?php } ?>
 
 				<?php do_action( 'sunshine_admin_after_order_billing', $order ); ?>

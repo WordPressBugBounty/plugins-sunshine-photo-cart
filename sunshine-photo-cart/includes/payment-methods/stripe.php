@@ -151,11 +151,49 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 			'currency' => $this->currency,
 		);
 
-		// Only include automatic_payment_methods when creating new payment intents.
+		// Only include payment method configuration when creating new payment intents.
 		if ( ! $for_update ) {
-			$args['automatic_payment_methods'] = array(
-				'enabled' => 'true',
-			);
+			$optimized_checkout = $this->get_option( 'optimized_checkout' );
+
+			SPC()->log( 'Stripe optimized_checkout setting value: ' . var_export( $optimized_checkout, true ) );
+
+			if ( $optimized_checkout === 'yes' || $optimized_checkout === '1' || $optimized_checkout === false ) {
+				// Use automatic payment methods (Optimized Checkout).
+				$args['automatic_payment_methods'] = array(
+					'enabled' => 'true',
+				);
+				SPC()->log( 'Using automatic_payment_methods (Optimized Checkout)' );
+			} else {
+				// Use manually selected payment methods
+				$enabled_methods = $this->get_enabled_payment_methods();
+				SPC()->log( 'Manually selected payment methods: ' . implode( ', ', $enabled_methods ) );
+				if ( ! empty( $enabled_methods ) ) {
+					$args['payment_method_types'] = $enabled_methods;
+				} else {
+					// Fallback to card only
+					$args['payment_method_types'] = array( 'card' );
+				}
+			}
+		}
+
+		// Add statement descriptor if configured
+		$statement_descriptor = $this->get_option( 'statement_descriptor' );
+		if ( ! empty( $statement_descriptor ) ) {
+			// Sanitize: only alphanumeric and spaces, max 22 chars, min 5 chars
+			$sanitized_descriptor = preg_replace( '/[^A-Za-z0-9 ]/', '', $statement_descriptor );
+			$sanitized_descriptor = substr( $sanitized_descriptor, 0, 22 );
+			if ( strlen( $sanitized_descriptor ) >= 5 ) {
+				$args['statement_descriptor'] = $sanitized_descriptor;
+			}
+		}
+
+		// Add statement descriptor suffix (order number) if configured and order exists
+		$use_suffix = $this->get_option( 'statement_descriptor_suffix' );
+		if ( ( $use_suffix === 'yes' || $use_suffix === '1' ) && ! empty( $order_id ) ) {
+			$order  = sunshine_get_order( $order_id );
+			$suffix = '#' . $order->get_order_number();
+			// Max 22 chars for suffix
+			$args['statement_descriptor_suffix'] = substr( $suffix, 0, 22 );
 		}
 
 		$args['shipping'] = $this->build_shipping_address();
@@ -258,9 +296,12 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 		add_action( 'sunshine_stripe_connect_display', array( $this, 'stripe_connect_display' ) );
 		add_action( 'sunshine_stripe_webhook_display', array( $this, 'stripe_webhook_display' ) );
+		add_action( 'sunshine_stripe_payment_methods_display', array( $this, 'stripe_payment_methods_display' ) );
 		add_action( 'admin_init', array( $this, 'stripe_connect_return' ) );
 		add_action( 'admin_init', array( $this, 'stripe_disconnect_return' ) );
 		add_action( 'admin_init', array( $this, 'setup_payment_domain_manual' ) );
+		add_action( 'wp_ajax_sunshine_stripe_sync_payment_methods', array( $this, 'sync_payment_methods_ajax' ) );
+		add_action( 'wp_ajax_sunshine_stripe_toggle_payment_method', array( $this, 'toggle_payment_method_ajax' ) );
 
 		if ( ! $this->is_active() || ! $this->is_allowed() ) {
 			return;
@@ -286,6 +327,13 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		add_action( 'wp', array( $this, 'process_webhook' ) );
 
 		add_action( 'wp', array( $this, 'payment_return' ), 20 );
+
+		// Hosted checkout handlers
+		add_action( 'wp', array( $this, 'stripe_checkout_return' ) );
+		add_action( 'wp', array( $this, 'stripe_checkout_cancel' ) );
+
+		// Filter order status for hosted checkout mode
+		add_filter( 'sunshine_create_order_status', array( $this, 'create_order_status' ), 10, 2 );
 
 		add_action( 'sunshine_checkout_process_payment_stripe', array( $this, 'process_payment' ) );
 
@@ -390,6 +438,40 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 			}
 		}
 
+		// Checkout Mode Setting (Inline vs Hosted)
+		$options[] = array(
+			'name'        => __( 'Checkout Mode', 'sunshine-photo-cart' ),
+			'id'          => $this->id . '_checkout_mode',
+			'type'        => 'radio',
+			'options'     => array(
+				'inline' => __( 'Inline Payment Form (recommended)', 'sunshine-photo-cart' ),
+				'hosted' => __( 'Redirect to Stripe Checkout', 'sunshine-photo-cart' ),
+			),
+			'default'     => 'inline',
+			'description' => __( 'Inline shows the payment form on your checkout page. Redirect sends customers to Stripe\'s hosted checkout page.', 'sunshine-photo-cart' ) . ' <a href="https://docs.stripe.com/payments/checkout" target="_blank">' . __( 'Learn more about Stripe Checkout', 'sunshine-photo-cart' ) . '</a>',
+		);
+
+		// Tax Calculation Mode (only for hosted checkout)
+		$options[] = array(
+			'name'        => __( 'Tax Calculation', 'sunshine-photo-cart' ),
+			'id'          => $this->id . '_tax_mode',
+			'type'        => 'radio',
+			'options'     => array(
+				'sunshine' => __( 'Use Sunshine tax calculations', 'sunshine-photo-cart' ),
+				'stripe'   => __( 'Use Stripe Tax (automatic)', 'sunshine-photo-cart' ),
+			),
+			'default'     => 'sunshine',
+			'description' => __( 'When using Stripe Tax, tax is calculated automatically by Stripe based on customer location. Requires Stripe Tax to be enabled in your Stripe Dashboard.', 'sunshine-photo-cart' ) . ' <a href="https://dashboard.stripe.com/tax" target="_blank">' . __( 'Enable Stripe Tax', 'sunshine-photo-cart' ) . '</a> | <a href="https://docs.stripe.com/tax" target="_blank">' . __( 'Learn more', 'sunshine-photo-cart' ) . '</a>',
+			'conditions'  => array(
+				array(
+					'field'   => $this->id . '_checkout_mode',
+					'compare' => '==',
+					'value'   => 'hosted',
+					'action'  => 'show',
+				),
+			),
+		);
+
 		$options[] = array(
 			'name'        => __( 'Layout', 'sunshine-photo-cart' ),
 			'id'          => $this->id . '_layout',
@@ -400,6 +482,14 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 			),
 			'description' => '<a href="https://docs.stripe.com/payments/payment-element#layout" target="_blank">' . __( 'See differences in layout options', 'sunshine-photo-cart' ) . '</a>',
 			'default'     => 'tabs',
+			'conditions'  => array(
+				array(
+					'field'   => $this->id . '_checkout_mode',
+					'compare' => '==',
+					'value'   => 'inline',
+					'action'  => 'show',
+				),
+			),
 		);
 
 		$options[] = array(
@@ -442,6 +532,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 			'hide_system_info' => true,
 		);
 
+		// Webhook settings - right after connection
 		$options[] = array(
 			'name'             => __( 'Stripe Webhook', 'sunshine-photo-cart' ),
 			'id'               => $this->id . '_webhook',
@@ -477,6 +568,96 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 			'hide_system_info' => true,
 		);
 
+		// Bank Statement Descriptor Settings (inline checkout only)
+		$options[] = array(
+			'name'        => __( 'Bank Statement Descriptor', 'sunshine-photo-cart' ),
+			'id'          => $this->id . '_statement_descriptor',
+			'type'        => 'text',
+			'default'     => '',
+			'placeholder' => __( 'e.g., WWW.YOURSITE.COM', 'sunshine-photo-cart' ),
+			'description' => __( 'The description that appears on your customer\'s bank statement. Max 22 characters, letters/numbers/spaces only. Leave blank to use your Stripe account default.', 'sunshine-photo-cart' ),
+			'conditions'  => array(
+				array(
+					'field'   => $this->id . '_checkout_mode',
+					'compare' => '==',
+					'value'   => 'inline',
+					'action'  => 'show',
+				),
+			),
+		);
+
+		$options[] = array(
+			'name'        => __( 'Add Order Number to Statement', 'sunshine-photo-cart' ),
+			'id'          => $this->id . '_statement_descriptor_suffix',
+			'type'        => 'checkbox',
+			'default'     => '',
+			'description' => __( 'Append the order number to the bank statement descriptor (e.g., "MYSHOP* #12345"). Helps customers identify charges.', 'sunshine-photo-cart' ),
+			'conditions'  => array(
+				array(
+					'field'   => $this->id . '_checkout_mode',
+					'compare' => '==',
+					'value'   => 'inline',
+					'action'  => 'show',
+				),
+			),
+		);
+
+		$options[] = array(
+			'name'        => __( 'Shortened Descriptor', 'sunshine-photo-cart' ),
+			'id'          => $this->id . '_statement_descriptor_prefix',
+			'type'        => 'text',
+			'default'     => '',
+			'placeholder' => __( 'e.g., MYSHOP', 'sunshine-photo-cart' ),
+			'description' => __( 'A shortened version (max 10 characters) used with the order number suffix. If blank, uses first 10 characters of the full descriptor.', 'sunshine-photo-cart' ),
+			'conditions'  => array(
+				array(
+					'field'   => $this->id . '_checkout_mode',
+					'compare' => '==',
+					'value'   => 'inline',
+					'action'  => 'show',
+				),
+				array(
+					'field'   => $this->id . '_statement_descriptor_suffix',
+					'compare' => '==',
+					'value'   => '1',
+					'action'  => 'show',
+				),
+			),
+		);
+
+		// Optimized Checkout Setting (inline checkout only)
+		$options[] = array(
+			'name'        => __( 'Optimized Checkout', 'sunshine-photo-cart' ),
+			'id'          => $this->id . '_optimized_checkout',
+			'type'        => 'checkbox',
+			'default'     => 'yes',
+			'description' => __( 'Use Stripe\'s Optimized Checkout Suite to dynamically display the most relevant payment methods to each customer. When disabled, you can manually select which payment methods to offer.', 'sunshine-photo-cart' ),
+			'conditions'  => array(
+				array(
+					'field'   => $this->id . '_checkout_mode',
+					'compare' => '==',
+					'value'   => 'inline',
+					'action'  => 'show',
+				),
+			),
+		);
+
+		// Payment Methods Setting (inline checkout only)
+		$options[] = array(
+			'name'             => __( 'Payment Methods', 'sunshine-photo-cart' ),
+			'id'               => $this->id . '_payment_methods',
+			'type'             => 'stripe_payment_methods',
+			'hide_system_info' => true,
+			'conditions'       => array(
+				array(
+					'field'   => $this->id . '_checkout_mode',
+					'compare' => '==',
+					'value'   => 'inline',
+					'action'  => 'show',
+				),
+			),
+		);
+
 		return $options;
 
 	}
@@ -492,9 +673,37 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		$account_id = SPC()->get_option( 'stripe_account_id_' . $mode );
 
 		if ( $account_id ) {
+			// Get account details from Stripe
+			$account_details = $this->get_stripe_account_details( $mode );
 			?>
 
-			<p><a href="https://www.sunshinephotocart.com/?stripe_disconnect=1&account_id=<?php echo esc_attr( $account_id ); ?>&mode=<?php echo esc_html( $mode ); ?>&nonce=<?php echo esc_html( wp_create_nonce( 'sunshine_stripe_disconnect' ) ); ?>&return_url=<?php echo esc_url( admin_url( 'admin.php?sunshine_stripe_disconnect_return' ) ); ?>" class="sunshine-stripe-connect"><span><?php esc_html_e( 'Disconnect from', 'sunshine-photo-cart' ); ?></span> <span class="stripe">Stripe</span></a></p>
+			<div class="sunshine-stripe-account-info" style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; padding: 15px;">
+				<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+					<span style="background: #635bff; color: #fff; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 12px;">STRIPE</span>
+					<span style="color: #28a745; font-weight: 500;"><?php esc_html_e( 'Connected', 'sunshine-photo-cart' ); ?></span>
+				</div>
+				<?php if ( $account_details ) : ?>
+					<div style="margin-bottom: 5px;">
+						<strong><?php esc_html_e( 'Account:', 'sunshine-photo-cart' ); ?></strong>
+						<?php echo esc_html( $account_details['name'] ); ?>
+						<?php if ( ! empty( $account_details['email'] ) ) : ?>
+							<span style="color: #666;">(<?php echo esc_html( $account_details['email'] ); ?>)</span>
+						<?php endif; ?>
+					</div>
+					<div style="color: #666; font-size: 12px;">
+						<strong><?php esc_html_e( 'Account ID:', 'sunshine-photo-cart' ); ?></strong>
+						<code style="background: #eee; padding: 2px 6px; border-radius: 3px;"><?php echo esc_html( $account_details['id'] ); ?></code>
+					</div>
+				<?php else : ?>
+					<div style="color: #666; font-size: 12px;">
+						<strong><?php esc_html_e( 'Account ID:', 'sunshine-photo-cart' ); ?></strong>
+						<code style="background: #eee; padding: 2px 6px; border-radius: 3px;"><?php echo esc_html( $account_id ); ?></code>
+					</div>
+				<?php endif; ?>
+				<div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd;">
+					<a href="https://www.sunshinephotocart.com/?stripe_disconnect=1&account_id=<?php echo esc_attr( $account_id ); ?>&mode=<?php echo esc_html( $mode ); ?>&nonce=<?php echo esc_html( wp_create_nonce( 'sunshine_stripe_disconnect' ) ); ?>&return_url=<?php echo esc_url( admin_url( 'admin.php?sunshine_stripe_disconnect_return' ) ); ?>" style="color: #dc3545; text-decoration: none; font-size: 12px;"><?php esc_html_e( 'Disconnect Stripe account', 'sunshine-photo-cart' ); ?></a>
+				</div>
+			</div>
 
 		<?php } else { ?>
 
@@ -510,6 +719,387 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		echo '<p>Stripe Webhook URL: <code>' . esc_url( $this->get_webhook_url() ) . '</code></p>';
 		echo '<p><a href="https://www.sunshinephotocart.com/docs/setting-up-stripe/#webhooks" target="_blank">' . esc_html__( 'Learn how to setup Stripe Webhooks', 'sunshine-photo-cart' ) . '</a></p>';
 
+	}
+
+	/**
+	 * Display payment methods configuration UI
+	 *
+	 * Shows a grid of available payment methods with toggle switches
+	 * and a sync button to refresh from Stripe.
+	 *
+	 * @param array $field Field configuration
+	 * @return void
+	 */
+	function stripe_payment_methods_display( $field ) {
+		$optimized_checkout = $this->get_option( 'optimized_checkout' );
+		// Optimized is ON if: value is 'yes', '1', or false (never saved, use default 'yes')
+		// Optimized is OFF if: value is '' (explicitly unchecked and saved)
+		$is_optimized      = ( $optimized_checkout === 'yes' || $optimized_checkout === '1' || $optimized_checkout === false );
+		$enabled_methods   = $this->get_enabled_payment_methods();
+		$available_methods = $this->get_available_payment_methods();
+
+		// Define all known payment methods with their display names
+		$all_payment_methods = $this->get_all_payment_method_definitions();
+
+		?>
+		<div id="sunshine-stripe-payment-methods-container">
+			<!-- Notice shown when Optimized Checkout is ON -->
+			<div id="sunshine-stripe-optimized-notice" class="sunshine-stripe-optimized-notice" style="background: #d4edda; border: 1px solid #28a745; border-radius: 4px; padding: 10px 15px; <?php echo ! $is_optimized ? 'display: none;' : ''; ?>">
+				<strong><?php esc_html_e( 'Optimized Checkout is enabled', 'sunshine-photo-cart' ); ?></strong><br>
+				<?php esc_html_e( 'Stripe will automatically display the most relevant payment methods to each customer based on their location, device, and purchase amount. Disable Optimized Checkout above to manually select payment methods.', 'sunshine-photo-cart' ); ?>
+			</div>
+
+			<!-- Manual payment methods selection (hidden when Optimized Checkout is ON) -->
+			<div id="sunshine-stripe-manual-methods" style="<?php echo $is_optimized ? 'display: none;' : ''; ?>">
+				<div class="sunshine-stripe-payment-methods-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
+					<?php foreach ( $all_payment_methods as $method_id => $method_info ) : ?>
+						<?php
+						$is_enabled   = in_array( $method_id, $enabled_methods );
+						$is_available = empty( $available_methods ) || in_array( $method_id, $available_methods );
+						?>
+						<div class="sunshine-stripe-payment-method" style="background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 12px; display: flex; align-items: center; justify-content: space-between; <?php echo ! $is_available ? 'opacity: 0.5;' : ''; ?>">
+							<div style="display: flex; align-items: center; gap: 10px;">
+								<span style="font-weight: 500;"><?php echo esc_html( $method_info['name'] ); ?></span>
+							</div>
+							<label class="sunshine-toggle-switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+								<input type="checkbox"
+									class="sunshine-stripe-payment-method-toggle"
+									data-method="<?php echo esc_attr( $method_id ); ?>"
+									<?php checked( $is_enabled ); ?>
+									<?php disabled( ! $is_available ); ?>
+									style="opacity: 0; width: 0; height: 0;">
+								<span class="sunshine-toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: <?php echo $is_enabled ? '#635bff' : '#ccc'; ?>; border-radius: 24px; transition: 0.3s;">
+									<span style="position: absolute; content: ''; height: 18px; width: 18px; left: <?php echo $is_enabled ? '23px' : '3px'; ?>; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.3s;"></span>
+								</span>
+							</label>
+						</div>
+					<?php endforeach; ?>
+				</div>
+
+				<button type="button" id="sunshine-stripe-sync-payment-methods" class="button">
+					<?php esc_html_e( 'Sync Payment Methods', 'sunshine-photo-cart' ); ?>
+				</button>
+				<span id="sunshine-stripe-sync-status" style="margin-left: 10px;"></span>
+			</div>
+		</div>
+
+		<script>
+		jQuery(document).ready(function($) {
+			// Handle payment method toggle
+			$('.sunshine-stripe-payment-method-toggle').on('change', function() {
+				var $toggle = $(this);
+				var method = $toggle.data('method');
+				var enabled = $toggle.is(':checked');
+				var $slider = $toggle.next('.sunshine-toggle-slider');
+				var $sliderKnob = $slider.find('span');
+
+				// Update visual state immediately
+				$slider.css('background-color', enabled ? '#635bff' : '#ccc');
+				$sliderKnob.css('left', enabled ? '23px' : '3px');
+
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'sunshine_stripe_toggle_payment_method',
+						method: method,
+						enabled: enabled ? 1 : 0,
+						nonce: '<?php echo esc_js( wp_create_nonce( 'sunshine_stripe_payment_methods' ) ); ?>'
+					},
+					error: function() {
+						// Revert on error
+						$toggle.prop('checked', !enabled);
+						$slider.css('background-color', !enabled ? '#635bff' : '#ccc');
+						$sliderKnob.css('left', !enabled ? '23px' : '3px');
+					}
+				});
+			});
+
+			// Handle sync button
+			$('#sunshine-stripe-sync-payment-methods').on('click', function() {
+				var $button = $(this);
+				var $status = $('#sunshine-stripe-sync-status');
+
+				$button.prop('disabled', true);
+				$status.text('<?php esc_html_e( 'Syncing...', 'sunshine-photo-cart' ); ?>');
+
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'sunshine_stripe_sync_payment_methods',
+						nonce: '<?php echo esc_js( wp_create_nonce( 'sunshine_stripe_payment_methods' ) ); ?>'
+					},
+					success: function(response) {
+						if (response.success) {
+							$status.text('<?php esc_html_e( 'Synced successfully!', 'sunshine-photo-cart' ); ?>');
+							setTimeout(function() {
+								location.reload();
+							}, 1000);
+						} else {
+							$status.text(response.data || '<?php esc_html_e( 'Sync failed', 'sunshine-photo-cart' ); ?>');
+							$button.prop('disabled', false);
+						}
+					},
+					error: function() {
+						$status.text('<?php esc_html_e( 'Sync failed', 'sunshine-photo-cart' ); ?>');
+						$button.prop('disabled', false);
+					}
+				});
+			});
+
+			// Handle optimized checkout toggle to show/hide payment methods
+			$('input[name="sunshine_options[stripe_optimized_checkout]"]').on('change', function() {
+				var isOptimized = $(this).is(':checked');
+
+				if (isOptimized) {
+					$('#sunshine-stripe-manual-methods').hide();
+					$('#sunshine-stripe-optimized-notice').show();
+				} else {
+					$('#sunshine-stripe-manual-methods').show();
+					$('#sunshine-stripe-optimized-notice').hide();
+				}
+			});
+		});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Get all payment method definitions
+	 *
+	 * @return array Array of payment method definitions
+	 */
+	private function get_all_payment_method_definitions() {
+		return array(
+			'card'              => array(
+				'name' => __( 'Credit Card', 'sunshine-photo-cart' ),
+			),
+			'us_bank_account'   => array(
+				'name' => __( 'US Bank Account', 'sunshine-photo-cart' ),
+			),
+			'acss_debit'        => array(
+				'name' => __( 'Canadian Debit', 'sunshine-photo-cart' ),
+			),
+			'affirm'            => array(
+				'name' => __( 'Affirm', 'sunshine-photo-cart' ),
+			),
+			'afterpay_clearpay' => array(
+				'name' => __( 'Afterpay/Clearpay', 'sunshine-photo-cart' ),
+			),
+			'alipay'            => array(
+				'name' => __( 'Alipay', 'sunshine-photo-cart' ),
+			),
+			'amazon_pay'        => array(
+				'name' => __( 'Amazon Pay', 'sunshine-photo-cart' ),
+			),
+			'apple_pay'         => array(
+				'name' => __( 'Apple Pay', 'sunshine-photo-cart' ),
+			),
+			'bacs_debit'        => array(
+				'name' => __( 'Bacs Debit', 'sunshine-photo-cart' ),
+			),
+			'bancontact'        => array(
+				'name' => __( 'Bancontact', 'sunshine-photo-cart' ),
+			),
+			'cashapp'           => array(
+				'name' => __( 'Cash App', 'sunshine-photo-cart' ),
+			),
+			'eps'               => array(
+				'name' => __( 'EPS', 'sunshine-photo-cart' ),
+			),
+			'giropay'           => array(
+				'name' => __( 'giropay', 'sunshine-photo-cart' ),
+			),
+			'google_pay'        => array(
+				'name' => __( 'Google Pay', 'sunshine-photo-cart' ),
+			),
+			'ideal'             => array(
+				'name' => __( 'iDEAL', 'sunshine-photo-cart' ),
+			),
+			'klarna'            => array(
+				'name' => __( 'Klarna', 'sunshine-photo-cart' ),
+			),
+			'link'              => array(
+				'name' => __( 'Link', 'sunshine-photo-cart' ),
+			),
+			'p24'               => array(
+				'name' => __( 'Przelewy24', 'sunshine-photo-cart' ),
+			),
+			'sepa_debit'        => array(
+				'name' => __( 'SEPA Direct Debit', 'sunshine-photo-cart' ),
+			),
+			'sofort'            => array(
+				'name' => __( 'SOFORT', 'sunshine-photo-cart' ),
+			),
+			'wechat_pay'        => array(
+				'name' => __( 'WeChat Pay', 'sunshine-photo-cart' ),
+			),
+		);
+	}
+
+	/**
+	 * Get enabled payment methods from options
+	 *
+	 * @return array Array of enabled payment method IDs
+	 */
+	private function get_enabled_payment_methods() {
+		$enabled = SPC()->get_option( 'stripe_enabled_payment_methods' );
+		if ( empty( $enabled ) || ! is_array( $enabled ) ) {
+			// Default to card only
+			return array( 'card' );
+		}
+		return $enabled;
+	}
+
+	/**
+	 * Get available payment methods from Stripe (cached)
+	 *
+	 * @return array Array of available payment method IDs, or empty if not synced
+	 */
+	private function get_available_payment_methods() {
+		$mode      = $this->get_mode_value();
+		$cache_key = 'sunshine_stripe_available_methods_' . $mode;
+		$cached    = get_transient( $cache_key );
+
+		if ( $cached !== false ) {
+			return $cached;
+		}
+
+		return array(); // Return empty if not synced yet (shows all as available)
+	}
+
+	/**
+	 * AJAX handler for syncing payment methods from Stripe
+	 *
+	 * @return void
+	 */
+	public function sync_payment_methods_ajax() {
+		check_ajax_referer( 'sunshine_stripe_payment_methods', 'nonce' );
+
+		if ( ! current_user_can( 'sunshine_manage_options' ) ) {
+			wp_send_json_error( __( 'Permission denied', 'sunshine-photo-cart' ) );
+		}
+
+		$this->setup();
+
+		// Fetch payment method configurations from Stripe
+		$response = $this->make_stripe_request( 'payment_method_configurations', array( 'limit' => 100 ) );
+
+		if ( is_wp_error( $response ) ) {
+			SPC()->log( 'Failed to sync payment methods: ' . $response->get_error_message() );
+			wp_send_json_error( $response->get_error_message() );
+		}
+
+		$available_methods = array();
+
+		// Parse the response to get available payment methods
+		if ( ! empty( $response['data'] ) ) {
+			foreach ( $response['data'] as $config ) {
+				// Each config has payment method types
+				if ( ! empty( $config ) && is_array( $config ) ) {
+					foreach ( $config as $key => $value ) {
+						// Check for enabled payment methods
+						if ( is_array( $value ) && isset( $value['available'] ) && $value['available'] ) {
+							$available_methods[] = $key;
+						}
+					}
+				}
+			}
+		}
+
+		// If we couldn't parse properly, try alternative endpoint
+		if ( empty( $available_methods ) ) {
+			// Fallback: Use account capabilities
+			$account_id = $this->get_account_id();
+			if ( $account_id ) {
+				$account_response = $this->make_stripe_request( 'accounts/' . $account_id );
+				if ( ! is_wp_error( $account_response ) && ! empty( $account_response['capabilities'] ) ) {
+					foreach ( $account_response['capabilities'] as $capability => $status ) {
+						if ( $status === 'active' ) {
+							// Map capability names to payment method types
+							$method_map = array(
+								'card_payments'       => 'card',
+								'transfers'           => null, // Not a payment method
+								'us_bank_account_ach_payments' => 'us_bank_account',
+								'affirm_payments'     => 'affirm',
+								'afterpay_clearpay_payments' => 'afterpay_clearpay',
+								'klarna_payments'     => 'klarna',
+								'link_payments'       => 'link',
+								'cashapp_payments'    => 'cashapp',
+								'eps_payments'        => 'eps',
+								'giropay_payments'    => 'giropay',
+								'ideal_payments'      => 'ideal',
+								'p24_payments'        => 'p24',
+								'sepa_debit_payments' => 'sepa_debit',
+								'sofort_payments'     => 'sofort',
+								'bancontact_payments' => 'bancontact',
+								'alipay_payments'     => 'alipay',
+								'wechat_pay_payments' => 'wechat_pay',
+							);
+
+							if ( isset( $method_map[ $capability ] ) && $method_map[ $capability ] ) {
+								$available_methods[] = $method_map[ $capability ];
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Always include card as it's the most basic
+		if ( ! in_array( 'card', $available_methods ) ) {
+			array_unshift( $available_methods, 'card' );
+		}
+
+		$available_methods = array_unique( $available_methods );
+
+		// Cache for 24 hours
+		$mode      = $this->get_mode_value();
+		$cache_key = 'sunshine_stripe_available_methods_' . $mode;
+		set_transient( $cache_key, $available_methods, DAY_IN_SECONDS );
+
+		SPC()->log( 'Synced payment methods from Stripe: ' . implode( ', ', $available_methods ) );
+
+		wp_send_json_success( array( 'methods' => $available_methods ) );
+	}
+
+	/**
+	 * AJAX handler for toggling a payment method
+	 *
+	 * @return void
+	 */
+	public function toggle_payment_method_ajax() {
+		check_ajax_referer( 'sunshine_stripe_payment_methods', 'nonce' );
+
+		if ( ! current_user_can( 'sunshine_manage_options' ) ) {
+			wp_send_json_error( __( 'Permission denied', 'sunshine-photo-cart' ) );
+		}
+
+		$method  = isset( $_POST['method'] ) ? sanitize_text_field( $_POST['method'] ) : '';
+		$enabled = isset( $_POST['enabled'] ) ? (bool) $_POST['enabled'] : false;
+
+		if ( empty( $method ) ) {
+			wp_send_json_error( __( 'Invalid payment method', 'sunshine-photo-cart' ) );
+		}
+
+		$enabled_methods = $this->get_enabled_payment_methods();
+
+		if ( $enabled ) {
+			if ( ! in_array( $method, $enabled_methods ) ) {
+				$enabled_methods[] = $method;
+			}
+		} else {
+			$enabled_methods = array_diff( $enabled_methods, array( $method ) );
+			// Ensure at least card is enabled
+			if ( empty( $enabled_methods ) ) {
+				$enabled_methods = array( 'card' );
+			}
+		}
+
+		SPC()->update_option( 'stripe_enabled_payment_methods', array_values( $enabled_methods ) );
+
+		wp_send_json_success( array( 'enabled_methods' => $enabled_methods ) );
 	}
 
 	private function get_webhook_url() {
@@ -659,6 +1249,104 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		$this->currency = SPC()->get_option( 'currency' );
 	}
 
+	/**
+	 * Check if currency is zero-decimal (no decimal places)
+	 *
+	 * Stripe requires amounts for zero-decimal currencies to be sent as whole numbers
+	 * without multiplying by 100. Common zero-decimal currencies include:
+	 * JPY, KRW, CLP, BIF, KMF, DJF, GNF, HUF, ISK, IDR, LAK, MGA, PYG, RWF, TZS, UGX, VND, VUV, XAF, XOF, XPF
+	 *
+	 * @return bool True if currency is zero-decimal
+	 */
+	private function is_zero_decimal_currency() {
+		$zero_decimal_currencies = array(
+			'BIF', // Burundian Franc
+			'CLP', // Chilean Peso
+			'DJF', // Djiboutian Franc
+			'GNF', // Guinean Franc
+			'JPY', // Japanese Yen
+			'KMF', // Comorian Franc
+			'KRW', // South Korean Won
+			'MGA', // Malagasy Ariary
+			'PYG', // Paraguayan Guarani
+			'RWF', // Rwandan Franc
+			'TZS', // Tanzanian Shilling
+			'UGX', // Ugandan Shilling
+			'VND', // Vietnamese Dong
+			'VUV', // Vanuatu Vatu
+			'XAF', // Central African CFA Franc
+			'XOF', // West African CFA Franc
+			'XPF', // CFP Franc
+			'HUF', // Hungarian Forint
+			'ISK', // Icelandic Króna
+			'IDR', // Indonesian Rupiah
+			'LAK', // Lao Kip
+		);
+		return in_array( $this->currency, $zero_decimal_currencies, true );
+	}
+
+	/**
+	 * Check if currency is three-decimal (three decimal places)
+	 *
+	 * Stripe requires amounts for three-decimal currencies to be multiplied by 1000
+	 * to convert to the smallest currency unit. Three-decimal currencies include:
+	 * BHD, JOD, KWD, OMR, TND
+	 *
+	 * @return bool True if currency is three-decimal
+	 */
+	private function is_three_decimal_currency() {
+		$three_decimal_currencies = array(
+			'BHD', // Bahraini Dinar
+			'JOD', // Jordanian Dinar
+			'KWD', // Kuwaiti Dinar
+			'OMR', // Omani Rial
+			'TND', // Tunisian Dinar
+		);
+		return in_array( $this->currency, $three_decimal_currencies, true );
+	}
+
+	/**
+	 * Convert amount to Stripe format
+	 *
+	 * Stripe requires amounts in the smallest currency unit:
+	 * - Zero-decimal currencies: no conversion (multiply by 1)
+	 * - Three-decimal currencies: multiply by 1000
+	 * - Two-decimal currencies: multiply by 100 (default)
+	 *
+	 * @param float $amount Amount in base currency
+	 * @return int Amount in Stripe's smallest currency unit
+	 */
+	private function convert_amount_to_stripe( $amount ) {
+		if ( $this->is_zero_decimal_currency() ) {
+			return round( $amount );
+		}
+		if ( $this->is_three_decimal_currency() ) {
+			return round( $amount * 1000 );
+		}
+		return round( $amount * 100 );
+	}
+
+	/**
+	 * Convert amount from Stripe format
+	 *
+	 * Stripe returns amounts in the smallest currency unit:
+	 * - Zero-decimal currencies: no conversion (divide by 1)
+	 * - Three-decimal currencies: divide by 1000
+	 * - Two-decimal currencies: divide by 100 (default)
+	 *
+	 * @param int|float $amount Amount in Stripe's smallest currency unit
+	 * @return float Amount in base currency
+	 */
+	private function convert_amount_from_stripe( $amount ) {
+		if ( $this->is_zero_decimal_currency() ) {
+			return floatval( $amount );
+		}
+		if ( $this->is_three_decimal_currency() ) {
+			return floatval( $amount / 1000 );
+		}
+		return floatval( $amount / 100 );
+	}
+
 	private function get_publishable_key( $mode = '' ) {
 		return ( $mode == 'live' || $this->get_mode_value() == 'live' ) ? SPC()->get_option( $this->id . '_publishable_key_live' ) : SPC()->get_option( $this->id . '_publishable_key_test' );
 	}
@@ -669,6 +1357,65 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 	private function get_account_id( $mode = '' ) {
 		return ( $mode == 'live' || $this->get_mode_value() == 'live' ) ? SPC()->get_option( $this->id . '_account_id_live' ) : SPC()->get_option( $this->id . '_account_id_test' );
+	}
+
+	/**
+	 * Get Stripe account details from the API
+	 *
+	 * Retrieves account name, ID, and other details from Stripe.
+	 * Results are cached in a transient for 1 hour to avoid excessive API calls.
+	 *
+	 * @param string $mode Optional. 'live' or 'test'. Defaults to current mode.
+	 * @return array|false Account details array or false on failure
+	 */
+	private function get_stripe_account_details( $mode = '' ) {
+		if ( empty( $mode ) ) {
+			$mode = $this->get_mode_value();
+		}
+
+		$account_id = $this->get_account_id( $mode );
+		if ( empty( $account_id ) ) {
+			return false;
+		}
+
+		// Check cache first
+		$cache_key = 'sunshine_stripe_account_' . md5( $account_id );
+		$cached    = get_transient( $cache_key );
+		if ( $cached !== false ) {
+			return $cached;
+		}
+
+		// Need to temporarily set up for the correct mode to get the right secret key
+		$this->setup( $mode );
+
+		$response = $this->make_stripe_request( 'accounts/' . $account_id );
+
+		if ( is_wp_error( $response ) ) {
+			SPC()->log( 'Failed to get Stripe account details: ' . $response->get_error_message() );
+			return false;
+		}
+
+		// Extract relevant details
+		$details = array(
+			'id'    => $response['id'],
+			'name'  => '',
+			'email' => ! empty( $response['email'] ) ? $response['email'] : '',
+		);
+
+		// Try to get the business name from various places
+		if ( ! empty( $response['business_profile']['name'] ) ) {
+			$details['name'] = $response['business_profile']['name'];
+		} elseif ( ! empty( $response['settings']['dashboard']['display_name'] ) ) {
+			$details['name'] = $response['settings']['dashboard']['display_name'];
+		} else {
+			// Fallback to account ID if no name available
+			$details['name'] = $response['id'];
+		}
+
+		// Cache for 1 hour
+		set_transient( $cache_key, $details, HOUR_IN_SECONDS );
+
+		return $details;
 	}
 
 	private function get_payment_intent_id() {
@@ -703,6 +1450,12 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 		if ( ! is_sunshine_page( 'checkout' ) || empty( $this->get_publishable_key() ) || empty( $this->get_account_id() ) ) {
 			return false;
+		}
+
+		// Only load Stripe JS for inline checkout mode
+		$checkout_mode = $this->get_option( 'checkout_mode' );
+		if ( $checkout_mode === 'hosted' ) {
+			return; // No JS needed for hosted checkout - redirect handles everything
 		}
 
 		wp_enqueue_script( 'sunshine-stripe', 'https://js.stripe.com/v3/' );
@@ -751,13 +1504,26 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 			SPC()->cart->setup();
 		}
 
-		// Set the cart total in cents
+		// Set the cart total in Stripe's smallest currency unit
 		$cart_total = SPC()->cart->get_total();
 		if ( $cart_total <= 0 || SPC()->cart->is_empty() ) {
 			return; // Don't create if there is no amount to charge yet or if the cart is empty.
 		}
 
-		$this->total = round( 100 * $cart_total );
+		$this->total = $this->convert_amount_to_stripe( $cart_total );
+
+		// CRITICAL: Check if existing payment intent was already used for a completed order
+		// This prevents stale payment intents from being reused after successful orders.
+		$existing_intent_id = $this->get_payment_intent_id();
+		if ( ! empty( $existing_intent_id ) ) {
+			$existing_order = $this->get_order_by_payment_intent( $existing_intent_id );
+			if ( $existing_order && $existing_order->is_paid() ) {
+				SPC()->log( 'Clearing stale payment intent ' . $existing_intent_id . ' that was already used for paid order ' . $existing_order->get_id() );
+				$this->set_payment_intent_id( '' );
+				$this->set_client_secret( '' );
+				SPC()->session->set( 'stripe_idempotency_key', '' );
+			}
+		}
 
 		// Get or create Stripe customer for both logged-in users and guests
 		$stripe_customer_id = $this->get_stripe_customer_id();
@@ -1056,6 +1822,197 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 	}
 
 	/**
+	 * Filter order status for hosted checkout mode
+	 *
+	 * For hosted checkout, order stays as 'pending' until the webhook confirms
+	 * payment, then it becomes 'new'.
+	 *
+	 * @param string $status The order status
+	 * @param object $order The order object
+	 * @return string The filtered order status
+	 */
+	public function create_order_status( $status, $order ) {
+		if ( $order->get_payment_method() === $this->id ) {
+			$checkout_mode = $this->get_option( 'checkout_mode' );
+			if ( $checkout_mode === 'hosted' ) {
+				// For hosted checkout, stay pending until webhook confirms payment
+				return 'pending';
+			}
+		}
+		return $status;
+	}
+
+	/**
+	 * Create a Stripe Checkout Session for hosted checkout
+	 *
+	 * @param SPC_Order $order The order object
+	 * @return array|WP_Error Checkout session data or error
+	 */
+	private function create_checkout_session( $order ) {
+		$this->setup();
+
+		$line_items     = array();
+		$tax_mode       = $this->get_option( 'tax_mode' );
+		$use_stripe_tax = ( $tax_mode === 'stripe' );
+
+		// Build line items from order
+		foreach ( $order->get_items() as $item ) {
+			$line_item = array(
+				'price_data' => array(
+					'currency'     => strtolower( $this->currency ),
+					'product_data' => array(
+						'name' => $item->get_name_raw(),
+					),
+					'unit_amount'  => $this->convert_amount_to_stripe( $item->get_price() - $item->get_discount_per_item() ),
+				),
+				'quantity'   => $item->get_qty(),
+			);
+
+			// If using Stripe Tax, set tax behavior
+			if ( $use_stripe_tax ) {
+				$line_item['price_data']['tax_behavior'] = 'exclusive';
+			}
+
+			$line_items[] = $line_item;
+		}
+
+		// Add shipping if applicable
+		if ( $order->get_shipping() > 0 ) {
+			$shipping_item = array(
+				'price_data' => array(
+					'currency'     => strtolower( $this->currency ),
+					'product_data' => array(
+						'name' => $order->get_shipping_method_name() ? $order->get_shipping_method_name() : __( 'Shipping', 'sunshine-photo-cart' ),
+					),
+					'unit_amount'  => $this->convert_amount_to_stripe( $order->get_shipping() ),
+				),
+				'quantity'   => 1,
+			);
+
+			if ( $use_stripe_tax ) {
+				$shipping_item['price_data']['tax_behavior'] = 'exclusive';
+			}
+
+			$line_items[] = $shipping_item;
+		}
+
+		// Add tax as line item ONLY if NOT using Stripe Tax
+		if ( ! $use_stripe_tax && $order->get_tax() > 0 ) {
+			$line_items[] = array(
+				'price_data' => array(
+					'currency'     => strtolower( $this->currency ),
+					'product_data' => array(
+						'name' => __( 'Tax', 'sunshine-photo-cart' ),
+					),
+					'unit_amount'  => $this->convert_amount_to_stripe( $order->get_tax() ),
+				),
+				'quantity'   => 1,
+			);
+		}
+
+		$args = array(
+			'mode'                => 'payment',
+			'success_url'         => add_query_arg( 'stripe_checkout_complete', '1', $order->get_received_permalink() ),
+			'cancel_url'          => wp_nonce_url(
+				add_query_arg( 'order_id', $order->get_id(), sunshine_get_page_url( 'checkout' ) ),
+				'stripe_cancel',
+				'stripe_cancel'
+			),
+			'line_items'          => $line_items,
+			'customer_email'      => $order->get_email(),
+			'metadata'            => array(
+				'order_id'   => $order->get_id(),
+				'order_name' => $order->get_name(),
+				'site'       => get_bloginfo( 'name' ),
+			),
+			'payment_intent_data' => array(
+				'metadata' => array(
+					'order_id'   => $order->get_id(),
+					'order_name' => $order->get_name(),
+					'site'       => get_bloginfo( 'name' ),
+				),
+			),
+		);
+
+		// Enable Stripe Tax if selected
+		if ( $use_stripe_tax ) {
+			$args['automatic_tax'] = array( 'enabled' => 'true' );
+			// Store that we're using Stripe Tax so webhook knows to update order tax
+			$order->update_meta_value( 'stripe_tax_mode', 'stripe' );
+		}
+
+		// Add statement descriptor if configured
+		$statement_descriptor = $this->get_option( 'statement_descriptor' );
+		if ( ! empty( $statement_descriptor ) ) {
+			$sanitized_descriptor = preg_replace( '/[^A-Za-z0-9 ]/', '', $statement_descriptor );
+			$sanitized_descriptor = substr( $sanitized_descriptor, 0, 22 );
+			if ( strlen( $sanitized_descriptor ) >= 5 ) {
+				$args['payment_intent_data']['statement_descriptor'] = $sanitized_descriptor;
+			}
+		}
+
+		// Add application fee if applicable
+		if ( $this->get_application_fee_percent() > 0 ) {
+			$fee_amount = round( $order->get_total() * ( $this->get_application_fee_percent() / 100 ), 2 );
+			$args['payment_intent_data']['application_fee_amount'] = $this->convert_amount_to_stripe( $fee_amount );
+		}
+
+		$response = $this->make_stripe_request( 'checkout/sessions', $args, 'POST' );
+
+		if ( is_wp_error( $response ) ) {
+			SPC()->log( 'Stripe Checkout Session creation failed: ' . $response->get_error_message() );
+			return $response;
+		}
+
+		// Store session ID in order meta
+		$order->update_meta_value( 'stripe_checkout_session_id', $response['id'] );
+		SPC()->log( 'Stripe Checkout Session created: ' . $response['id'] );
+
+		return $response;
+	}
+
+	/**
+	 * Process hosted checkout - redirect to Stripe
+	 *
+	 * @param SPC_Order $order The order object
+	 * @return void
+	 */
+	public function process_payment_hosted( $order ) {
+		// Create Checkout Session
+		$session = $this->create_checkout_session( $order );
+
+		if ( is_wp_error( $session ) ) {
+			SPC()->cart->add_error( $session->get_error_message() );
+			wp_safe_redirect( sunshine_get_page_url( 'checkout' ) );
+			exit;
+		}
+
+		// Output redirect page (similar to PayPal Legacy)
+		?>
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<title><?php esc_html_e( 'Redirecting to Stripe', 'sunshine-photo-cart' ); ?>...</title>
+			<style>
+				body, html { margin: 0; padding: 50px; background: #FFF; }
+				h1 { color: #000; text-align: center; font-family: Arial; font-size: 24px; }
+			</style>
+		</head>
+		<body>
+			<h1><?php esc_html_e( 'Redirecting to Stripe', 'sunshine-photo-cart' ); ?>...</h1>
+			<script>
+				window.location.href = '<?php echo esc_url( $session['url'] ); ?>';
+			</script>
+			<noscript>
+				<p style="text-align: center;"><a href="<?php echo esc_url( $session['url'] ); ?>"><?php esc_html_e( 'Click here to continue to payment', 'sunshine-photo-cart' ); ?></a></p>
+			</noscript>
+		</body>
+		</html>
+		<?php
+		exit;
+	}
+
+	/**
 	 * Process payment after successful Stripe payment
 	 *
 	 * Updates order with payment information and metadata from Stripe.
@@ -1064,6 +2021,13 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 	 * @return void
 	 */
 	public function process_payment( $order ) {
+
+		// Check if we're using hosted checkout mode
+		$checkout_mode = $this->get_option( 'checkout_mode' );
+		if ( $checkout_mode === 'hosted' ) {
+			$this->process_payment_hosted( $order );
+			return;
+		}
 
 		// At this point we already have a paid order from the Stripe JS and we are just updating the order with info.
 		SPC()->log( 'Processing Stripe payment for order: ' . $order->get_id() );
@@ -1082,6 +2046,16 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		if ( empty( $payment_intent_id ) ) {
 			SPC()->log( 'No payment intent ID found - cannot process payment' );
 			SPC()->cart->add_error( __( 'Could not complete order, contact site owner for more details', 'sunshine-photo-cart' ) );
+			return;
+		}
+
+		// CRITICAL: Check if this payment intent is already associated with a different order
+		// This prevents the scenario where a stale payment intent from a previous order
+		// is reused for a new order, resulting in an unpaid order being marked as paid.
+		$existing_order = $this->get_order_by_payment_intent( $payment_intent_id );
+		if ( $existing_order && $existing_order->get_id() != $order->get_id() ) {
+			SPC()->log( 'Payment intent ' . $payment_intent_id . ' already used for order ' . $existing_order->get_id() . ', current order is ' . $order->get_id() );
+			SPC()->cart->add_error( __( 'This payment has already been processed for a different order. Please refresh the page and try again.', 'sunshine-photo-cart' ) );
 			return;
 		}
 
@@ -1109,7 +2083,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 			$order->update_meta_value( 'source', sanitize_text_field( $payment_intent_object['source'] ) );
 		}
 		if ( ! empty( $payment_intent_object['application_fee_amount'] ) ) {
-			$order->update_meta_value( 'application_fee_amount', sanitize_text_field( $payment_intent_object['application_fee_amount'] ) / 100 );
+			$order->update_meta_value( 'application_fee_amount', $this->convert_amount_from_stripe( $payment_intent_object['application_fee_amount'] ) );
 		}
 
 		// Continue to update metadata in Stripe.
@@ -1201,6 +2175,78 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 	}
 
 	/**
+	 * Handle successful return from Stripe hosted checkout
+	 *
+	 * Clears cart/session and redirects to clean order URL.
+	 * The actual order completion is handled by the webhook.
+	 *
+	 * @return void
+	 */
+	public function stripe_checkout_return() {
+		if ( ! isset( $_GET['stripe_checkout_complete'] ) ) {
+			return;
+		}
+
+		SPC()->log( 'Returned from Stripe hosted checkout' );
+
+		// Clear session data
+		SPC()->session->set( 'checkout_data', '' );
+		SPC()->session->set( 'checkout_sections_completed', '' );
+		SPC()->session->set( 'checkout_order_id', '' );
+		SPC()->cart->empty_cart();
+
+		// Wait briefly for webhook to process (similar to PayPal)
+		sleep( 3 );
+
+		// Remove query param and redirect to clean order received URL
+		$url = remove_query_arg( 'stripe_checkout_complete' );
+
+		wp_safe_redirect( $url );
+		exit;
+	}
+
+	/**
+	 * Handle cancellation from Stripe hosted checkout
+	 *
+	 * Expires the checkout session, deletes the order, and returns to checkout.
+	 *
+	 * @return void
+	 */
+	public function stripe_checkout_cancel() {
+		if ( ! isset( $_GET['stripe_cancel'] ) || ! wp_verify_nonce( $_GET['stripe_cancel'], 'stripe_cancel' ) ) {
+			return;
+		}
+
+		if ( ! isset( $_GET['order_id'] ) ) {
+			return;
+		}
+
+		$order_id = intval( $_GET['order_id'] );
+		$order    = sunshine_get_order( $order_id );
+
+		SPC()->log( 'Stripe hosted checkout cancelled for order: ' . $order_id );
+
+		if ( $order->exists() ) {
+			// Try to expire the Checkout Session if it exists
+			$session_id = $order->get_meta_value( 'stripe_checkout_session_id' );
+			if ( $session_id ) {
+				$this->setup();
+				$result = $this->make_stripe_request( 'checkout/sessions/' . $session_id . '/expire', array(), 'POST' );
+				if ( is_wp_error( $result ) ) {
+					SPC()->log( 'Could not expire Stripe checkout session: ' . $result->get_error_message() );
+				}
+			}
+
+			// Delete the order
+			$order->delete( true );
+		}
+
+		SPC()->cart->add_error( __( 'Stripe payment has been cancelled', 'sunshine-photo-cart' ) );
+		wp_safe_redirect( sunshine_get_page_url( 'checkout' ) );
+		exit;
+	}
+
+	/**
 	 * Process Stripe webhook events
 	 *
 	 * Handles incoming webhook events from Stripe, verifies signatures,
@@ -1260,8 +2306,77 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		}
 
 		// Webhook is verified — process it
-		$event = json_decode( $payload, true );
-		if ( $event['type'] == 'payment_intent.succeeded' ) {
+		$event      = json_decode( $payload, true );
+		$event_type = $event['type'] ?? '';
+
+		// Handle checkout.session.completed (for hosted checkout mode)
+		if ( $event_type === 'checkout.session.completed' ) {
+			$session  = $event['data']['object'];
+			$order_id = $session['metadata']['order_id'] ?? null;
+
+			if ( ! $order_id ) {
+				SPC()->log( 'Stripe Webhook: No order_id in checkout session metadata' );
+				status_header( 400 );
+				exit;
+			}
+
+			$order = sunshine_get_order( $order_id );
+			if ( ! $order || ! $order->exists() ) {
+				SPC()->log( 'Stripe Webhook: Order not found: ' . $order_id );
+				status_header( 404 );
+				exit;
+			}
+
+			SPC()->log( 'Processing Stripe webhook: checkout.session.completed for session ' . $session['id'] . ' and order ' . $order->get_id() );
+
+			$order->add_log( 'Stripe webhook: checkout.session.completed for session ' . $session['id'] );
+
+			// Store payment intent ID from session
+			if ( ! empty( $session['payment_intent'] ) ) {
+				$order->update_meta_value( 'stripe_payment_intent_id', $session['payment_intent'] );
+			}
+
+			// Check if Stripe Tax was used and update order tax accordingly
+			$stripe_tax_mode = $order->get_meta_value( 'stripe_tax_mode' );
+			if ( $stripe_tax_mode === 'stripe' ) {
+				$total_details = $session['total_details'] ?? array();
+				if ( isset( $total_details['amount_tax'] ) ) {
+					$stripe_tax = $this->convert_amount_from_stripe( $total_details['amount_tax'] );
+					$order->set_tax( $stripe_tax );
+					$order->update_meta_value( 'stripe_calculated_tax', $stripe_tax );
+					SPC()->log( 'Stripe Webhook: Updated order tax from Stripe Tax: ' . $stripe_tax );
+				}
+			}
+
+			// Update order metadata
+			$order->update_meta_value( 'paid_date', current_time( 'timestamp' ) );
+			$order->update_meta_value( 'source', 'stripe_hosted_checkout' );
+
+			// Store Stripe customer ID if available
+			if ( ! empty( $session['customer'] ) ) {
+				$order->update_meta_value( 'stripe_customer_id', $session['customer'] );
+			}
+
+			wp_update_post(
+				array(
+					'ID'        => $order->get_id(),
+					'post_date' => current_time( 'mysql' ),
+				)
+			);
+
+			// Post-process order (sends emails, updates stats, etc.)
+			SPC()->cart->post_process_order( $order );
+
+			// Set order status to 'new' AFTER post_process_order to avoid filter overwrite
+			$order->set_status( 'new', 'Stripe hosted checkout payment confirmed' );
+
+			SPC()->log( 'Stripe Webhook: Order ' . $order->get_name() . ' processed via checkout.session.completed' );
+			status_header( 200 );
+			exit;
+		}
+
+		// Handle payment_intent.succeeded (for inline checkout mode)
+		if ( $event_type === 'payment_intent.succeeded' ) {
 			$payment_intent = $event['data']['object'];
 			$order          = $this->get_order_by_payment_intent( $payment_intent['id'] );
 
@@ -1291,7 +2406,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 				$order->update_meta_value( 'source', sanitize_text_field( $payment_intent['source'] ) );
 			}
 			if ( ! empty( $payment_intent['application_fee_amount'] ) ) {
-				$order->update_meta_value( 'application_fee_amount', sanitize_text_field( $payment_intent['application_fee_amount'] ) / 100 );
+				$order->update_meta_value( 'application_fee_amount', $this->convert_amount_from_stripe( $payment_intent['application_fee_amount'] ) );
 			}
 		}
 
@@ -1584,7 +2699,7 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		// Create a stable key based on order, amount, user, and cart contents
 		$key_data = array(
 			'unique_id' => $unique_id,
-			'total'     => round( 100 * $cart_total ),
+			'total'     => $this->convert_amount_to_stripe( $cart_total ),
 			'user_id'   => ( $user_id ? $user_id : 'guest' ),
 			'cart'      => $cart_items_hash,
 		);
@@ -1627,29 +2742,36 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 		if ( $this->get_mode_value() == 'test' ) {
 			echo '<div class="sunshine--payment--test">' . esc_html__( 'This will be processed as a test payment and no real money will be exchanged', 'sunshine-photo-cart' ) . '</div>';
 		}
-		?>
 
-		<div id="sunshine-stripe-payment">
-			<div id="sunshine-stripe-payment-fields">
-				<div id="sunshine-stripe-payment-loading" style="padding: 30px 20px; text-align: center; color: #666; font-size: 14px;">
-					<?php esc_html_e( 'Loading secure payment form...', 'sunshine-photo-cart' ); ?>
-				</div>
+		$checkout_mode = $this->get_option( 'checkout_mode' );
+
+		if ( $checkout_mode === 'hosted' ) {
+			// Hosted checkout - show redirect message
+			?>
+			<div id="sunshine-stripe-payment">
+				<p style="margin: 0; color: #666;">
+					<?php esc_html_e( 'You will be redirected to Stripe to complete your payment securely.', 'sunshine-photo-cart' ); ?>
+				</p>
 			</div>
-			<div id="sunshine-stripe-payment-errors"></div>
-		</div>
+			<?php
+		} else {
+			// Inline checkout - show Payment Element
+			?>
+			<div id="sunshine-stripe-payment">
+				<div id="sunshine-stripe-payment-fields">
+					<div id="sunshine-stripe-payment-loading" style="padding: 30px 20px; text-align: center; color: #666; font-size: 14px;">
+						<?php esc_html_e( 'Loading secure payment form...', 'sunshine-photo-cart' ); ?>
+					</div>
+				</div>
+				<div id="sunshine-stripe-payment-errors"></div>
+			</div>
+			<?php
+		}
 
-		<?php
 		$output = ob_get_contents();
 		ob_end_clean();
 		return $output;
 
-	}
-
-	public function create_order_status( $status, $order ) {
-		if ( $order->get_payment_method() == $this->id ) {
-			return 'new'; // Straight to new.
-		}
-		return $status;
 	}
 
 	public function order_notify( $notify, $order ) {
@@ -1798,13 +2920,13 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 			$refund_amount = sanitize_text_field( $_POST['stripe_refund_amount'] );
 		}
 
-		$refund_amount_stripe = $refund_amount * 100; // Lose decimals because Stripe
+		$refund_amount_stripe = $this->convert_amount_to_stripe( $refund_amount );
 
 		// Don't allow refund for more than the charged amount
 		if ( $refund_amount_stripe > $payment_intent['amount'] ) {
 			SPC()->notices->add_admin( 'stripe_refund_fail_' . $payment_intent_id, __( 'Refund amount is higher than allowed', 'sunshine-photo-cart' ), 'error' );
 			/* translators: %1$s is the maximum allowed refund amount, %2$s is the requested refund amount */
-			$order->add_log( sprintf( __( 'Refund amount is higher than allowed (Total allowed: %1$s, Refund Requested: %2$s)', 'sunshine-photo-cart' ), ( $payment_intent['amount'] / 100 ), $refund_amount ) );
+			$order->add_log( sprintf( __( 'Refund amount is higher than allowed (Total allowed: %1$s, Refund Requested: %2$s)', 'sunshine-photo-cart' ), $this->convert_amount_from_stripe( $payment_intent['amount'] ), $refund_amount ) );
 			return;
 		}
 
@@ -1847,6 +2969,11 @@ class SPC_Payment_Method_Stripe extends SPC_Payment_Method {
 
 	public function checkout_validation( $section ) {
 		if ( $section == 'payment' && SPC()->cart->get_total() > 0 && SPC()->cart->get_checkout_data_item( 'payment_method' ) == 'stripe' ) {
+			// Skip payment intent validation for hosted checkout - payment intent is created on redirect
+			$checkout_mode = $this->get_option( 'checkout_mode' );
+			if ( $checkout_mode === 'hosted' ) {
+				return;
+			}
 			if ( empty( $_POST['stripe_payment_intent_id'] ) ) {
 				SPC()->cart->add_error( __( 'Invalid payment', 'sunshine-photo-cart' ) );
 			}

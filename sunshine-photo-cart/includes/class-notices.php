@@ -90,6 +90,10 @@ class SPC_Notices {
 		if ( ! empty( $this->admin_notices ) ) {
 			$html = '<div id="sunshine-notices">';
 			foreach ( $this->admin_notices as $key => $notice ) {
+				// Skip in-app promo notices - they are rendered separately.
+				if ( strpos( $key, 'in_app_promo_' ) === 0 ) {
+					continue;
+				}
 				if ( ! $notice['dismissed'] ) {
 					$html .= '<div class="notice is-dismissible sunshine-notice notice-' . esc_attr( $notice['type'] ) . '" id="sunshine-notice--' . esc_attr( $key ) . '" data-notice="' . esc_attr( $key ) . '"><p>' . $notice['text'] . '</p></div>';
 				}
@@ -130,12 +134,30 @@ class SPC_Notices {
 		}
 
 		$dismiss_notice_key = sanitize_text_field( $_POST['notice'] );
-		foreach ( $this->admin_notices as $key => $notice ) {
-			if ( $dismiss_notice_key == $key ) {
-				$this->admin_notices[ $key ]['dismissed'] = true;
-				$result                                   = update_user_meta( get_current_user_id(), 'sunshine_admin_notices', $this->admin_notices );
-			}
+
+		// Read fresh from user meta to ensure we have the latest notices.
+		$notices = get_user_meta( get_current_user_id(), 'sunshine_admin_notices', true );
+		if ( ! is_array( $notices ) ) {
+			$notices = array();
 		}
+
+		// If notice exists, mark as dismissed.
+		if ( isset( $notices[ $dismiss_notice_key ] ) ) {
+			$notices[ $dismiss_notice_key ]['dismissed'] = true;
+		} else {
+			// Notice doesn't exist yet, create it as dismissed.
+			$notices[ $dismiss_notice_key ] = array(
+				'text'      => '',
+				'type'      => 'notice',
+				'permanent' => true,
+				'dismissed' => true,
+			);
+		}
+
+		update_user_meta( get_current_user_id(), 'sunshine_admin_notices', $notices );
+
+		// Also update the class property.
+		$this->admin_notices = $notices;
 
 		wp_send_json_success();
 

@@ -77,8 +77,18 @@ class SPC_Cart_Item {
 				$this->product = $product;
 				$this->name    = $product->get_display_name();
 				$this->type    = $product->get_type();
-				$this->taxable = $product->is_taxable();
-				$this->price   = $product->get_regular_price();
+				// For gift certificates, use values from the item array (set by filter) instead of product values
+				if ( $this->type === 'gift-certificate' ) {
+					$this->taxable = ( ! empty( $item['taxable'] ) ) ? (bool) $item['taxable'] : false;
+					if ( ! empty( $item['price'] ) ) {
+						$this->price = floatval( $item['price'] );
+					} else {
+						$this->price = 0;
+					}
+				} else {
+					$this->taxable = $product->is_taxable();
+					$this->price   = $product->get_regular_price();
+				}
 				$this->set_options_total();
 			}
 		}
@@ -92,12 +102,9 @@ class SPC_Cart_Item {
 			$this->qty = intval( $item['qty'] );
 		}
 
-		/*
-		We do not want to get re-used price anymore in case it has changed since being added to cart
 		if ( ! empty( $item['price'] ) ) {
 			$this->price = floatval( $item['price'] );
 		}
-		*/
 
 		if ( ! empty( $item['comments'] ) ) {
 			$this->comments = $item['comments'];
@@ -259,7 +266,7 @@ class SPC_Cart_Item {
 		$result  = '';
 		$gallery = $this->get_gallery();
 		if ( empty( $gallery ) ) {
-			return false;
+			return ''; // Return empty string instead of false
 		}
 		if ( $gallery->exists() && $gallery->get_parent_gallery_id() > 0 ) {
 			$ancestors      = get_ancestors( $gallery->get_id(), 'sunshine-gallery', 'post_type' );
@@ -450,7 +457,7 @@ class SPC_Cart_Item {
 	}
 
 	public function get_comments() {
-		return $this->comments;
+		return $this->comments ? $this->comments : '';
 	}
 
 	public function get_shipping() {
@@ -552,6 +559,7 @@ class SPC_Cart_Item {
 
 	public function get_extra() {
 		do_action( 'sunshine_cart_item_extra', $this );
+		return ''; // Return empty string instead of null
 	}
 
 	public function get_options_formatted() {

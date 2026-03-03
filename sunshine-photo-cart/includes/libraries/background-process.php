@@ -446,6 +446,21 @@ abstract class SPC_Background_Process extends SPC_Async_Request {
 	 * and data exists in the queue.
 	 */
 	public function handle_cron_healthcheck() {
+		// Check if we're in an upload context - if so, skip processing to avoid synchronous execution
+		// WordPress cron runs on shutdown, which means it can run during the same request as the upload
+		$post_action    = isset( $_POST['action'] ) ? $_POST['action'] : '';
+		$request_action = isset( $_REQUEST['action'] ) ? $_REQUEST['action'] : '';
+		$is_upload      = ( $post_action === 'sunshine_gallery_upload' || $request_action === 'sunshine_gallery_upload' );
+
+		// If this is being called during an upload request and NOT from wp-cron.php, skip it
+		// DOING_CRON is only defined when wp-cron.php is called directly, not when cron runs on shutdown
+		// So we check if we're in an upload context AND not in a true cron context
+		if ( $is_upload && ! defined( 'DOING_CRON' ) && ! isset( $_GET['doing_wp_cron'] ) ) {
+			return;
+		}
+
+		SPC()->log( 'Background Process: Starting background processing' );
+
 		if ( $this->is_process_running() ) {
 			// Background process already running.
 			exit;
@@ -467,7 +482,14 @@ abstract class SPC_Background_Process extends SPC_Async_Request {
 	 */
 	protected function schedule_event() {
 		if ( ! wp_next_scheduled( $this->cron_hook_identifier ) ) {
-			wp_schedule_event( time(), $this->cron_interval_identifier, $this->cron_hook_identifier );
+			// Schedule recurring event starting 1 minute in the future
+			// This prevents it from running immediately on shutdown during the same request
+			// The single events scheduled in dispatch() will handle immediate processing
+			$start_time = time() + 60;
+			$scheduled  = wp_schedule_event( $start_time, $this->cron_interval_identifier, $this->cron_hook_identifier );
+			if ( is_wp_error( $scheduled ) ) {
+				SPC()->log( 'Background process: Failed to schedule cron event - ' . $scheduled->get_error_message() );
+			}
 		}
 	}
 

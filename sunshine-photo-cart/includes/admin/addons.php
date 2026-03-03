@@ -1,9 +1,27 @@
 <?php
+/**
+ * Check if a Sunshine addon is active.
+ *
+ * @param string $addon The addon slug (e.g., 'volume-galleries', 'cloud-storage').
+ * @return bool True if the addon plugin is active, false otherwise.
+ */
 function is_sunshine_addon_active( $addon ) {
-	if ( array_key_exists( $addon, SPC()->active_addons ) ) {
-		return true;
+	// Check if the plugin is actually installed and activated in WordPress.
+	// Plugin path follows pattern: sunshine-{addon}/{addon}.php
+	$plugin_path = 'sunshine-' . $addon . '/' . $addon . '.php';
+
+	// Include plugin.php if not already loaded (needed for is_plugin_active).
+	if ( ! function_exists( 'is_plugin_active' ) ) {
+		include_once ABSPATH . 'wp-admin/includes/plugin.php';
 	}
-	return false;
+
+	return is_plugin_active( $plugin_path );
+
+	// Original license-based check - commented out for later restoration.
+	// if ( array_key_exists( $addon, SPC()->active_addons ) ) {
+	// return true;
+	// }
+	// return false;
 }
 
 function sunshine_addon_activation( $file, $name, $item_id ) {

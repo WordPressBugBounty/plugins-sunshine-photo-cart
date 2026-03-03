@@ -28,7 +28,7 @@ function sunshine_watermark_image( $attachment_id, $metadata = array(), $passed_
 			}
 
 			if ( ! file_exists( $image ) ) {
-				SPC()->log( 'File does not exist during watermarking: ' . $image );
+				SPC()->log( 'File does not exist during watermarking: ' . $image . ' (looking for size: ' . $image_size . ')' );
 				return;
 			}
 

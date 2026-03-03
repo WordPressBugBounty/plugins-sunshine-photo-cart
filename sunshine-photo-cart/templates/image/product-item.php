@@ -9,7 +9,7 @@
 		<?php echo wp_kses_post( $product->get_price_formatted() ); ?>
 	</div>
 	<div class="sunshine--image--add-to-cart--product-list--action">
-		<button class="sunshine--product--show-details" data-product-id="<?php echo esc_attr( $product->get_id() ); ?>" data-image-id="<?php echo esc_attr( $image->get_id() ); ?>" data-gallery-id="<?php echo esc_attr( $image->get_gallery_id() ); ?>" data-product-type="<?php echo esc_attr( $product->get_type() ); ?>">
+		<button class="sunshine--product--show-details" data-product-id="<?php echo esc_attr( $product->get_id() ); ?>" data-image-id="<?php echo esc_attr( ! empty( $image ) ? $image->get_id() : '' ); ?>" data-gallery-id="<?php echo esc_attr( ! empty( $image ) ? $image->get_gallery_id() : '' ); ?>" data-product-type="<?php echo esc_attr( $product->get_type() ); ?>"<?php echo ! empty( $bulk_mode ) ? ' data-bulk-mode="true"' : ''; ?>>
 			<span>
 			<?php
 			esc_html_e( 'See options', 'sunshine-photo-cart' );

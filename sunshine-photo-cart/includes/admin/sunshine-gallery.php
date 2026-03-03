@@ -46,15 +46,16 @@ class Sunshine_Admin_Meta_Boxes_Gallery extends Sunshine_Admin_Meta_Boxes {
 				'icon'   => SUNSHINE_PHOTO_CART_PATH . 'assets/images/icons/settings.svg',
 				'fields' => array(
 					array(
-						'id'      => 'status',
-						'name'    => __( 'Gallery Type', 'sunshine-photo-cart' ),
-						'type'    => 'radio',
-						'default' => 'default',
-						'options' => array(
+						'id'            => 'status',
+						'name'          => __( 'Gallery Type', 'sunshine-photo-cart' ),
+						'type'          => 'radio',
+						'default'       => 'default',
+						'options'       => array(
 							'default'  => __( 'Default', 'sunshine-photo-cart' ),
 							'password' => __( 'Password Protected', 'sunshine-photo-cart' ),
 							'private'  => __( 'Private (only specified users)', 'sunshine-photo-cart' ),
 						),
+						'documentation' => 'https://www.sunshinephotocart.com/docs/gallery-types/',
 					),
 					array(
 						'id'         => 'password',
@@ -100,15 +101,16 @@ class Sunshine_Admin_Meta_Boxes_Gallery extends Sunshine_Admin_Meta_Boxes {
 						),
 					),
 					array(
-						'id'      => 'access_type',
-						'name'    => __( 'Access Type', 'sunshine-photo-cart' ),
-						'type'    => 'radio',
-						'options' => array(
+						'id'            => 'access_type',
+						'name'          => __( 'Access Type', 'sunshine-photo-cart' ),
+						'type'          => 'radio',
+						'options'       => array(
 							''        => __( 'Default', 'sunshine-photo-cart' ),
 							'account' => __( 'Registered and logged in', 'sunshine-photo-cart' ),
 							'email'   => __( 'Provide email address', 'sunshine-photo-cart' ),
 							'url'     => __( 'Direct URL', 'sunshine-photo-cart' ),
 						),
+						'documentation' => 'https://www.sunshinephotocart.com/docs/gallery-access-types/',
 						/*
 						'conditions' => array(
 							array(
@@ -122,16 +124,18 @@ class Sunshine_Admin_Meta_Boxes_Gallery extends Sunshine_Admin_Meta_Boxes {
 						*/
 					),
 					array(
-						'id'          => 'end_date',
-						'name'        => __( 'Expiration', 'sunshine-photo-cart' ),
-						'type'        => 'date_time',
-						'description' => __( 'When will this gallery expire and no longer be accessible', 'sunshine-photo-cart' ),
+						'id'            => 'end_date',
+						'name'          => __( 'Expiration', 'sunshine-photo-cart' ),
+						'type'          => 'date_time',
+						'description'   => __( 'When will this gallery expire and no longer be accessible', 'sunshine-photo-cart' ),
+						'documentation' => 'https://www.sunshinephotocart.com/docs/gallery-expiration/',
 					),
 					array(
-						'id'          => 'image_comments',
-						'name'        => __( 'Comments', 'sunshine-photo-cart' ),
-						'type'        => 'checkbox',
-						'description' => __( 'Allow comments on images in this gallery', 'sunshine-photo-cart' ),
+						'id'            => 'image_comments',
+						'name'          => __( 'Comments', 'sunshine-photo-cart' ),
+						'type'          => 'checkbox',
+						'description'   => __( 'Allow comments on images in this gallery', 'sunshine-photo-cart' ),
+						'documentation' => 'https://www.sunshinephotocart.com/docs/enable-comments-images-gallery/',
 					),
 					array(
 						'id'          => 'image_comments_approval',
@@ -154,16 +158,16 @@ class Sunshine_Admin_Meta_Boxes_Gallery extends Sunshine_Admin_Meta_Boxes {
 						'description' => __( 'Disable favorites for this gallery', 'sunshine-photo-cart' ),
 					),
 					array(
-						'id'          => 'disable_gallery_sharing',
+						'id'          => 'allow_gallery_sharing',
 						'name'        => __( 'Gallery Sharing', 'sunshine-photo-cart' ),
 						'type'        => 'checkbox',
-						'description' => __( 'Disable gallery sharing', 'sunshine-photo-cart' ),
+						'description' => __( 'Allow gallery sharing', 'sunshine-photo-cart' ),
 					),
 					array(
-						'id'          => 'disable_image_sharing',
+						'id'          => 'allow_image_sharing',
 						'name'        => __( 'Image Sharing', 'sunshine-photo-cart' ),
 						'type'        => 'checkbox',
-						'description' => __( 'Disable individual image sharing for this gallery', 'sunshine-photo-cart' ),
+						'description' => __( 'Allow individual image sharing for this gallery', 'sunshine-photo-cart' ),
 					),
 				),
 			),
@@ -347,10 +351,6 @@ function sunshine_meta_gallery_images_display() {
 			<p class="drag-drop-info">
 				<span class="no-drag-drop"><?php esc_html_e( 'Drop files here', 'sunshine-photo-cart' ); ?> or </span><input id="plupload-browse-button" type="button" value="<?php esc_attr_e( 'Select Files from Computer', 'sunshine-photo-cart' ); ?>" class="button" />
 				<br /><span class="recommend-size">
-					<?php
-					/* translators: %s is the minimum image dimensions in width x height format */
-					echo esc_html( sprintf( __( 'Images must be larger than %s', 'sunshine-photo-cart' ), sunshine_get_large_dimension( 'w' ) . ' &times; ' . sunshine_get_large_dimension( 'h' ) ) );
-					?>
 					<?php if ( SPC()->get_option( 'watermark_image' ) ) { ?>
 						<br />
 						<label class="sunshine-switch small">
@@ -410,6 +410,7 @@ function sunshine_meta_gallery_images_display() {
 		</ul>
 		<div id="sunshine-gallery-image-actions">
 			<div id="sunshine-gallery-select-all"><a class="button" data-action="all"><?php esc_html_e( 'Select all images', 'sunshine-photo-cart' ); ?></a></div>
+			<div id="sunshine-gallery-regenerate-images"><a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'edit.php?post_type=sunshine-gallery&page=sunshine-tools&tool=regenerate-images&sunshine_gallery=' . $post->ID ), 'sunshine_tool_regenerate-images' ) ); ?>"><?php esc_html_e( 'Regenerate all gallery images', 'sunshine-photo-cart' ); ?></a></div>
 			<div id="sunshine-gallery-delete-images" style="display: none;"><a class="button delete"><?php esc_html_e( 'Delete selected images', 'sunshine-photo-cart' ); ?></a><span class="spinner"></span></div>
 		<?php
 		if ( $total_images > 20 ) {
@@ -729,6 +730,12 @@ function sunshine_meta_gallery_images_display() {
 		var uploader = new plupload.Uploader(<?php echo json_encode( $plupload_init ); ?>);
 		uploader.init();
 
+		// Make uploader globally accessible for addon plugins
+		window.sunshineGalleryUploader = uploader;
+
+		// Track active uploads for debug logging
+		var activeUploads = 0;
+
 		// ON watermark setting change.
 		//uploader.settings.multipart_params.watermark = false;
 		$( 'input[name="watermark"]' ).change(function () {
@@ -767,7 +774,15 @@ function sunshine_meta_gallery_images_display() {
 			$( '#sunshine-gallery-image-errors' ).html( '' );
 			var hundredmb = 100 * 1024 * 1024, max = parseInt(up.settings.max_file_size, 10);
 			var images_to_upload = files.length;
+			var has_video = false;
 			plupload.each(files, function(file){
+				console.log( 'SUNSHINE: Processing file:', file.name, 'Type:', file.type );
+				var ext = file.name.split('.').pop().toLowerCase();
+				var videoExts = ['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm', 'mkv'];
+				if ( videoExts.indexOf( ext ) !== -1 ) {
+					console.log( 'SUNSHINE: Video file detected:', file.name );
+					has_video = true;
+				}
 				if ( max > hundredmb && file.size > hundredmb && up.runtime != 'html5' ){
 					alert( 'Your file was too large' );
 				} else {
@@ -778,13 +793,83 @@ function sunshine_meta_gallery_images_display() {
 				}
 			});
 
+			// Set video flag if any video files are in the queue
+			if ( has_video ) {
+				up.settings.multipart_params.sunshine_is_video = true;
+				console.log( 'SUNSHINE: Video files detected, set sunshine_is_video flag' );
+			} else {
+				if ( up.settings.multipart_params.sunshine_is_video ) {
+					delete up.settings.multipart_params.sunshine_is_video;
+				}
+			}
+			console.log( 'SUNSHINE: Upload params before start:', up.settings.multipart_params );
+
 			up.refresh();
-			up.start();
+			// Delay start() to allow video handler to process videos first
+			// Video handler will remove videos from queue, then we can start uploading remaining files
+			setTimeout(function() {
+				up.start();
+			}, 50);
 		});
 
 		// a file was uploaded
+		uploader.bind( 'FilesAdded', function(up, files) {
+			console.log( 'SUNSHINE: Files added to queue:', files.length );
+			files.forEach( function( file ) {
+				console.log( 'SUNSHINE: File added:', file.name, 'Type:', file.type );
+				var ext = file.name.split('.').pop().toLowerCase();
+				var videoExts = ['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm', 'mkv'];
+				if ( videoExts.indexOf( ext ) !== -1 ) {
+					console.log( 'SUNSHINE: Video file detected:', file.name );
+					// Add video flag to multipart params for this file
+					uploader.settings.multipart_params.sunshine_is_video = true;
+					console.log( 'SUNSHINE: Set sunshine_is_video flag in upload params' );
+				} else {
+					// Make sure flag is not set for non-videos
+					if ( uploader.settings.multipart_params.sunshine_is_video ) {
+						delete uploader.settings.multipart_params.sunshine_is_video;
+					}
+				}
+			});
+		});
+
+		uploader.bind( 'BeforeUpload', function(up, file) {
+			activeUploads++;
+			console.log( 'SUNSHINE: Before upload:', file.name, '(active:', activeUploads, ')' );
+			console.log( 'SUNSHINE: Upload params:', up.settings.multipart_params );
+			var ext = file.name.split('.').pop().toLowerCase();
+			var videoExts = ['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm', 'mkv'];
+			if ( videoExts.indexOf( ext ) !== -1 ) {
+				up.settings.multipart_params.sunshine_is_video = true;
+				console.log( 'SUNSHINE: Video file, setting sunshine_is_video flag' );
+			} else {
+				if ( up.settings.multipart_params.sunshine_is_video ) {
+					delete up.settings.multipart_params.sunshine_is_video;
+				}
+			}
+		});
+
+		uploader.bind( 'BeforeUpload', function(up, file) {
+			console.log( 'SUNSHINE: BeforeUpload event:', file.name );
+			var ext = file.name.split('.').pop().toLowerCase();
+			var videoExts = ['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm', 'mkv'];
+			if ( videoExts.indexOf( ext ) !== -1 ) {
+				up.settings.multipart_params.sunshine_is_video = true;
+				console.log( 'SUNSHINE: Video file, setting sunshine_is_video flag before upload' );
+			} else {
+				if ( up.settings.multipart_params.sunshine_is_video ) {
+					delete up.settings.multipart_params.sunshine_is_video;
+				}
+			}
+			console.log( 'SUNSHINE: Upload params:', up.settings.multipart_params );
+		});
+
 		uploader.bind( 'FileUploaded', function(up, file, response) {
+			activeUploads--;
+			console.log( 'SUNSHINE: FileUploaded event:', file.name, '(active:', activeUploads, ')' );
+			console.log( 'SUNSHINE: Response:', response.response );
 			var result = $.parseJSON( response.response );
+			console.log( 'SUNSHINE: Parsed result:', result );
 			if ( result.success === true ) {
 				current_image_count++;
 				$( '#sunshine-gallery-images-processing span.processed' ).html( current_image_count );
@@ -794,8 +879,10 @@ function sunshine_meta_gallery_images_display() {
 					$( 'input[name="selected_images"]' ).val( image_ids + ',' + result.data.image_id );
 					$( '#sunshine-gallery-image-list' ).append( result.data.image_html );
 					total_images++;
+					console.log( 'SUNSHINE: Image added to gallery, ID:', result.data.image_id );
 					jQuery( document ).trigger( 'refresh_images' );
 				} else {
+					console.log( 'SUNSHINE: No image_html in response, adding to files list' );
 					$( '#sunshine-gallery-images ul#files' ).append(
 						$('<li/>', {
 							'id': 'image-' + result.data.image_id,
@@ -804,6 +891,7 @@ function sunshine_meta_gallery_images_display() {
 					);
 				}
 			} else {
+				console.error( 'SUNSHINE: Upload failed:', result.data.error );
 				$( '#sunshine-gallery-image-errors' ).append( '<li>' + result.data.file + ' could not be uploaded: ' + result.data.error + '</li>' );
 			}
 		});
@@ -814,7 +902,29 @@ function sunshine_meta_gallery_images_display() {
 		});
 
 		uploader.bind('Error', function(up, err) {
-			if ( err.status == 504 ) {
+			activeUploads--;
+			console.error( 'SUNSHINE: Upload error:', err, '(active:', activeUploads, ')' );
+
+			var transientStatuses = [502, 503, 504];
+			var maxRetries = 3;
+
+			// Retry transient HTTP errors with exponential backoff
+			if ( err.file && err.code === plupload.HTTP_ERROR && transientStatuses.indexOf( err.status ) !== -1 ) {
+				err.file._retries = ( err.file._retries || 0 ) + 1;
+				if ( err.file._retries <= maxRetries ) {
+					var delay = 1000 * Math.pow( 2, err.file._retries - 1 ); // 1s, 2s, 4s
+					console.log( 'SUNSHINE: Retrying ' + err.file.name + ' (attempt ' + err.file._retries + '/' + maxRetries + ') in ' + delay + 'ms' );
+					$( '#sunshine-gallery-images-processing div.status span.current-file' ).html( 'Retrying ' + err.file.name + '...' );
+					setTimeout( function() {
+						err.file.status = plupload.QUEUED;
+						up.start();
+					}, delay );
+					return;
+				}
+			}
+
+			// Non-retryable or retries exhausted
+			if ( err.status == 504 || err.status == 503 || err.status == 502 ) {
 				$( '#sunshine-gallery-image-errors' ).append( '<li>' + err.file.name + ': ' + err.message + ' (Your server could not process the image, contact your web host)</li>' );
 			} else {
 				$( '#sunshine-gallery-image-errors' ).append( '<li>' + err.file.name + ': ' + err.message + ' (' + err.code + ', ' + err.status + ')</li>' );
@@ -1023,11 +1133,17 @@ function sunshine_gallery_admin_ajax_upload() {
 
 	check_ajax_referer( 'sunshine_gallery_upload', 'security' );
 
+	// Skip if this is a video (handled by video sales addon)
+	if ( isset( $_POST['sunshine_is_video'] ) && $_POST['sunshine_is_video'] ) {
+		SPC()->log( 'CORE: Skipping - video detected, handled by addon' );
+		return;
+	}
+
 	// Log the start of upload process
-	SPC()->log( 'Starting image upload process' );
+	SPC()->log( 'CORE: Starting image upload process' );
 
 	if ( ! isset( $_FILES['sunshine_gallery_image'] ) ) {
-		SPC()->log( 'Error: No file uploaded' );
+		SPC()->log( 'CORE: Error: No file uploaded' );
 		wp_send_json_error(
 			array(
 				'error' => __( 'No file was uploaded', 'sunshine-photo-cart' ),
@@ -1041,12 +1157,19 @@ function sunshine_gallery_admin_ajax_upload() {
 	// Log file details
 	SPC()->log(
 		sprintf(
-			'Uploading file: %s, Size: %s, Type: %s',
+			'CORE: Uploading file: %s, Size: %s, Type: %s',
 			$file['name'],
 			size_format( $file['size'] ),
 			$file['type']
 		)
 	);
+
+	// Check if it's a video file
+	$file_type        = wp_check_filetype( basename( $file['name'] ) );
+	$video_extensions = array( 'mp4', 'mov', 'avi', 'wmv', 'flv', 'webm', 'mkv' );
+	if ( in_array( strtolower( $file_type['ext'] ), $video_extensions ) ) {
+		SPC()->log( 'CORE: Video file detected but sunshine_is_video flag not set. File extension: ' . $file_type['ext'] );
+	}
 
 	$result         = array();
 	$result['file'] = sanitize_file_name( $file['name'] );
@@ -1096,63 +1219,6 @@ function sunshine_gallery_admin_ajax_upload() {
 			return;
 		}
 
-		// Check image dimensions against minimum size requirements
-		$large_size = SPC()->get_option( 'large_size' );
-		if ( isset( $large_size['w'] ) && isset( $large_size['h'] ) ) {
-			$image_info = getimagesize( $file_upload['file'] );
-			if ( $image_info === false ) {
-				SPC()->log( 'Error: Could not get image dimensions' );
-				wp_send_json_error(
-					array(
-						'error' => __( 'Could not read image dimensions', 'sunshine-photo-cart' ),
-						'file'  => $file['name'],
-					)
-				);
-				return;
-			}
-
-			$image_width  = $image_info[0];
-			$image_height = $image_info[1];
-			$min_width    = intval( $large_size['w'] );
-			$min_height   = intval( $large_size['h'] );
-
-			if ( $image_width < $min_width || $image_height < $min_height ) {
-				SPC()->log(
-					sprintf(
-						'Error: Image too small. Required: %dx%d, Actual: %dx%d',
-						$min_width,
-						$min_height,
-						$image_width,
-						$image_height
-					)
-				);
-				wp_send_json_error(
-					array(
-						'error' => sprintf(
-							/* translators: %1$d is minimum width, %2$d is minimum height, %3$d is actual image width, %4$d is actual image height */
-							__( 'Image is too small. Image must be larger than: %1$dx%2$d pixels. Your image: %3$dx%4$d pixels', 'sunshine-photo-cart' ),
-							$min_width,
-							$min_height,
-							$image_width,
-							$image_height
-						),
-						'file'  => $file['name'],
-					)
-				);
-				return;
-			}
-
-			SPC()->log(
-				sprintf(
-					'Image size validation passed. Required: %dx%d, Actual: %dx%d',
-					$min_width,
-					$min_height,
-					$image_width,
-					$image_height
-				)
-			);
-		}
-
 		SPC()->log( 'File upload successful' );
 
 		$post_parent_id = intval( $_POST['gallery_id'] );
@@ -1181,13 +1247,12 @@ function sunshine_gallery_admin_ajax_upload() {
 
 function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json', $watermark = true ) {
 
-	SPC()->log( 'Inserting a gallery image' );
-
 	$file_type = wp_check_filetype( $file_path );
 	$file_name = basename( $file_path );
+	$original_file_name = $file_name; // Store original for title processing
 
 	// Generate a single random string to append to the file name and all sizes
-	if ( ! SPC()->get_option( 'disable_secure_file_names' ) ) {
+	if ( SPC()->get_option( 'use_secure_file_names' ) ) {
 		$random_string = wp_generate_password( 24, false );
 		$info          = pathinfo( $file_name );
 		$new_file_name = $info['filename'] . '-' . $random_string . '.' . $info['extension'];
@@ -1198,14 +1263,18 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 		if ( $rename_result ) {
 			SPC()->log( 'Main file renamed with secure file name' );
 			$file_path = $new_file_path;
+			$file_name = basename( $new_file_path ); // Update file_name after rename
 		}
 	}
 
+	// Use the original filename (without extension) for the post_title
+	$post_title = preg_replace( '/\.[^.]+$/', '', $original_file_name );
+	
 	// Adds file as attachment to WordPress
 	$attachment_id = wp_insert_attachment(
 		array(
 			'post_mime_type' => $file_type['type'],
-			'post_title'     => preg_replace( '/\.[^.]+$/', '', $file_name ),
+			'post_title'     => $post_title,
 			'post_content'   => '',
 			'post_status'    => 'inherit',
 			'comment_status' => 'inherit',
@@ -1221,10 +1290,50 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 		// Use meta value to store all image IDs for gallery
 		$gallery = sunshine_get_gallery( $gallery_id );
 
-		$attachment_image_meta = wp_generate_attachment_metadata( $attachment_id, $file_path );
+		$delay_processing = SPC()->get_option( 'delay_image_processing' );
+
+		// If delay processing is enabled, skip full metadata generation and create minimal metadata only
+		if ( $delay_processing ) {
+			// Set global flag to prevent image size generation
+			$GLOBALS['sunshine_delaying_image_processing'] = true;
+
+			// Add filters to prevent intermediate image sizes from being generated
+			add_filter( 'intermediate_image_sizes_advanced', '__return_empty_array', 999 );
+			add_filter( 'fallback_intermediate_image_sizes', '__return_empty_array', 999 );
+			add_filter( 'image_make_intermediate_size', '__return_false', 999 );
+
+			// Prevent WP Offload Media from uploading during initial upload
+			if ( function_exists( 'as3cf_get_attachment_url' ) ) {
+				add_filter( 'as3cf_pre_update_attachment_metadata', 'sunshine_delay_s3_offload', 10, 4 );
+			}
+
+			// Generate minimal metadata (dimensions, file info) without intermediate sizes
+			// This avoids the overhead of wp_generate_attachment_metadata() which still processes images even when sizes are prevented
+			$attachment_image_meta = array();
+			$image_size            = @getimagesize( $file_path );
+
+			if ( $image_size ) {
+				$attachment_image_meta['width']  = $image_size[0];
+				$attachment_image_meta['height'] = $image_size[1];
+				$upload_dir                      = wp_upload_dir();
+				$attachment_image_meta['file']   = str_replace( $upload_dir['basedir'] . '/', '', $file_path );
+			}
+
+			$attachment_image_meta['image_meta'] = wp_read_image_metadata( $file_path );
+			if ( ! is_array( $attachment_image_meta['image_meta'] ) ) {
+				$attachment_image_meta['image_meta'] = array();
+			}
+			$attachment_image_meta['sizes'] = array(); // No sizes yet
+		} else {
+			// Normal processing - generate full metadata including intermediate sizes
+			$attachment_image_meta = wp_generate_attachment_metadata( $attachment_id, $file_path );
+
+			// Ensure intermediate sizes exist even when the image is smaller than the target size.
+			$attachment_image_meta = sunshine_ensure_intermediate_sizes( $attachment_id, $attachment_image_meta, $file_path );
+		}
 
 		// Don't do this when offloading is enabled.
-		if ( ! function_exists( 'as3cf_get_attachment_url' ) && ! SPC()->get_option( 'disable_secure_file_names' ) ) {
+		if ( ! function_exists( 'as3cf_get_attachment_url' ) && SPC()->get_option( 'use_secure_file_names' ) && ! $delay_processing ) {
 
 			SPC()->log( 'Appending image sizes with random strings' );
 
@@ -1255,11 +1364,13 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 
 		$image_meta  = $attachment_image_meta['image_meta'];
 		$update_args = array();
-		if ( '' != trim( $image_meta['title'] ) ) {
-			$update_args['post_title'] = trim( $image_meta['title'] );
+		$image_title = isset( $image_meta['title'] ) ? trim( (string) $image_meta['title'] ) : '';
+		if ( '' !== $image_title ) {
+			$update_args['post_title'] = $image_title;
 		}
-		if ( '' != trim( $image_meta['caption'] ) ) {
-			$update_args['post_content'] = trim( $image_meta['caption'] );
+		$image_caption = isset( $image_meta['caption'] ) ? trim( (string) $image_meta['caption'] ) : '';
+		if ( '' !== $image_caption ) {
+			$update_args['post_excerpt'] = $image_caption;
 		}
 		if ( ! empty( $update_args ) ) {
 			$update_args['ID'] = $attachment_id;
@@ -1273,13 +1384,50 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 		}
 
 		add_post_meta( $attachment_id, 'created_timestamp', $created_timestamp );
-		add_post_meta( $attachment_id, 'sunshine_file_name', $file_name );
+		add_post_meta( $attachment_id, 'sunshine_file_name', $original_file_name );
 		$apply_watermark = ( ! empty( $watermark ) ) ? SPC()->get_option( 'watermark_image' ) : 0;
 		add_post_meta( $attachment_id, 'sunshine_watermark', $apply_watermark );
 
 		$attachment_meta_data = wp_update_attachment_metadata( $attachment_id, $attachment_image_meta );
 
-		do_action( 'sunshine_after_image_process', $attachment_id, $file_path, $apply_watermark );
+		// If delay processing is enabled, queue for background processing
+		if ( $delay_processing ) {
+			// Get the background processing instance
+			if ( isset( $GLOBALS['sunshine_background_processing'] ) ) {
+				$background_processing = $GLOBALS['sunshine_background_processing'];
+			} else {
+				$background_processing                     = new SPC_Background_Processing();
+				$GLOBALS['sunshine_background_processing'] = $background_processing;
+				// Manually trigger init to ensure it's initialized (needed for AJAX requests)
+				$background_processing->init();
+			}
+
+			$process_images = $background_processing->get_process_images();
+			if ( $process_images ) {
+				$process_images->push_to_queue(
+					array(
+						'attachment_id' => $attachment_id,
+						'file_path'     => $file_path,
+						'watermark'     => $apply_watermark,
+					)
+				);
+				$process_images->save();
+				$process_images->dispatch();
+				SPC()->log( 'Delay Processing: Queued attachment ' . $attachment_id . ' for background processing' );
+			}
+
+			// Remove filters and global flag AFTER dispatch completes (dispatch may trigger image processing)
+			remove_filter( 'intermediate_image_sizes_advanced', '__return_empty_array', 999 );
+			remove_filter( 'fallback_intermediate_image_sizes', '__return_empty_array', 999 );
+			remove_filter( 'image_make_intermediate_size', '__return_false', 999 );
+			if ( function_exists( 'as3cf_get_attachment_url' ) ) {
+				remove_filter( 'as3cf_pre_update_attachment_metadata', 'sunshine_delay_s3_offload', 10 );
+			}
+			unset( $GLOBALS['sunshine_delaying_image_processing'] );
+		} else {
+			// Process immediately as before
+			do_action( 'sunshine_after_image_process', $attachment_id, $file_path, $apply_watermark );
+		}
 
 		$image_ids = $gallery->add_image_id( $attachment_id );
 
@@ -1647,63 +1795,6 @@ function sunshine_ajax_gallery_import() {
 	@ chmod( $new_file_path, $perms );
 	$url = $upload_dir['url'] . '/' . $new_file_name;
 
-	// Check image dimensions against minimum size requirements
-	$large_size = SPC()->get_option( 'large_size' );
-	if ( isset( $large_size['w'] ) && isset( $large_size['h'] ) ) {
-		$image_info = getimagesize( $new_file_path );
-		if ( $image_info === false ) {
-			SPC()->log( 'Error: Could not get image dimensions for import' );
-			wp_send_json_error(
-				array(
-					'error' => __( 'Could not read image dimensions', 'sunshine-photo-cart' ),
-					'file'  => $file_name,
-				)
-			);
-			return;
-		}
-
-		$image_width  = $image_info[0];
-		$image_height = $image_info[1];
-		$min_width    = intval( $large_size['w'] );
-		$min_height   = intval( $large_size['h'] );
-
-		if ( $image_width < $min_width || $image_height < $min_height ) {
-			SPC()->log(
-				sprintf(
-					'Error: Imported image too small. Required: %dx%d, Actual: %dx%d',
-					$min_width,
-					$min_height,
-					$image_width,
-					$image_height
-				)
-			);
-			wp_send_json_error(
-				array(
-					'error' => sprintf(
-						/* translators: %1$d is minimum width, %2$d is minimum height, %3$d is actual image width, %4$d is actual image height */
-						__( 'Image is too small. Image must be larger than: %1$dx%2$d pixels. Your image: %3$dx%4$d pixels', 'sunshine-photo-cart' ),
-						$min_width,
-						$min_height,
-						$image_width,
-						$image_height
-					),
-					'file'  => $file_name,
-				)
-			);
-			return;
-		}
-
-		SPC()->log(
-			sprintf(
-				'Image size validation passed for import. Required: %dx%d, Actual: %dx%d',
-				$min_width,
-				$min_height,
-				$image_width,
-				$image_height
-			)
-		);
-	}
-
 	$data = sunshine_insert_gallery_image( $new_file_path, $gallery_id, 'data', $watermark );
 
 	if ( ! empty( $data ) && SPC()->get_option( 'delete_images_folder' ) && $file_path === end( $images ) ) {
@@ -1829,6 +1920,17 @@ function sunshine_gallery_post_states( $post_states, $post ) {
 
 	return $post_states;
 
+}
+
+/**
+ * Delay S3 offloading when delay_image_processing is enabled
+ * This prevents the file from being uploaded to S3 until after intermediate sizes are generated
+ */
+function sunshine_delay_s3_offload( $cancel, $data, $post_id, $as3cf_item ) {
+	if ( isset( $GLOBALS['sunshine_delaying_image_processing'] ) && $GLOBALS['sunshine_delaying_image_processing'] ) {
+		return true; // Cancel the upload
+	}
+	return $cancel;
 }
 
 // add_filter( 'as3cf_pre_upload_attachment', 'sunshine_s3_offload_pre_upload_attachment', 10, 3 );

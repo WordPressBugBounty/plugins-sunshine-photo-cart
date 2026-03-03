@@ -9,6 +9,7 @@ class SPC_Frontend {
 	private $page_title;
 	public $search_results = array();
 	public $search_term;
+	public $gallery_search_results = array();
 
 	function __construct() {
 
@@ -28,6 +29,7 @@ class SPC_Frontend {
 		add_action( 'wp_head', array( $this, 'head' ), 2 );
 		add_action( 'wp_head', array( $this, 'custom_css' ), 999 );
 		add_action( 'wp_footer', array( $this, 'protection' ) );
+		add_action( 'wp_footer', array( $this, 'selection_tray_widget' ), 10 );
 		add_action( 'wp_footer', array( $this, 'version_output' ), 9999 );
 		// add_action( 'template_redirect', array( $this, 'can_view_gallery' ) );
 		add_action( 'template_redirect', array( $this, 'can_view_image' ) );
@@ -212,6 +214,25 @@ class SPC_Frontend {
 			}
 			$args                 = apply_filters( 'sunshine_search_args', $args );
 			$this->search_results = sunshine_get_images( $args );
+
+			// Search for matching sub-galleries when searching within a gallery.
+			if ( $this->is_gallery() ) {
+				// Get all descendant gallery IDs to search within.
+				$descendant_ids = array( $this->current_gallery->get_id() );
+				$descendants    = sunshine_get_gallery_descendants( $this->current_gallery->get_id() );
+				if ( ! empty( $descendants ) ) {
+					foreach ( $descendants as $descendant ) {
+						$descendant_ids[] = $descendant->ID;
+					}
+				}
+				$gallery_args                 = array(
+					's'               => $this->search_term,
+					'post_parent__in' => $descendant_ids,
+				);
+				$gallery_args                 = apply_filters( 'sunshine_search_gallery_args', $gallery_args );
+				$this->gallery_search_results = sunshine_get_galleries( $gallery_args, 'access' );
+			}
+
 			do_action( 'sunshine_search', $this->search_term, $this->search_results );
 		}
 
@@ -384,18 +405,44 @@ class SPC_Frontend {
 			}
 
 			wp_enqueue_script( 'sunshine-photo-cart', SUNSHINE_PHOTO_CART_URL . 'assets/js/sunshine.js', array( 'jquery' ), SUNSHINE_PHOTO_CART_VERSION, true );
+			// Build favorites data for the tray widget.
+			$favorites_data = array();
+			foreach ( SPC()->customer->get_favorite_ids() as $fav_id ) {
+				$src = wp_get_attachment_image_url( $fav_id, 'sunshine-thumbnail' );
+				if ( $src ) {
+					$favorites_data[] = array(
+						'id'  => $fav_id,
+						'src' => $src,
+					);
+				}
+			}
+
 			wp_localize_script(
 				'sunshine-photo-cart',
 				'sunshine_photo_cart',
 				array(
-					'ajax_url'     => admin_url( 'admin-ajax.php' ),
-					'security'     => wp_create_nonce( 'sunshinephotocart' ),
-					'cart_url'     => sunshine_get_page_permalink( 'cart' ),
-					'checkout_url' => sunshine_get_page_permalink( 'checkout' ),
-					'lang'         => array(
-						'error'      => __( 'Sorry, there was an error with your request', 'sunshine-photo-cart' ),
-						'max_images' => __( 'You have already selected the maximum number of photos allowed', 'sunshine-photo-cart' ),
-						'view_cart'  => __( 'View Cart', 'sunshine-photo-cart' ),
+					'ajax_url'             => admin_url( 'admin-ajax.php' ),
+					'security'             => wp_create_nonce( 'sunshinephotocart' ),
+					'cart_url'             => sunshine_get_page_permalink( 'cart' ),
+					'checkout_url'         => sunshine_get_page_permalink( 'checkout' ),
+					'favorites_url'        => sunshine_get_page_permalink( 'favorites' ),
+					'favorites'            => $favorites_data,
+					'is_logged_in'         => is_user_logged_in() ? 1 : 0,
+					'guest_favorites_mode' => ( ! is_user_logged_in() && SPC()->session->get( 'guest_favorites_mode' ) ) ? 1 : 0,
+					'lang'                 => array(
+						'error'                   => __( 'Sorry, there was an error with your request', 'sunshine-photo-cart' ),
+						'max_images'              => __( 'You have already selected the maximum number of photos allowed', 'sunshine-photo-cart' ),
+						'view_cart'               => __( 'View Cart', 'sunshine-photo-cart' ),
+						'preparing_download'      => __( 'Preparing download...', 'sunshine-photo-cart' ),
+						'download_started'        => __( 'Download started', 'sunshine-photo-cart' ),
+						'downloading'             => __( 'Downloading...', 'sunshine-photo-cart' ),
+						'download_complete'       => __( 'Download complete!', 'sunshine-photo-cart' ),
+						'guest_favorites_message' => __( 'Create an account to save your favorites permanently', 'sunshine-photo-cart' ),
+						'guest_favorites_notice'  => __( 'Your selections will only be saved for this browser session. To save them permanently, <a href="#" id="sunshine--guest-to-signup">create an account</a>.', 'sunshine-photo-cart' ),
+						'continue_as_guest'       => __( 'Continue as guest', 'sunshine-photo-cart' ),
+						'already_have_account'    => __( 'I already have an account', 'sunshine-photo-cart' ),
+						'back_to_signup'          => __( 'Back to sign up', 'sunshine-photo-cart' ),
+						'continue'                => __( 'I understand, continue', 'sunshine-photo-cart' ),
 					),
 				)
 			);
@@ -470,23 +517,6 @@ class SPC_Frontend {
 				'class' => 'sunshine--account' . $selected,
 			);
 
-			if ( SPC()->get_option( 'page_favorites' ) && ! SPC()->get_option( 'disable_favorites' ) ) {
-
-				$favorites = SPC()->customer->get_favorite_count();
-				$count     = '';
-				$count     = '<span class="sunshine--count sunshine--favorites--count">' . $favorites . '</span>';
-
-				$selected = '';
-				if ( is_sunshine_page( 'favorites' ) ) {
-					$selected = ' sunshine--selected';
-				}
-				$menu[25] = array(
-					'name'    => get_the_title( SPC()->get_option( 'page_favorites' ) ),
-					'after_a' => $count,
-					'url'     => sunshine_get_page_permalink( 'favorites' ),
-					'class'   => 'sunshine--favorites' . $selected,
-				);
-			}
 		} else {
 			$menu[100] = array(
 				'name'    => __( 'Login', 'sunshine-photo-cart' ),
@@ -510,6 +540,22 @@ class SPC_Frontend {
 					),
 				);
 			}
+		}
+
+		if ( SPC()->get_option( 'page_favorites' ) && SPC()->get_option( 'enable_favorites', true ) ) {
+			$favorites_count = SPC()->customer->get_favorite_count();
+			$count           = $favorites_count > 0 ? '<span class="sunshine--count sunshine--favorites--count">' . $favorites_count . '</span>' : '';
+
+			$selected = '';
+			if ( is_sunshine_page( 'favorites' ) ) {
+				$selected = ' sunshine--selected';
+			}
+			$menu[25] = array(
+				'name'    => get_the_title( SPC()->get_option( 'page_favorites' ) ),
+				'after_a' => $count,
+				'url'     => sunshine_get_page_permalink( 'favorites' ),
+				'class'   => 'sunshine--favorites' . $selected,
+			);
 		}
 
 		if ( empty( SPC()->get_option( 'hide_galleries_link' ) ) || SPC()->get_option( 'hide_galleries_link' ) != 1 ) {
@@ -575,38 +621,22 @@ class SPC_Frontend {
 			);
 		}
 
-		if ( ! SPC()->get_option( 'disable_favorites' ) && $image->allow_favorites() ) {
-
-			if ( is_user_logged_in() ) {
-				$menu[10] = array(
-					'name'    => __( 'Favorite', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
-					'class'   => 'sunshine--favorite',
-					// 'url'     => '#favorite',
-					'a_class' => 'sunshine--add-to-favorites',
-					'attr'    => array(
-						'data-image-id' => $image->get_id(),
-					),
-				);
-			} else {
-				$menu[10] = array(
-					'name'    => __( 'Favorite', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
-					// 'url'     => '#favorite',
-					'class'   => 'sunshine--favorite',
-					'a_class' => 'sunshine--open-modal',
-					'attr'    => array(
-						'data-image-id' => $image->get_id(),
-						'data-hook'     => 'require_login',
-						'data-after'    => 'sunshine_add_favorite',
-					),
-				);
-			}
+		if ( SPC()->get_option( 'enable_favorites', true ) && $image->allow_favorites() ) {
+			// Always use sunshine--add-to-favorites; JS handles guest flow.
+			$menu[10] = array(
+				'name'    => __( 'Favorite', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
+				'class'   => 'sunshine--favorite',
+				'a_class' => 'sunshine--add-to-favorites',
+				'attr'    => array(
+					'data-image-id' => $image->get_id(),
+				),
+			);
 		}
 
 		if ( $image->can_purchase() && ! SPC()->get_option( 'proofing', false ) ) {
 			if ( SPC()->get_option( 'products_require_account' ) && ! is_user_logged_in() ) {
 				$menu[20] = array(
 					'name'    => __( 'Purchase options', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
-					// 'url'     => '#purchase',
 					'class'   => 'sunshine--purchase',
 					'a_class' => 'sunshine--open-modal',
 					'attr'    => array(
@@ -619,7 +649,6 @@ class SPC_Frontend {
 			} else {
 				$menu[20] = array(
 					'name'    => __( 'Purchase options', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
-					// 'url'     => '#purchase',
 					'class'   => 'sunshine--purchase',
 					'a_class' => 'sunshine--open-modal',
 					'attr'    => array(
@@ -651,7 +680,7 @@ class SPC_Frontend {
 			);
 		}
 
-		if ( ! SPC()->get_option( 'disable_image_sharing' ) && $image->allow_image_sharing() ) {
+		if ( SPC()->get_option( 'allow_image_sharing' ) && $image->allow_image_sharing() ) {
 			$menu[50] = array(
 				'name'    => __( 'Share', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
 				// 'url'     => $image->get_permalink() . '#share',
@@ -665,8 +694,8 @@ class SPC_Frontend {
 			);
 		}
 
-		// Kill image menu when viewing favorites with an access key
-		if ( ! $image->can_access() && ! empty( SPC()->session->get( 'favorite_key' ) ) ) {
+		// Kill image menu when viewing shared favorites with an access key (not the user's own favorites page)
+		if ( ! $image->can_access() && ! empty( SPC()->session->get( 'favorite_key' ) ) && isset( $_GET['favorites_key'] ) ) {
 			$menu = array();
 		}
 
@@ -716,23 +745,37 @@ class SPC_Frontend {
 			);
 		}
 
-		if ( is_sunshine_page( 'favorites' ) && is_user_logged_in() ) {
+		if ( is_sunshine_page( 'favorites' ) ) {
 
 			if ( SPC()->customer->has_favorites() ) {
 
-				$menu[10] = array(
-					'name'    => __( 'Share your favorites', 'sunshine-photo-cart' ),
-					'class'   => 'sunshine--favorites-share',
-					'a_class' => 'sunshine--open-modal',
-					'attr'    => array(
-						'data-hook' => 'share_favorites',
-					),
-				);
+				if ( ! SPC()->get_option( 'proofing', false ) ) {
+					$menu[9] = array(
+						'name'    => __( 'Add all to cart', 'sunshine-photo-cart' ),
+						'class'   => 'sunshine--favorites-all',
+						'a_class' => 'sunshine--open-modal',
+						'attr'    => array(
+							'data-hook'     => 'add_favorites_to_cart',
+							'aria-haspopup' => 'dialog',
+						),
+					);
+				}
+
+				if ( is_user_logged_in() && SPC()->get_option( 'allow_image_sharing' ) ) {
+					$menu[10] = array(
+						'name'    => __( 'Share your favorites', 'sunshine-photo-cart' ),
+						'class'   => 'sunshine--favorites-share',
+						'a_class' => 'sunshine--open-modal',
+						'attr'    => array(
+							'data-hook' => 'share_favorites',
+						),
+					);
+				}
 
 				$url      = sunshine_get_page_url( 'favorites' );
 				$url      = wp_nonce_url( $url, 'sunshine_clear_favorites', 'clear_favorites' );
 				$menu[11] = array(
-					'name'  => __( 'Clear All Favorites', 'sunshine-photo-cart' ),
+					'name'  => __( 'Clear all favorites', 'sunshine-photo-cart' ),
 					'url'   => $url,
 					'class' => 'sunshine--favorites-clear',
 				);
@@ -864,6 +907,28 @@ class SPC_Frontend {
 			<?php
 		}
 
+	}
+
+	public function selection_tray_widget() {
+		if ( is_sunshine() && ! is_sunshine_page( 'favorites' ) && SPC()->get_option( 'enable_selection_tray' ) ) {
+			$position = SPC()->get_option( 'selection_tray_position', 'bottom_right' );
+			if ( $position === 'before_content' ) {
+				$position = 'bottom_right';
+			}
+			$favorites_url = sunshine_get_page_permalink( 'favorites' );
+			?>
+			<div id="sunshine--selection-tray-widget" class="sunshine--selection-tray-<?php echo esc_attr( $position ); ?>">
+				<button id="sunshine--selection-tray-widget--minimize" title="<?php esc_attr_e( 'Minimize', 'sunshine-photo-cart' ); ?>"></button>
+				<div id="sunshine--selection-tray-widget--header">
+					<a href="<?php echo esc_url( $favorites_url ); ?>" id="sunshine--selection-tray-widget--title"><?php esc_html_e( 'Favorites', 'sunshine-photo-cart' ); ?> (<span id="sunshine--selection-tray-widget--count">0</span>)</a>
+				</div>
+				<div id="sunshine--selection-tray-widget--images"></div>
+			</div>
+			<button id="sunshine--selection-tray-minimized" title="<?php esc_attr_e( 'Show favorites', 'sunshine-photo-cart' ); ?>">
+				<span id="sunshine--selection-tray-minimized--count">0</span>
+			</button>
+			<?php
+		}
 	}
 
 	public function version_output() {

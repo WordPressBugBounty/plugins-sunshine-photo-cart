@@ -16,10 +16,10 @@ function sunshine_emails_display() {
 			foreach ( $emails as $id => $email ) {
 				$email_class = SPC()->emails->get_email_by_id( $id );
 				?>
-				<tr id="sunshine-email-<?php echo esc_attr( $id ); ?>" data-id="<?php echo esc_attr( $id ); ?>">
+				<tr id="sunshine-email-<?php echo esc_attr( $id ); ?>">
 					<td>
 						<label class="sunshine-switch">
-						  <input type="checkbox" name="sunshine_email_active[<?php echo esc_attr( $id ); ?>]" <?php checked( $email_class->is_active(), true ); ?> />
+						  <input type="checkbox" name="sunshine_email_<?php echo esc_attr( $id ); ?>_active" value="1" <?php checked( $email_class->is_active(), true ); ?> data-id="<?php echo esc_attr( $id ); ?>" />
 						  <span class="sunshine-switch-slider"></span>
 						</label>
 					</td>
@@ -45,14 +45,16 @@ function sunshine_emails_display() {
 	<script>
 	jQuery( document ).ready(function($){
 
-		$( document ).on( 'change', '.sunshine-switch', function( e ){
-			var toggled_id = $( this ).closest( 'tr' ).data( 'id' );
+		$( document ).on( 'change', '.sunshine-switch input', function( e ){
+			var toggled_id = $( this ).data( 'id' );
+			var value = $( this ).prop( 'checked' );
 			$.ajax({
 				type: 'POST',
 				url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 				data: {
 					action: 'sunshine_active_emails',
 					id: toggled_id,
+					value: $( this ).prop( 'checked' ),
 					security: "<?php echo esc_js( wp_create_nonce( 'sunshine-active-emails' ) ); ?>"
 				},
 				success: function( data, textStatus, XMLHttpRequest ) {
@@ -77,12 +79,14 @@ function sunshine_active_emails_toggle() {
 		return false;
 	}
 
-	$id             = sanitize_text_field( $_REQUEST['id'] );
-	$current_status = SPC()->get_option( 'email_' . $id . '_active' );
-	if ( empty( $current_status ) ) {
-		$current_status = false;
-	}
-	SPC()->update_option( 'email_' . $id . '_active', ! $current_status );
+	sunshine_log( 'sunshine_active_emails_toggle: ' . print_r( $_REQUEST, true ) );
+
+	$id    = sanitize_text_field( $_REQUEST['id'] );
+	$value = isset( $_REQUEST['value'] ) ? sanitize_text_field( $_REQUEST['value'] ) : '';
+	// Convert string "false", "0", or empty to boolean false, otherwise boolean true.
+	$active = ( 'false' === $value || '0' === $value || '' === $value ) ? false : true;
+	sunshine_log( 'sunshine_active_emails_toggle: ' . $id . ' - ' . $value . ' -> ' . ( $active ? 'true' : 'false' ) );
+	SPC()->update_option( 'email_' . $id . '_active', $active );
 	exit;
 
 }
