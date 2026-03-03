@@ -6,7 +6,7 @@ Tags: client photo gallery, photo proofing, client proofing, sell photos, client
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 7.0
-Stable tag: 3.6
+Stable tag: 3.6.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -243,6 +243,11 @@ Security is important to us. Please report security bugs through the [Patchstack
 
 == Changelog ==
 
+= 3.6.1 =
+* Fix: Image search query causing database lockups on sites with large posts/postmeta tables due to unconstrained joins
+* Fix: Stripe inline checkout orders not updating to paid status when using webhooks
+* Fix: Stripe hosted checkout not including gateway fees in line items
+
 = 3.6 2026-03-02 =
 * Add: Caption option added to Thumbnail Content setting (from EXIF metadata)
 * Add: Option to show image caption under single image view
@@ -276,7 +281,6 @@ Security is important to us. Please report security bugs through the [Patchstack
 * Add: Log files are now downloaded through authenticated admin routes instead of direct file access
 * Security: Block direct web access to log files via .htaccess
 * Fix: Automatically prevent Yoast SEO and Rank Math from redirecting Sunshine gallery image pages when media pages are disabled
-
 = 3.5.7.3 =
 * Security: Add permission check on image data ajax request
 
