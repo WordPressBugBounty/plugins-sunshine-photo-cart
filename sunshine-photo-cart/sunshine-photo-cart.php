@@ -5,7 +5,7 @@
  * Description: Client Gallery Photo Cart & Photo Proofing Plugin for Professional Photographers using WordPress
  * Author: WP Sunshine
  * Author URI: https://www.wpsunshine.com
- * Version: 3.6.4
+ * Version: 3.6.5
  * Text Domain: sunshine-photo-cart
  * Domain Path: /languages
  * License: GPLv2 or later
@@ -20,8 +20,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'SUNSHINE_PHOTO_CART_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SUNSHINE_PHOTO_CART_URL', plugin_dir_url( __FILE__ ) );
 define( 'SUNSHINE_PHOTO_CART_FILE', __FILE__ );
-define( 'SUNSHINE_PHOTO_CART_VERSION', '3.6.4' );
-define( 'SUNSHINE_PHOTO_CART_STORE_URL', 'https://www.sunshinephotocart.com' );
+define( 'SUNSHINE_PHOTO_CART_VERSION', '3.6.5' );
+define( 'SUNSHINE_PHOTO_CART_STORE_URL', 'https://license.sunshinephotocart.com' );
 
 if ( ! class_exists( 'Sunshine_Photo_Cart', false ) ) {
 	include_once SUNSHINE_PHOTO_CART_PATH . '/includes/class-sunshinephotocart.php';

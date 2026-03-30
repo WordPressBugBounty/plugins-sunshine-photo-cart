@@ -6,7 +6,7 @@ Tags: client photo gallery, photo proofing, client proofing, sell photos, client
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 7.0
-Stable tag: 3.6.4
+Stable tag: 3.6.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -243,7 +243,13 @@ Security is important to us. Please report security bugs through the [Patchstack
 
 == Changelog ==
 
-= 3.6.4 =
+= 3.6.5 =
+* Fix: Regenerated images not re-uploaded to cloud storage after watermark changes
+* Fix: Product categories created via the block editor not appearing on the taxonomy management screen
+* Fix: Single product mode not triggering multi-image product image selection UI
+* Fix: Redundant product database queries causing lock contention on high-traffic sites
+
+= 3.6.4 - March 19, 2026 =
 * New: Privacy setting to automatically delete galleries a specified number of days after they expire
 * Fix: Google address autocomplete not working for address fields at checkout
 * Fix: Tax calculated on pre-discount subtotal when discounts are applied before tax
