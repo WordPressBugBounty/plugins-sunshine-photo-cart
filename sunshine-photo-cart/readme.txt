@@ -6,7 +6,7 @@ Tags: client photo gallery, photo proofing, client proofing, sell photos, client
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 7.0
-Stable tag: 3.6.6
+Stable tag: 3.6.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -242,6 +242,13 @@ Security is important to us. Please report security bugs through the [Patchstack
 11. Admin gallery management - Easy-to-use admin interface to create galleries, upload images, and manage your client photo galleries and photo proofing workflow.
 
 == Changelog ==
+
+= 3.6.7 - April 27, 2026 =
+* New: Filter `sunshine_store_product_item_link` to allow add-ons to replace the store product modal with a direct link
+* New: Actions `sunshine_gallery_password_before`, `sunshine_gallery_password_after`, `sunshine_gallery_email_before`, and `sunshine_gallery_email_after` to add custom content around gallery password and email fields
+* Fix: Galleries requiring email entry now correctly block access until an email is provided
+* Fix: Classic/Cover theme menu CSS fixes
+* Fix: Flat rate shipping calculations to consider if line items need shipping when doing advanced shipping calculations
 
 = 3.6.6 - April 20, 2026 =
 * Fix: Admin email for customer signup missing template tags
