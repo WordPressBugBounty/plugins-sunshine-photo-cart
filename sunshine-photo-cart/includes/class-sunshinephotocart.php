@@ -108,6 +108,7 @@ final class Sunshine_Photo_Cart {
 		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/shipping-methods/local.php';
 		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/shipping-methods/flat-rate.php';
 		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/shipping-methods/free.php';
+		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/shipping-methods/pickup.php';
 
 		// Payment Methods
 		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/class-payment-methods.php';
@@ -171,6 +172,18 @@ final class Sunshine_Photo_Cart {
 		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/class-privacy.php';
 		new SPC_Privacy();
 
+		// Tool registry: loaded in every context so the REST API (and CLI) can
+		// discover and drive the same tool classes the admin UI uses. The tool
+		// constructors only register wp_ajax_* hooks, which are inert outside
+		// admin-ajax, so this is safe.
+		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/tools.php';
+		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/class-tool.php';
+		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/tools/regenerate.php';
+		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/tools/sessions.php';
+		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/tools/orphans.php';
+		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/tools/unused-image-sizes.php';
+		include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/tools/reinstall.php';
+
 		// Various admin functions
 		if ( is_admin() ) {
 
@@ -198,14 +211,7 @@ final class Sunshine_Photo_Cart {
 			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/options/taxes.php';
 			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/options/emails.php';
 
-			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/tools.php';
-			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/class-tool.php';
-			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/tools/regenerate.php';
-			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/tools/sessions.php';
-			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/tools/orphans.php';
-			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/tools/unused-image-sizes.php';
-			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/tools/reinstall.php';
-			// include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/tools/duplicate-images.php';
+			// Tool registry is loaded above for all contexts; nothing to do here.
 
 			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/customers.php';
 			include_once SUNSHINE_PHOTO_CART_PATH . 'includes/admin/class-customers-table.php';
@@ -637,11 +643,12 @@ final class Sunshine_Photo_Cart {
 	}
 
 	public function get_option( $key, $default = false ) {
-		$value = get_option( $this->prefix . $key, $default );
-		if ( empty( $value ) && $default ) {
-			$value = $default;
+		$sentinel = "\0__spc_not_set__\0";
+		$value    = get_option( $this->prefix . $key, $sentinel );
+		if ( $value === $sentinel ) {
+			return $default;
 		}
-		return ( $value !== '' ) ? maybe_unserialize( $value ) : '';
+		return maybe_unserialize( $value );
 	}
 
 	public function update_option( $key, $value, $autoload = false ) {
