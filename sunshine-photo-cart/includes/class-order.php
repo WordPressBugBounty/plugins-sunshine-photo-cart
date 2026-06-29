@@ -13,6 +13,7 @@ class SPC_Order extends Sunshine_Data {
 		'discounts'            => array(),
 		'discount_names'       => array(),
 		'discount'             => 0,
+		'discount_tax'         => 0.00,
 		'shipping'             => 0,
 		'shipping_tax'         => 0.00,
 		'subtotal'             => 0,
@@ -572,8 +573,17 @@ class SPC_Order extends Sunshine_Data {
 	public function get_discount() {
 		return floatval( $this->get_meta_value( 'discount' ) );
 	}
+	public function get_discount_tax() {
+		return floatval( $this->get_meta_value( 'discount_tax' ) );
+	}
+	public function set_discount_tax( $value ) {
+		$this->update_meta_value( 'discount_tax', floatval( $value ) );
+	}
 	public function get_discount_formatted() {
-		return '-' . sunshine_price( $this->get_discount() );
+		// Mirror get_subtotal_formatted()/get_shipping_formatted(): price_formatted() adds the tax
+		// portion back only in with-tax mode, so this shows the gross discount with tax displayed
+		// and the ex-tax (base) discount when prices are shown without tax.
+		return '-' . $this->price_formatted( $this->get_discount() - $this->get_discount_tax(), $this->get_discount_tax() );
 	}
 	public function set_discount( $value ) {
 		$this->update_meta_value( 'discount', floatval( $value ) );
@@ -702,9 +712,29 @@ class SPC_Order extends Sunshine_Data {
 			)
 		);
 
+		if ( empty( $results ) ) {
+			return array();
+		}
+
+		// Bulk-load every item's meta in a single query, then hand each item its own
+		// meta, instead of each SPC_Order_Item querying sunshine_order_itemmeta on its
+		// own (an N+1 — e.g. a 30-item order ran 30+ extra queries).
+		$item_ids     = array_map( 'intval', wp_list_pluck( $results, 'order_item_id' ) );
+		$meta_by_item = array();
+		if ( ! empty( $item_ids ) ) {
+			$ids_in    = implode( ',', $item_ids );
+			$meta_rows = $wpdb->get_results(
+				"SELECT order_item_id, meta_key, meta_value FROM {$wpdb->prefix}sunshine_order_itemmeta WHERE order_item_id IN ($ids_in)"
+			);
+			foreach ( $meta_rows as $meta_row ) {
+				$meta_by_item[ $meta_row->order_item_id ][ $meta_row->meta_key ] = maybe_unserialize( $meta_row->meta_value );
+			}
+		}
+
 		$items = array();
 		foreach ( $results as $item ) {
-			$items[] = new SPC_Order_Item( (array) $item );
+			$item_meta = isset( $meta_by_item[ $item->order_item_id ] ) ? $meta_by_item[ $item->order_item_id ] : array();
+			$items[]   = new SPC_Order_Item( (array) $item, $item_meta );
 		}
 		return $items;
 

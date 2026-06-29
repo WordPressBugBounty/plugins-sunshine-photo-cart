@@ -831,7 +831,7 @@ class Sunshine_Admin {
 				}
 			}
 		}
-		update_option( 'sunshine_repaired_term_order_meta', true, true );
+		update_option( 'sunshine_repaired_term_order_meta', true, false );
 	}
 
 	public function delete_post( $post_id, $post ) {
@@ -962,7 +962,7 @@ class Sunshine_Admin {
 			$form_fields['sunshine_watermark'] = array(
 				'label' => __( 'Watermark', 'sunshine-photo-cart' ),
 				'input' => 'html',
-				'html'  => "<input type='checkbox' name='attachments[{$post->ID}][sunshine_watermark]' value='1' " . checked( $watermark, 1, false ) . ' />',
+				'html'  => "<input type='checkbox' name='attachments[{$post->ID}][sunshine_watermark]' value='1' " . checked( ! empty( $watermark ), true, false ) . ' />',
 			);
 
 		}
