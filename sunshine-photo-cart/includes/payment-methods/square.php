@@ -18,6 +18,9 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		$this->description           = __( 'Pay with credit card', 'sunshine-photo-cart' );
 		$this->can_be_enabled        = true;
 		$this->needs_billing_address = true;
+		$this->fee_addon_slug        = 'square';
+		$this->fee_addon_plan        = 'plus';
+		$this->fee_addon_name        = __( 'Square Pro', 'sunshine-photo-cart' );
 
 		add_action( 'sunshine_square_connect_display', array( $this, 'square_connect_display' ) );
 		add_action( 'admin_init', array( $this, 'square_connect_return' ) );
@@ -81,9 +84,9 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 	public function options( $options ) {
 
 		foreach ( $options as &$option ) {
-			if ( $option['id'] == 'square_header' && $this->get_application_fee_percent() > 0 ) {
+			if ( $option['id'] == 'square_header' && $this->get_effective_application_fee_percent() > 0 ) {
 				/* translators: %s is the application fee percentage */
-				$option['description'] = sprintf( __( 'Note: You are using the free Square payment gateway integration. This includes an additional %s%% fee for payment processing on each order that goes to Sunshine Photo Cart in addition to Square processing fees. This added fee is removed by using the Square Pro add-on.', 'sunshine-photo-cart' ), $this->get_application_fee_percent() ) . ' <a href="https://www.sunshinephotocart.com/addon/square/?utm_source=plugin&utm_medium=link&utm_campaign=square" target="_blank">' . __( 'Learn more', 'sunshine-photo-cart' ) . '</a>';
+				$option['description'] = sprintf( __( 'Note: An additional %s%% fee is added to each Square order and goes to Sunshine Photo Cart, on top of Square\'s own processing fees.', 'sunshine-photo-cart' ), $this->get_effective_application_fee_percent() ) . ' ' . $this->get_fee_addon_message();
 			}
 		}
 
@@ -431,6 +434,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 		$response = $this->api_request( 'v2/payments/' . $payment_id, '', 'GET' );
 		if ( is_wp_error( $response ) ) {
+			/* translators: %s: error message from Square */
 			SPC()->notices->add_admin( 'square_refresh_fee_fail_' . $payment_id, sprintf( __( 'Could not refresh Square processing fee: %s', 'sunshine-photo-cart' ), $response->get_error_message() ), 'error' );
 			wp_redirect( admin_url( 'post.php?post=' . $order_id . '&action=edit' ) );
 			exit;
@@ -765,11 +769,11 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 
 	}
 
-	private function get_application_fee_percent() {
+	public function get_application_fee_percent() {
 		return floatval( apply_filters( 'sunshine_square_application_fee_percent', 5 ) );
 	}
 
-	private function get_application_fee_amount() {
+	public function get_effective_application_fee_percent() {
 
 		$percentage = $this->get_application_fee_percent();
 
@@ -783,6 +787,18 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		if ( ! in_array( $country, $countries_to_allow_application_fees ) ) {
 			$percentage = 0;
 		}
+
+		return $percentage;
+
+	}
+
+	public function get_order_application_fee( $order ) {
+		return $this->get_app_fee( $order );
+	}
+
+	private function get_application_fee_amount() {
+
+		$percentage = $this->get_effective_application_fee_percent();
 
 		if ( $percentage <= 0 ) {
 			return 0;
@@ -1235,6 +1251,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 					$reason = $payment['delay_reason'];
 				}
 				$order->update_meta_value( 'square_idempotency_key', '' );
+				/* translators: %1$s: Square payment ID, %2$s: payment status */
 				$log_msg = sprintf( __( 'Square reports payment %1$s as %2$s', 'sunshine-photo-cart' ), $payment['id'], $payment_status );
 				if ( $reason ) {
 					$log_msg .= ': ' . $reason;
@@ -1254,6 +1271,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 			SPC()->log( 'Square payment ' . $payment['id'] . ' returned non-final status: ' . $payment_status );
 			if ( $order && $order->exists() ) {
 				$this->store_payment_meta( $order, $payment, $square_order_id );
+				/* translators: %1$s: Square payment ID, %2$s: payment status */
 				$order->add_log( sprintf( __( 'Square payment %1$s returned status %2$s - waiting for completion', 'sunshine-photo-cart' ), $payment['id'], $payment_status ?: 'unknown' ) );
 			}
 			wp_send_json_error(
@@ -1526,6 +1544,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		if ( $status === 'COMPLETED' ) {
 			$square_order_id = ! empty( $payment['order_id'] ) ? $payment['order_id'] : '';
 			$this->store_payment_meta( $order, $payment, $square_order_id );
+			/* translators: %s: Square payment ID */
 			$order->add_log( sprintf( __( 'Square payment %s reconciled as COMPLETED', 'sunshine-photo-cart' ), $payment_id ) );
 			SPC()->log( 'reconcile_order: finalizing order ' . $order->get_id() . ' for Square payment ' . $payment_id );
 			SPC()->cart->post_process_order( $order );
@@ -1541,6 +1560,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 			} elseif ( ! empty( $payment['delay_reason'] ) ) {
 				$reason = $payment['delay_reason'];
 			}
+			/* translators: %1$s: Square payment ID, %2$s: payment status */
 			$log_msg = sprintf( __( 'Square reports payment %1$s as %2$s', 'sunshine-photo-cart' ), $payment_id, $status );
 			if ( $reason ) {
 				$log_msg .= ': ' . $reason;
@@ -1629,7 +1649,7 @@ class SPC_Payment_Method_Square extends SPC_Payment_Method {
 		if ( $application_fee_amount ) {
 			echo '<tr>';
 			echo '<th>' . esc_html__( 'Application Fee Amount (To Sunshine)', 'sunshine-photo-cart' ) . '</th>';
-			echo '<td>' . wp_kses_post( sunshine_price( $application_fee_amount ) ) . ' (<a href="https://www.sunshinephotocart.com/upgrade/?utm_source=plugin&utm_medium=link&utm_campaign=stripe" target="_blank">' . esc_html__( 'Upgrade to remove this fee on future transactions', 'sunshine-photo-cart' ) . '</a>)' . '</td>';
+			echo '<td>' . wp_kses_post( sunshine_price( $application_fee_amount ) ) . '<br /><span class="description">' . wp_kses_post( $this->get_fee_addon_message() ) . '</span></td>';
 			echo '</tr>';
 		}
 

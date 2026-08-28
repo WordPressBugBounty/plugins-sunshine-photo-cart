@@ -200,16 +200,30 @@ class SPC_Frontend {
 			$args              = array(
 				's' => $this->search_term,
 			);
+			$descendant_ids = array();
 			if ( $this->is_gallery() ) {
 				$args['post_parent__in'] = array( $this->current_gallery->get_id() );
-				$descendants             = sunshine_get_gallery_descendants( $this->current_gallery->get_id() );
-				if ( ! empty( $descendants ) ) {
-					foreach ( $descendants as $descendant ) {
-						$descendant_gallery = sunshine_get_gallery( $descendant );
-						if ( $descendant_gallery->can_access() ) {
-							$args['post_parent__in'][] = $descendant->ID;
-						}
-					}
+				// Work with descendant IDs and the lightweight visibility filter;
+				// loading every descendant as a full object exhausts memory on
+				// sites with thousands of sub-galleries.
+				$descendant_ids = sunshine_get_gallery_descendant_ids( $this->current_gallery->get_id() );
+				if ( ! empty( $descendant_ids ) ) {
+					$visibility_args = sunshine_get_galleries_query_args(
+						array(
+							'post__in' => $descendant_ids,
+						),
+						'access'
+					);
+					$use_optimized_query = sunshine_galleries_use_optimized_query( $visibility_args, 'access' );
+					// URL-only descendants were included by the previous can_access()
+					// implementation, so do not apply listing-page URL exclusion here.
+					$accessible_ids = sunshine_filter_gallery_ids_by_visibility(
+						$descendant_ids,
+						'access',
+						false,
+						$use_optimized_query
+					);
+					$args['post_parent__in'] = array_merge( $args['post_parent__in'], $accessible_ids );
 				}
 			}
 			$args                 = apply_filters( 'sunshine_search_args', $args );
@@ -217,17 +231,11 @@ class SPC_Frontend {
 
 			// Search for matching sub-galleries when searching within a gallery.
 			if ( $this->is_gallery() ) {
-				// Get all descendant gallery IDs to search within.
-				$descendant_ids = array( $this->current_gallery->get_id() );
-				$descendants    = sunshine_get_gallery_descendants( $this->current_gallery->get_id() );
-				if ( ! empty( $descendants ) ) {
-					foreach ( $descendants as $descendant ) {
-						$descendant_ids[] = $descendant->ID;
-					}
-				}
+				// Search within the current gallery and all of its descendants,
+				// reusing the descendant IDs fetched above.
 				$gallery_args                 = array(
 					's'               => $this->search_term,
-					'post_parent__in' => $descendant_ids,
+					'post_parent__in' => array_merge( array( $this->current_gallery->get_id() ), $descendant_ids ),
 				);
 				$gallery_args                 = apply_filters( 'sunshine_search_gallery_args', $gallery_args );
 				$this->gallery_search_results = sunshine_get_galleries( $gallery_args, 'access' );
@@ -289,7 +297,7 @@ class SPC_Frontend {
 	}
 
 	public function is_search() {
-		if ( isset( $_GET['sunshine_search'] ) && wp_verify_nonce( $_GET['sunshine_search_nonce'], 'sunshine_search' ) ) {
+		if ( isset( $_GET['sunshine_search'], $_GET['sunshine_search_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['sunshine_search_nonce'] ) ), 'sunshine_search' ) ) {
 			return true;
 		}
 		return false;
@@ -620,7 +628,8 @@ class SPC_Frontend {
 		if ( SPC()->get_option( 'enable_favorites' ) && $image->allow_favorites() ) {
 			// Always use sunshine--add-to-favorites; JS handles guest flow.
 			$menu[10] = array(
-				'name'    => __( 'Favorite', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
+				/* translators: %s: image name */
+				'name'    => sprintf( __( 'Favorite: %s', 'sunshine-photo-cart' ), $image->get_name() ),
 				'class'   => 'sunshine--favorite',
 				'a_class' => 'sunshine--add-to-favorites',
 				'attr'    => array(
@@ -632,7 +641,8 @@ class SPC_Frontend {
 		if ( $image->can_purchase() && ! SPC()->get_option( 'proofing', false ) ) {
 			if ( SPC()->get_option( 'products_require_account' ) && ! is_user_logged_in() ) {
 				$menu[20] = array(
-					'name'    => __( 'Purchase options', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
+					/* translators: %s: image name */
+					'name'    => sprintf( __( 'Purchase options: %s', 'sunshine-photo-cart' ), $image->get_name() ),
 					'class'   => 'sunshine--purchase',
 					'a_class' => 'sunshine--open-modal',
 					'attr'    => array(
@@ -644,7 +654,8 @@ class SPC_Frontend {
 				);
 			} else {
 				$menu[20] = array(
-					'name'    => __( 'Purchase options', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
+					/* translators: %s: image name */
+					'name'    => sprintf( __( 'Purchase options: %s', 'sunshine-photo-cart' ), $image->get_name() ),
 					'class'   => 'sunshine--purchase',
 					'a_class' => 'sunshine--open-modal',
 					'attr'    => array(
@@ -663,7 +674,8 @@ class SPC_Frontend {
 				$after_a = '<span class="sunshine--count sunshine--comment-count">' . esc_html( $comment_count ) . '</span>';
 			}
 			$menu[30] = array(
-				'name'    => __( 'Comments', 'sunshine-photo-cart' ) . ': ' . $image->get_name(),
+				/* translators: %s: image name */
+				'name'    => sprintf( __( 'Comments: %s', 'sunshine-photo-cart' ), $image->get_name() ),
 				// 'url'     => $image->get_permalink() . '#comments',
 				'class'   => 'sunshine--comments',
 				'after_a' => $after_a,

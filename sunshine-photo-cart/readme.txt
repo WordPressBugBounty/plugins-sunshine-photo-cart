@@ -5,8 +5,8 @@ Contributors: wpsunshine, sccr410
 Tags: client photo gallery, photo proofing, client proofing, sell photos, client galleries
 Requires at least: 5.5
 Requires PHP: 7.4
-Tested up to: 7.0
-Stable tag: 3.6.12
+Tested up to: 7.1
+Stable tag: 3.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -242,6 +242,47 @@ Security is important to us. Please report security bugs through the [Patchstack
 11. Admin gallery management - Easy-to-use admin interface to create galleries, upload images, and manage your client photo galleries and photo proofing workflow.
 
 == Changelog ==
+
+= 3.7 - August 27, 2026 =
+* New: Billing address is now its own step at checkout, so you can record the address of the person paying even when the order is being shipped somewhere else. Invoices need the buyer's address, and the buyer is not always who the parcel goes to. On orders that ship, the customer gets a "use shipping address as billing address" box that is already ticked, so nothing extra to fill in unless the two differ
+* Change: The "Always collect an address" setting is now "Always collect a billing address" and applies to every order, not only orders with nothing to ship
+* Change: Payment methods that require a billing address, such as Square, now collect it at its own step rather than partway through the payment step
+* Change: Tax is now worked out from where the order actually changes hands. Shipped orders use the shipping address, orders collected in person use your store's address because the goods never move, and downloads use the customer's billing address. Previously anything without a shipping address fell back to the store address whether that was right or not
+* Fix: Tax shown on the first view of the cart or checkout could be based on a different address than the order total used, because items worked out their own tax before the delivery method was known
+* Fix: Choosing a pickup location and continuing no longer leaves the order thinking it still needs shipping. The pickup location was being saved in a form the checkout could not read back, so the order was treated as being shipped, which could apply the wrong tax and ask for a shipping address that was not needed
+* Fix: Changing the address at checkout to one that no tax rate covers now correctly removes the tax. Previously the rate found for the earlier address stayed applied, so a customer could be charged tax that does not apply where they are, at an amount that shrank each time the checkout refreshed
+* Fix: Square was being sent the buyer's name and country under field names it does not recognise, so it ignored them and verified cards without knowing where the buyer was. Card verification is required for European cards, and missing details there are a common cause of declines
+* Change: Square card verification now happens as part of tokenizing the card, which is the method Square currently recommends. The older separate verification step has been deprecated by Square
+* Fix: Square now receives the billing address the customer actually gave. It was read from the checkout form as the payment was taken, which no longer works now the billing address is collected at an earlier step, and the copied address was only being saved to the order rather than passed on. Both the card verification and the payment record now get the right address whether the buyer typed one or reused their shipping address
+* Fix: Orders no longer store a meaningless billing_method value alongside the real billing address
+* Fix: Gallery, product and order names containing an ampersand could show as "&amp;" in admin dropdowns, breadcrumbs, order screens and on the gallery page. The name was being escaped twice on sites where WordPress had already stored the ampersand encoded
+* Fix: The parent gallery path in the orders list gallery filter now shows a real "&gt;" between gallery names instead of the raw code for it
+* Dev: A payment method now asks for a billing address by setting $needs_billing_address on its own class, and the checkout works the rest out from there, so an add-on gateway declares it the same way the built in ones do. New filters sunshine_checkout_needs_billing_address and sunshine_checkout_section_billing. The checkout no longer uses the customer_ address prefix, which only ever existed to be renamed to billing_ when the order was saved; sunshine_checkout_section_address is gone with it
+* Performance: The session cookie is now only set once a visitor has something to remember (items in the cart, a favorite, a gallery password), instead of on every request. Pages with no Sunshine content no longer send a cookie, so hosts and caching plugins can serve them from cache again
+* Performance: Visitors who already have a session are no longer sent a replacement cookie on every page view, only when the existing one is close to expiring
+* Performance: The session cookie is now removed once there is nothing left to remember, such as after a cart is emptied, so returning visitors can be served cached pages again instead of waiting for the cookie to expire
+* Performance: With an empty cart, the shipping, delivery, payment, tax and checkout form setup no longer runs on every page load, cutting around 11 database queries from every request across the whole site
+* Performance: The galleries page now loads galleries a page at a time instead of all at once, significantly reducing memory usage on sites with a large number of galleries
+* Security: The session cookie is now flagged HttpOnly, and Secure on sites served over HTTPS, so it can no longer be read by scripts in the browser
+* Dev: New filters sunshine_session_lazy_cookie and sunshine_session_destroy_when_empty to restore the previous session cookie behavior
+* Dev: New filter sunshine_email_headers to modify outgoing email headers
+* Fix: Orders can no longer be submitted with a required section left unfilled, which could produce an order with no address on it at all. Checkout now re-checks every required field before the order is created and sends the customer back to whatever still needs completing
+* Fix: The Delivery Method step no longer appears or disappears partway through checkout, which could walk customers through the steps out of order (shipping address before delivery method). Whether an order can be shipped or picked up is now decided independently of the address, and shipping options that don't cover the customer's address are reported at the Shipping Method step instead
+* Fix: A customer can no longer skip ahead to a later checkout step, including payment, by way of the section links in the page URL
+* Fix: A checkout step that no longer applies after the customer changes their delivery method is no longer remembered as completed, which could let its address step be skipped
+* Fix: When no shipping option covers the address entered, the Shipping Method step can no longer be stepped past. Previously the customer could continue and only be stopped at payment, away from the message explaining the problem
+* Fix: A checkout step that fails validation on the server no longer leaves the page sitting on the loading spinner. The step now reloads and shows what needs fixing
+* Fix: Removing the last product that requires shipping from the cart (leaving only digital products) now removes the shipping fee instead of leaving it applied at checkout
+* Fix: Selecting Apple Pay or Google Pay in the Stripe payment method settings no longer causes a checkout error, and payment methods your Stripe account can't process are now greyed out so they can't be enabled by mistake
+* Dev: New filters sunshine_shipping_fields and sunshine_billing_fields for modifying the checkout address fields, such as offering a different country list for shipping than billing. The existing sunshine_shipping__fields and sunshine_billing__fields filters (double underscore) still work
+* Fix: A JavaScript error no longer appears in the browser console on admin pages outside of Sunshine. The admin script sets up tooltips that rely on a library only loaded on Sunshine's own screens, and it now checks for that library first
+* New: Warning in the admin when the added fee is being charged but your license already includes the add-on that removes it
+* Change: The added fee now shows with the order totals, not just in the payment method tab
+* Change: The fee note on an order now links to the Add-ons page instead of telling you to upgrade when you already have
+* Fix: The Add-ons page switch no longer flips back off without saying why
+* Fix: Order profit now has the added fee and any discount codes taken off. Figures for past orders change to match
+* Fix: Stripe's hosted checkout charged the fee in India, Mexico and Malaysia, which are exempt
+* Dev: New sunshine_plan_covers_addon(), get_effective_application_fee_percent(), get_order_application_fee(), get_application_fee()
 
 = 3.6.12 - July 21, 2026 =
 * New: Zip/postal code fields for tax rates and the Local Delivery method now accept wildcard prefixes (902* matches any code starting with 902) and numeric ranges (90210...99000), in addition to exact comma-separated codes

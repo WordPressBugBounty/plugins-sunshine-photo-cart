@@ -5,6 +5,11 @@ class SPC_Gallery extends Sunshine_Data {
 	protected $name;
 	private $parent_gallery_id;
 
+	// Galleries read meta per-key on demand. Loading and unserializing every meta
+	// row up front costs megabytes per gallery on large sites (the `images` array
+	// and add-on meta), and listing pages construct many galleries at once.
+	protected $lazy_meta = true;
+
 	public function __construct( $object ) {
 
 		if ( is_numeric( $object ) && $object > 0 ) {
@@ -23,7 +28,6 @@ class SPC_Gallery extends Sunshine_Data {
 			$this->data              = $object;
 			$this->name              = $this->data->post_title;
 			$this->parent_gallery_id = $this->data->post_parent;
-			$this->set_meta_data();
 		}
 
 	}
@@ -379,10 +383,12 @@ class SPC_Gallery extends Sunshine_Data {
 		if ( $this->get_parent_gallery_id() > 0 ) {
 			$ancestors      = $this->get_ancestors();
 			$url            = ( $context === 'admin' ) ? admin_url( 'post.php?action=edit&post=' . $this->get_id() ) : $this->get_permalink( $this->get_id() );
-			$ancestor_links = array( $link ? '<a href="' . $url . '">' . esc_html( $this->get_name() ) . '</a>' : esc_html( $this->get_name() ) );
+			// When not linking, return plain text so the caller can escape it once for its own context.
+			$ancestor_links = array( $link ? '<a href="' . $url . '">' . esc_html( $this->get_name() ) . '</a>' : $this->get_name() );
 			foreach ( $ancestors as $ancestor_id ) {
 				$ancestor_url     = ( $context === 'admin' ) ? admin_url( 'post.php?action=edit&post=' . $ancestor_id ) : $this->get_permalink( $ancestor_id );
-				$ancestor_links[] = $link ? '<a href="' . $ancestor_url . '">' . esc_html( get_the_title( $ancestor_id ) ) . '</a>' : esc_html( get_the_title( $ancestor_id ) );
+				$ancestor_title   = sunshine_decode_text( get_the_title( $ancestor_id ) );
+				$ancestor_links[] = $link ? '<a href="' . $ancestor_url . '">' . esc_html( $ancestor_title ) . '</a>' : $ancestor_title;
 			}
 			$ancestor_links = array_reverse( $ancestor_links );
 			return join( ' > ', $ancestor_links );
