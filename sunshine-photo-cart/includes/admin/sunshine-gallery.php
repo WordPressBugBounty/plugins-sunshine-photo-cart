@@ -953,8 +953,16 @@ function sunshine_admin_gallery_image_thumbnail( $image, $echo = true ) {
 		$image = sunshine_get_image( $image );
 	}
 
-	$html  = '<li id="image-' . esc_attr( $image->get_id() ) . '" data-image-id="' . esc_attr( $image->get_id() ) . '">';
-	$html .= '<div class="sunshine-image-container"><img src="' . $image->get_image_url() . '" data-image-id="' . esc_attr( $image->get_id() ) . '" alt="" /></div>';
+	$processing = sunshine_image_is_awaiting_processing( $image->get_id() );
+	$failed     = $processing && sunshine_image_processing_failed( $image->get_id() );
+
+	$html  = '<li id="image-' . esc_attr( $image->get_id() ) . '" data-image-id="' . esc_attr( $image->get_id() ) . '"' . ( $processing ? ' class="sunshine-image-processing"' : '' ) . '>';
+	$html .= '<div class="sunshine-image-container"><img src="' . $image->get_image_url() . '" data-image-id="' . esc_attr( $image->get_id() ) . '" alt="" />';
+	if ( $processing ) {
+		$label = $failed ? __( 'Processing failed', 'sunshine-photo-cart' ) : __( 'Processing', 'sunshine-photo-cart' );
+		$html .= '<span class="sunshine-image-processing-label">' . esc_html( $label ) . '</span>';
+	}
+	$html .= '</div>';
 	$html .= '<span class="sunshine-image-actions">';
 	$html .= '<a href="post.php?post=' . esc_attr( $image->get_id() ) . '&action=edit" class="sunshine-image-edit dashicons dashicons-edit"  data-image-id="' . esc_attr( $image->get_id() ) . '" target="_blank"></a> ';
 	$html .= '<a href="#" class="sunshine-image-delete dashicons dashicons-trash remove" data-image-id="' . esc_attr( $image->get_id() ) . '"></a> ';
@@ -1296,6 +1304,10 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 						'watermark'     => $apply_watermark,
 					)
 				);
+				// Hide it until processing finishes, so nobody is served the
+				// untouched original in the meantime. This marker is also what tells
+				// the gallery it still has work outstanding.
+				sunshine_image_mark_processing( $attachment_id );
 				$process_images->save();
 				$process_images->dispatch();
 				SPC()->log( 'Delay Processing: Queued attachment ' . $attachment_id . ' for background processing' );
@@ -1317,6 +1329,11 @@ function sunshine_insert_gallery_image( $file_path, $gallery_id, $result = 'json
 		unset( $GLOBALS['sunshine_current_upload_path'] );
 
 		$image_ids = $gallery->add_image_id( $attachment_id );
+
+		// Every route an image can take into a gallery -- admin upload, FTP import,
+		// Bulk Galleries, the API -- comes through here, so this is the one place that
+		// needs to know the gallery has changed.
+		sunshine_gallery_image_added( $gallery_id );
 
 		$return = array(
 			'image_id'   => $attachment_id,

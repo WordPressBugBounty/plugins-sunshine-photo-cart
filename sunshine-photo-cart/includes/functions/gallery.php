@@ -39,7 +39,8 @@ function sunshine_get_galleries_query_args( $custom_args = array(), $conditional
 
 // conditional_method = access/view
 // access = has permission (hides private, password, expired)
-// view = can know about it's existence but not yet see (hides private, expired)
+// view = can know about it's existence but not yet see (hides private, but still
+// lists password protected, email gated and expired galleries)
 function sunshine_get_galleries( $custom_args = array(), $conditional_method = 'access' ) {
 
 	$args = sunshine_get_galleries_query_args( $custom_args, $conditional_method );
@@ -304,12 +305,36 @@ function sunshine_get_gallery_descendants( $gallery_id, $status = 'publish' ) {
 	return $children;
 }
 
-function sunshine_get_gallery_descendant_ids( $gallery_id, $status = 'publish' ) {
-	// Optimized to fetch only IDs instead of full post objects. One query
-	// fetches every gallery's ID and parent, then the tree is walked in PHP —
-	// the same strategy core's get_page_children() uses — instead of running
-	// one query per gallery node, which does not scale on sites with
-	// thousands of sub-galleries.
+/**
+ * Every gallery's child IDs, keyed by parent gallery ID.
+ *
+ * One query fetches every gallery's ID and parent, then the tree is walked in
+ * PHP — the same strategy core's get_page_children() uses — instead of running
+ * one query per gallery node, which does not scale on sites with thousands of
+ * sub-galleries.
+ *
+ * The map covers the whole site, so it is built once per request and reused.
+ * Discounts and product sources ask for the descendants of several galleries in
+ * a row, and each of those would otherwise refetch every gallery on the site.
+ *
+ * @param string|array $status Post status to include.
+ * @param bool         $flush  Throw the cached map away instead of returning it.
+ * @return array Arrays of child gallery IDs, keyed by parent gallery ID.
+ */
+function sunshine_get_gallery_parent_map( $status = 'publish', $flush = false ) {
+	static $maps = array();
+
+	if ( $flush ) {
+		$maps = array();
+		return array();
+	}
+
+	$key = is_array( $status ) ? implode( ',', $status ) : (string) $status;
+
+	if ( isset( $maps[ $key ] ) ) {
+		return $maps[ $key ];
+	}
+
 	$relationships = get_posts(
 		array(
 			'post_type'      => 'sunshine-gallery',
@@ -319,10 +344,6 @@ function sunshine_get_gallery_descendant_ids( $gallery_id, $status = 'publish' )
 			'no_found_rows'  => true,
 		)
 	);
-
-	if ( empty( $relationships ) ) {
-		return array();
-	}
 
 	// 'id=>parent' returns an array of parent IDs keyed by gallery ID, never post
 	// objects. WP_Query keys that array by the plain ID when the query runs
@@ -338,6 +359,30 @@ function sunshine_get_gallery_descendant_ids( $gallery_id, $status = 'publish' )
 			continue;
 		}
 		$children_by_parent[ (int) $parent_id ][] = $child_id;
+	}
+
+	$maps[ $key ] = $children_by_parent;
+
+	return $maps[ $key ];
+}
+
+/**
+ * Adding, changing or removing a gallery makes the cached parent map stale.
+ */
+add_action( 'save_post_sunshine-gallery', 'sunshine_flush_gallery_parent_map' );
+add_action( 'deleted_post', 'sunshine_flush_gallery_parent_map', 10, 2 );
+function sunshine_flush_gallery_parent_map( $post_id = 0, $post = null ) {
+	if ( $post && 'sunshine-gallery' !== $post->post_type ) {
+		return;
+	}
+	sunshine_get_gallery_parent_map( 'publish', true );
+}
+
+function sunshine_get_gallery_descendant_ids( $gallery_id, $status = 'publish' ) {
+	$children_by_parent = sunshine_get_gallery_parent_map( $status );
+
+	if ( empty( $children_by_parent ) ) {
+		return array();
 	}
 
 	// Breadth-first walk down from the requested gallery. Collecting into keys
@@ -388,4 +433,252 @@ function sunshine_get_large_dimension( $side = 'w' ) {
 		return 300;
 	}
 	return false;
+}
+
+/**********************
+GALLERY READY STATE
+ ***********************/
+
+/**
+ * Meta key holding when an image was last added to a gallery.
+ */
+const SUNSHINE_GALLERY_LAST_IMAGE_META = '_sunshine_last_image_added';
+
+/**
+ * Meta key marking that sunshine_gallery_ready has already fired for a gallery.
+ */
+const SUNSHINE_GALLERY_READY_META = '_sunshine_gallery_ready';
+
+/**
+ * How long a gallery must go without a new image before it counts as finished.
+ *
+ * Uploads arrive one request per photo, so the queue legitimately empties between
+ * images. Without a quiet period a gallery would be declared ready after the first
+ * photo of a hundred.
+ *
+ * @return int Seconds.
+ */
+function sunshine_gallery_ready_quiet_period() {
+	return (int) apply_filters( 'sunshine_gallery_ready_quiet_period', 5 * MINUTE_IN_SECONDS );
+}
+
+/**
+ * Whether any of a gallery's images are still queued for processing.
+ *
+ * Derived from the images themselves rather than a counter kept on the gallery.
+ * A counter has to be incremented and decremented in matching pairs, and drifts
+ * permanently the moment one decrement is missed; this cannot get out of step
+ * with reality.
+ *
+ * @param int $gallery_id Gallery ID.
+ * @return bool
+ */
+function sunshine_gallery_has_images_processing( $gallery_id ) {
+	$pending = get_posts(
+		array(
+			'post_type'        => 'attachment',
+			'post_parent'      => (int) $gallery_id,
+			'post_status'      => 'inherit',
+			'fields'           => 'ids',
+			'posts_per_page'   => 1,
+			'no_found_rows'    => true,
+			'suppress_filters' => true,
+			'meta_query'       => array(
+				array(
+					'key'   => SUNSHINE_IMAGE_PROCESSING_META,
+					'value' => '1',
+				),
+			),
+		)
+	);
+
+	return ! empty( $pending );
+}
+
+/**
+ * Record that an image was added to a gallery.
+ *
+ * Called for every image however it arrives — admin upload, FTP import, Bulk
+ * Galleries, the API — because they all go through sunshine_insert_gallery_image().
+ * Adding an image means the gallery is not finished, so any earlier "ready" is
+ * cleared and the quiet period starts again.
+ *
+ * @param int $gallery_id Gallery ID.
+ */
+function sunshine_gallery_image_added( $gallery_id ) {
+	$gallery_id = (int) $gallery_id;
+	if ( ! $gallery_id ) {
+		return;
+	}
+
+	delete_post_meta( $gallery_id, SUNSHINE_GALLERY_READY_META );
+	update_post_meta( $gallery_id, SUNSHINE_GALLERY_LAST_IMAGE_META, time() );
+
+	// Scheduled here rather than on install so it exists whenever there is actually
+	// something to check, including on sites that upgraded without the event.
+	if ( ! wp_next_scheduled( 'sunshine_gallery_ready_check' ) ) {
+		wp_schedule_event( time() + MINUTE_IN_SECONDS, 'sunshine_gallery_ready_interval', 'sunshine_gallery_ready_check' );
+	}
+}
+
+/**
+ * Schedule used by the gallery ready check.
+ */
+add_filter( 'cron_schedules', 'sunshine_gallery_ready_cron_schedule' );
+function sunshine_gallery_ready_cron_schedule( $schedules ) {
+	$schedules['sunshine_gallery_ready_interval'] = array(
+		'interval' => MINUTE_IN_SECONDS,
+		'display'  => __( 'Every minute', 'sunshine-photo-cart' ),
+	);
+
+	return $schedules;
+}
+
+/**
+ * Whether a gallery is finished and safe to send people to.
+ *
+ * All four have to hold:
+ *
+ * - it is published,
+ * - it actually has images,
+ * - nothing is still queued for background processing,
+ * - and no new image has arrived for a while, so the upload is genuinely over.
+ *
+ * That last one is what stops a fifty photo upload being declared ready after the
+ * first photo, since each photo arrives in its own request and the queue empties in
+ * between. Cloud storage offloading deliberately is not part of this: images are
+ * served locally until they reach the bucket, so it makes no difference to a visitor.
+ *
+ * @param int $gallery_id Gallery ID.
+ * @return bool
+ */
+function sunshine_gallery_is_ready( $gallery_id ) {
+	$gallery_id = (int) $gallery_id;
+
+	if ( ! $gallery_id || 'sunshine-gallery' !== get_post_type( $gallery_id ) ) {
+		return false;
+	}
+
+	if ( 'publish' !== get_post_status( $gallery_id ) ) {
+		return false;
+	}
+
+	if ( sunshine_gallery_has_images_processing( $gallery_id ) ) {
+		return false;
+	}
+
+	$gallery = sunshine_get_gallery( $gallery_id );
+	if ( ! $gallery || ! $gallery->get_image_count() ) {
+		return false;
+	}
+
+	$last_added = (int) get_post_meta( $gallery_id, SUNSHINE_GALLERY_LAST_IMAGE_META, true );
+	if ( $last_added && ( time() - $last_added ) < sunshine_gallery_ready_quiet_period() ) {
+		return false;
+	}
+
+	return true;
+}
+
+/**
+ * Fire `sunshine_gallery_ready` once a gallery is finished.
+ *
+ * Safe to call as often as you like; it only fires once per gallery, and fires again
+ * only if more images are added later.
+ *
+ * @param int $gallery_id Gallery ID.
+ * @return bool Whether the hook fired on this call.
+ */
+function sunshine_maybe_gallery_ready( $gallery_id ) {
+	$gallery_id = (int) $gallery_id;
+
+	if ( get_post_meta( $gallery_id, SUNSHINE_GALLERY_READY_META, true ) ) {
+		return false;
+	}
+
+	if ( ! sunshine_gallery_is_ready( $gallery_id ) ) {
+		return false;
+	}
+
+	update_post_meta( $gallery_id, SUNSHINE_GALLERY_READY_META, time() );
+	delete_post_meta( $gallery_id, SUNSHINE_GALLERY_LAST_IMAGE_META );
+
+	/**
+	 * Fires once, when a gallery is published and all of its images have finished
+	 * processing.
+	 *
+	 * @param int $gallery_id Gallery ID.
+	 */
+	do_action( 'sunshine_gallery_ready', $gallery_id );
+
+	return true;
+}
+
+/**
+ * Publishing a gallery is one of the moments it can become ready.
+ *
+ * Usually it is not: a gallery is normally published before its photos are uploaded,
+ * so sunshine_gallery_is_ready() will say no and the check below picks it up later.
+ */
+add_action( 'transition_post_status', 'sunshine_gallery_check_ready_on_publish', 10, 3 );
+function sunshine_gallery_check_ready_on_publish( $new_status, $old_status, $post ) {
+	if ( 'publish' !== $new_status || $new_status === $old_status ) {
+		return;
+	}
+
+	if ( ! $post || 'sunshine-gallery' !== $post->post_type ) {
+		return;
+	}
+
+	sunshine_maybe_gallery_ready( $post->ID );
+}
+
+/**
+ * Recurring check for galleries that have finished uploading.
+ *
+ * The quiet period means readiness cannot be decided at the moment the last image
+ * finishes — nothing knows yet whether another is about to arrive. So galleries that
+ * have had an image added are re-checked here until they settle.
+ */
+add_action( 'sunshine_gallery_ready_check', 'sunshine_check_galleries_ready' );
+function sunshine_check_galleries_ready() {
+	$gallery_ids = get_posts(
+		array(
+			'post_type'        => 'sunshine-gallery',
+			'post_status'      => 'publish',
+			'posts_per_page'   => 50,
+			'fields'           => 'ids',
+			'suppress_filters' => true,
+			'meta_query'       => array(
+				array(
+					'key'     => SUNSHINE_GALLERY_LAST_IMAGE_META,
+					'compare' => 'EXISTS',
+				),
+				array(
+					'key'     => SUNSHINE_GALLERY_READY_META,
+					'compare' => 'NOT EXISTS',
+				),
+			),
+		)
+	);
+
+	if ( empty( $gallery_ids ) ) {
+		// Nothing waiting, so stop checking. Adding an image schedules it again.
+		wp_clear_scheduled_hook( 'sunshine_gallery_ready_check' );
+		return;
+	}
+
+	foreach ( $gallery_ids as $gallery_id ) {
+		if ( sunshine_maybe_gallery_ready( $gallery_id ) ) {
+			continue;
+		}
+
+		// A gallery with no images left can never be reported ready, so nothing
+		// would ever remove its marker and this check would keep running every
+		// minute for good. Drop the marker and let the gallery go.
+		$gallery = sunshine_get_gallery( $gallery_id );
+		if ( ! $gallery || ! $gallery->get_image_count() ) {
+			delete_post_meta( $gallery_id, SUNSHINE_GALLERY_LAST_IMAGE_META );
+		}
+	}
 }
