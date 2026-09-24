@@ -6,7 +6,7 @@ Tags: client photo gallery, photo proofing, client proofing, sell photos, client
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 3.7.1
+Stable tag: 3.7.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -242,6 +242,17 @@ Security is important to us. Please report security bugs through the [Patchstack
 11. Admin gallery management - Easy-to-use admin interface to create galleries, upload images, and manage your client photo galleries and photo proofing workflow.
 
 == Changelog ==
+
+= 3.7.2 - September 24, 2026 =
+* Fix: The "Check your system information" link in the images-waiting warning opened a page that no longer exists. It now opens Tools > Site Health > Info, where the image queue details (images waiting, queue running, next run) have been added to the Sunshine section
+* Fix: A background image queue that lost its scheduled task is now rescheduled automatically on the next admin page load, instead of waiting for another upload. The warning now only shows when WordPress cron genuinely has not run, and says how long it has been
+* Change: The old Sunshine System Info page, unreachable since its menu entry was removed, is now deleted. Site Health is the one place for system information
+* Fix: Photos saved to favorites from a gallery that asks for an email address showed no add to cart option when the visitor came back in a new browser session
+* Security: Stored meta and option values were unserialized a second time after WordPress had already done so. A user with permission to edit orders or galleries could store a specially crafted value that would then be turned into a PHP object when the order or gallery was viewed. Values are now read only once, so a stored string stays a string
+* Change: An order now builds the customer it belongs to once instead of rebuilding it for every piece of customer information read from the order, which speeds up any screen or export that lists a lot of orders
+* Change: Added `sunshine_get_order_ids()` for developers, which takes the same arguments as `sunshine_get_orders()` but returns only order IDs, for code that needs to count or list orders without loading each one
+* Fix: The cart, checkout, account and favorites pages now send a header telling caches to skip them. Sunshine already set the flag that caching plugins look for, but a cache running on the server in front of WordPress never saw it, and could save one visitor's checkout page and hand it to the next person. Galleries keep their caching benefit until a visitor has a cart, a favorite, or a gallery password they entered
+* Fix: Choosing a photo for a print or download from the store page could fail with an error on sites with a large number of galleries
 
 = 3.7.1 - September 10, 2026 =
 * New: Automated Emails can now be sent when a gallery is published. The email waits until the gallery has photos and they have all finished processing, so it never goes out on a half-built gallery. Also available to developers as the `sunshine_gallery_ready` action

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-10T20:30:54+00:00\n"
+"POT-Creation-Date: 2026-09-24T18:22:53+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: sunshine-photo-cart\n"
@@ -302,7 +302,7 @@ msgid "Write a Review"
 msgstr ""
 
 #: includes/admin/class-admin.php:263
-#: includes/admin/class-admin.php:949
+#: includes/admin/class-admin.php:996
 msgid "Upgrade"
 msgstr ""
 
@@ -335,7 +335,7 @@ msgid "Sunshine Checkout"
 msgstr ""
 
 #: includes/admin/class-admin.php:342
-#: includes/functions/favorites.php:269
+#: includes/functions/favorites.php:270
 msgid "Sunshine Favorites"
 msgstr ""
 
@@ -389,29 +389,41 @@ msgstr ""
 msgid "Sunshine logging is enabled. <a href=\"%s\">Please disable when no longer in use.</a>"
 msgstr ""
 
-#. translators: 1: number of images waiting, 2: URL to the tools page
-#: includes/admin/class-admin.php:627
+#. translators: 1: number of images waiting, 2: URL to the Site Health info page
+#: includes/admin/class-admin.php:652
 #, php-format
-msgid "%1$d image is waiting to be processed but nothing is scheduled to process it. This usually means WordPress cron is not running. <a href=\"%2$s\">Check your system information</a>."
-msgid_plural "%1$d images are waiting to be processed but nothing is scheduled to process them. This usually means WordPress cron is not running. <a href=\"%2$s\">Check your system information</a>."
+msgid "%1$d image is waiting to be processed, but WordPress could not save the background task that processes it. <a href=\"%2$s\">Check Site Health</a>."
+msgid_plural "%1$d images are waiting to be processed, but WordPress could not save the background task that processes them. <a href=\"%2$s\">Check Site Health</a>."
 msgstr[0] ""
 msgstr[1] ""
 
+#. translators: 1: number of images waiting, 2: how long ago cron should have run, e.g. "2 hours", 3: URL to the Site Health info page, 4: URL to the server cron documentation
+#: includes/admin/class-admin.php:669
+#, php-format
+msgid "%1$d image is waiting to be processed, but WordPress cron has not run for %2$s. <a href=\"%3$s\">Check Site Health</a> or see <a href=\"%4$s\" target=\"_blank\">how to set up a reliable server cron</a>."
+msgid_plural "%1$d images are waiting to be processed, but WordPress cron has not run for %2$s. <a href=\"%3$s\">Check Site Health</a> or see <a href=\"%4$s\" target=\"_blank\">how to set up a reliable server cron</a>."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin/class-admin.php:682
+msgid "This site has WP-Cron turned off, so a server cron job has to call wp-cron.php for anything to run."
+msgstr ""
+
 #. translators: %s is the URL to installation page
-#: includes/admin/class-admin.php:643
+#: includes/admin/class-admin.php:691
 #, php-format
 msgid "Sunshine installation process was skipped. <a href=\"%s\">Please complete the installation process.</a>"
 msgstr ""
 
 #. translators: %1$d is the number of orders, %2$s is the number of orders in plural
-#: includes/admin/class-admin.php:926
+#: includes/admin/class-admin.php:974
 #, php-format
 msgid "%s order"
 msgid_plural "%s orders"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/admin/class-admin.php:934
+#: includes/admin/class-admin.php:982
 #: includes/admin/customers.php:13
 #: includes/admin/customers.php:34
 #: includes/admin/reports.php:20
@@ -419,38 +431,38 @@ msgstr[1] ""
 msgid "Customers"
 msgstr ""
 
-#: includes/admin/class-admin.php:935
+#: includes/admin/class-admin.php:983
 #: includes/admin/reports.php:88
 msgid "Reports"
 msgstr ""
 
-#: includes/admin/class-admin.php:936
+#: includes/admin/class-admin.php:984
 #: includes/admin/tools.php:36
 #: includes/admin/tools.php:42
 msgid "Tools"
 msgstr ""
 
-#: includes/admin/class-admin.php:937
+#: includes/admin/class-admin.php:985
 msgid "Add-ons"
 msgstr ""
 
-#: includes/admin/class-admin.php:941
+#: includes/admin/class-admin.php:988
 msgid "Setup Guide"
 msgstr ""
 
-#: includes/admin/class-admin.php:946
+#: includes/admin/class-admin.php:993
 msgid "Get Help"
 msgstr ""
 
-#: includes/admin/class-admin.php:977
+#: includes/admin/class-admin.php:1024
 msgid "Keywords"
 msgstr ""
 
-#: includes/admin/class-admin.php:989
+#: includes/admin/class-admin.php:1036
 msgid "Use gallery price level"
 msgstr ""
 
-#: includes/admin/class-admin.php:997
+#: includes/admin/class-admin.php:1044
 #: includes/admin/sunshine-gallery.php:218
 #: includes/class-sunshinephotocart.php:500
 #: includes/class-sunshinephotocart.php:513
@@ -458,34 +470,34 @@ msgstr ""
 msgid "Price Level"
 msgstr ""
 
-#: includes/admin/class-admin.php:1008
+#: includes/admin/class-admin.php:1055
 msgid "Disable Purchasing"
 msgstr ""
 
-#: includes/admin/class-admin.php:1014
+#: includes/admin/class-admin.php:1061
 #: includes/admin/settings-fields.php:702
 #: admin/products.php:45
 msgid "Watermark"
 msgstr ""
 
-#: includes/admin/class-admin.php:1059
+#: includes/admin/class-admin.php:1106
 msgid "Metadata"
 msgstr ""
 
-#: includes/admin/class-admin.php:1146
+#: includes/admin/class-admin.php:1193
 msgid "Log file has been cleared"
 msgstr ""
 
-#: includes/admin/class-admin.php:1202
+#: includes/admin/class-admin.php:1249
 msgid "Error log file has been cleared"
 msgstr ""
 
-#: includes/admin/class-admin.php:1208
-#: includes/admin/class-admin.php:1216
+#: includes/admin/class-admin.php:1255
+#: includes/admin/class-admin.php:1263
 msgid "You do not have permission to access this file."
 msgstr ""
 
-#: includes/admin/class-admin.php:1224
+#: includes/admin/class-admin.php:1271
 msgid "Log file not found."
 msgstr ""
 
@@ -504,7 +516,7 @@ msgstr ""
 #: includes/admin/class-customers-table.php:43
 #: includes/admin/class-privacy.php:256
 #: includes/admin/settings-fields.php:1432
-#: includes/class-cart.php:1588
+#: includes/class-cart.php:1589
 #: includes/functions/account.php:558
 #: includes/payment-methods/paypal-legacy.php:45
 #: includes/payment-methods/paypal-legacy.php:58
@@ -513,7 +525,7 @@ msgstr ""
 #: templates/invoice/admin.php:159
 #: templates/order/details.php:8
 #: templates/required-data.php:9
-#: class-export-orders.php:474
+#: class-export-orders.php:499
 msgid "Email"
 msgstr ""
 
@@ -542,7 +554,7 @@ msgstr ""
 #: gallery.php:271
 #: gallery.php:298
 #: templates/account/downloads.php:19
-#: class-export-orders.php:17
+#: class-export-orders.php:19
 msgid "Orders"
 msgstr ""
 
@@ -727,10 +739,10 @@ msgstr ""
 #: includes/admin/class-privacy.php:257
 #: includes/admin/settings-fields.php:976
 #: includes/admin/settings-fields.php:986
-#: includes/class-cart.php:1615
+#: includes/class-cart.php:1616
 #: templates/invoice/admin.php:164
 #: templates/order/details.php:13
-#: class-export-orders.php:475
+#: class-export-orders.php:500
 msgid "Phone"
 msgstr ""
 
@@ -741,22 +753,22 @@ msgid "VAT Number"
 msgstr ""
 
 #: includes/admin/class-privacy.php:192
-#: class-export-orders.php:516
+#: class-export-orders.php:541
 msgid "Billing Address 1"
 msgstr ""
 
 #: includes/admin/class-privacy.php:193
-#: class-export-orders.php:517
+#: class-export-orders.php:542
 msgid "Billing Address 2"
 msgstr ""
 
 #: includes/admin/class-privacy.php:194
-#: class-export-orders.php:518
+#: class-export-orders.php:543
 msgid "Billing City"
 msgstr ""
 
 #: includes/admin/class-privacy.php:195
-#: class-export-orders.php:519
+#: class-export-orders.php:544
 msgid "Billing State"
 msgstr ""
 
@@ -765,27 +777,27 @@ msgid "Billing Postcode"
 msgstr ""
 
 #: includes/admin/class-privacy.php:197
-#: class-export-orders.php:521
+#: class-export-orders.php:546
 msgid "Billing Country"
 msgstr ""
 
 #: includes/admin/class-privacy.php:198
-#: class-export-orders.php:508
+#: class-export-orders.php:533
 msgid "Shipping Address 1"
 msgstr ""
 
 #: includes/admin/class-privacy.php:199
-#: class-export-orders.php:509
+#: class-export-orders.php:534
 msgid "Shipping Address 2"
 msgstr ""
 
 #: includes/admin/class-privacy.php:200
-#: class-export-orders.php:510
+#: class-export-orders.php:535
 msgid "Shipping City"
 msgstr ""
 
 #: includes/admin/class-privacy.php:201
-#: class-export-orders.php:511
+#: class-export-orders.php:536
 msgid "Shipping State"
 msgstr ""
 
@@ -794,7 +806,7 @@ msgid "Shipping Postcode"
 msgstr ""
 
 #: includes/admin/class-privacy.php:203
-#: class-export-orders.php:513
+#: class-export-orders.php:538
 msgid "Shipping Country"
 msgstr ""
 
@@ -811,7 +823,7 @@ msgid "Last Login"
 msgstr ""
 
 #: includes/admin/class-privacy.php:253
-#: class-export-orders.php:462
+#: class-export-orders.php:487
 msgid "Order Number"
 msgstr ""
 
@@ -833,6 +845,7 @@ msgstr ""
 #: includes/admin/class-privacy.php:255
 #: includes/admin/sunshine-order.php:424
 #: templates/account/orders.php:8
+#: admin.php:103
 #: admin.php:226
 #: hooks.php:578
 msgid "Status"
@@ -844,7 +857,7 @@ msgstr ""
 
 #: includes/admin/class-privacy.php:259
 #: includes/admin/customers.php:106
-#: includes/class-cart.php:1901
+#: includes/class-cart.php:1902
 #: templates/invoice/admin.php:194
 msgid "Billing Address"
 msgstr ""
@@ -855,8 +868,8 @@ msgstr ""
 
 #: includes/admin/class-privacy.php:268
 #: includes/admin/customers.php:99
-#: includes/class-cart.php:1755
-#: includes/template-hooks.php:431
+#: includes/class-cart.php:1756
+#: includes/template-hooks.php:432
 #: templates/invoice/admin.php:191
 msgid "Shipping Address"
 msgstr ""
@@ -864,7 +877,7 @@ msgstr ""
 #: includes/admin/class-privacy.php:276
 #: includes/admin/sunshine-order.php:720
 #: templates/invoice/admin.php:201
-#: class-export-orders.php:522
+#: class-export-orders.php:547
 msgid "Customer Notes"
 msgstr ""
 
@@ -1103,7 +1116,7 @@ msgstr ""
 #: includes/admin/gallery-navigator.php:176
 #: includes/admin/gallery-navigator.php:336
 #: includes/admin/sunshine-gallery.php:1589
-#: includes/class-cloud-storage-import.php:904
+#: includes/class-cloud-storage-import.php:928
 msgid "images"
 msgstr ""
 
@@ -1117,7 +1130,7 @@ msgstr[1] ""
 #. translators: %s is the section name
 #: includes/admin/gallery-navigator.php:184
 #: includes/admin/gallery-navigator.php:344
-#: includes/class-cart.php:2037
+#: includes/class-cart.php:2038
 msgid "Edit"
 msgstr ""
 
@@ -1389,7 +1402,7 @@ msgstr ""
 
 #: includes/admin/promos.php:248
 #: admin/settings.php:642
-#: includes/class-cloud-storage-import.php:170
+#: includes/class-cloud-storage-import.php:190
 msgid "Cloud Storage"
 msgstr ""
 
@@ -1416,7 +1429,7 @@ msgstr ""
 #: hooks.php:673
 #: templates/account/downloads.php:30
 #: class-export-galleries.php:10
-#: class-export-orders.php:502
+#: class-export-orders.php:527
 msgid "Galleries"
 msgstr ""
 
@@ -1428,7 +1441,7 @@ msgstr ""
 #: reports.php:6
 #: hooks.php:681
 #: class-export-galleries.php:16
-#: class-export-orders.php:501
+#: class-export-orders.php:526
 msgid "Images"
 msgstr ""
 
@@ -1662,7 +1675,7 @@ msgstr ""
 
 #: includes/admin/settings-fields.php:200
 #: includes/admin/sunshine-product.php:103
-#: class-admin-automated-emails.php:132
+#: class-admin-automated-emails.php:164
 #: class-admin-discounts.php:204
 #: sell-anything.php:39
 #: class-admin-gift-cards.php:64
@@ -1694,7 +1707,7 @@ msgstr ""
 #: includes/class-sunshinephotocart.php:372
 #: class-reports-galleries-table.php:36
 #: gallery.php:277
-#: class-export-orders.php:578
+#: class-export-orders.php:603
 #: messaging.php:148
 msgid "Gallery"
 msgstr ""
@@ -2302,7 +2315,7 @@ msgstr ""
 #: includes/admin/settings-fields.php:977
 #: includes/admin/settings-fields.php:987
 #: includes/admin/sunshine-order.php:732
-#: includes/class-cart.php:1932
+#: includes/class-cart.php:1933
 #: templates/email/admin-receipt.php:146
 #: templates/email/customer-receipt.php:150
 #: templates/email/order-status.php:118
@@ -2920,7 +2933,7 @@ msgid "Add gallery name"
 msgstr ""
 
 #: includes/admin/sunshine-order.php:106
-#: class-admin-automated-emails.php:93
+#: class-admin-automated-emails.php:119
 msgid "All"
 msgstr ""
 
@@ -2988,7 +3001,7 @@ msgid "Select All"
 msgstr ""
 
 #: includes/admin/sunshine-order.php:421
-#: includes/class-order.php:1009
+#: includes/class-order.php:1013
 #: includes/class-sunshinephotocart.php:534
 #: gallery.php:272
 #: admin.php:237
@@ -3016,7 +3029,7 @@ msgstr ""
 #: templates/email/order-status.php:106
 #: templates/invoice/admin.php:169
 #: templates/order/details.php:22
-#: class-export-orders.php:471
+#: class-export-orders.php:496
 msgid "Payment Method"
 msgstr ""
 
@@ -3029,7 +3042,7 @@ msgstr ""
 #: templates/email/order-status.php:96
 #: templates/invoice/admin.php:311
 #: templates/order/totals.php:67
-#: class-export-orders.php:469
+#: class-export-orders.php:494
 msgid "Order Total"
 msgstr ""
 
@@ -3102,8 +3115,8 @@ msgstr ""
 #: includes/admin/sunshine-order.php:670
 #: includes/class-sunshinephotocart.php:583
 #: includes/class-sunshinephotocart.php:594
-#: class-export-orders.php:464
-#: class-export-orders.php:556
+#: class-export-orders.php:489
+#: class-export-orders.php:581
 msgid "Order Status"
 msgstr ""
 
@@ -3284,7 +3297,7 @@ msgstr ""
 #: admin.php:4
 #: discounts.php:34
 #: discounts.php:46
-#: class-export-orders.php:467
+#: class-export-orders.php:492
 msgid "Discounts"
 msgstr ""
 
@@ -3438,39 +3451,35 @@ msgstr ""
 msgid "Add product name"
 msgstr ""
 
-#: includes/admin/system-info.php:63
+#: includes/admin/system-info.php:75
 msgid "Sunshine Photo Cart Memory Availability"
 msgstr ""
 
-#: includes/admin/system-info.php:84
-#: includes/admin/system-info.php:101
+#: includes/admin/system-info.php:96
+#: includes/admin/system-info.php:113
 msgid "Sunshine Photo Cart Recommended Memory Limit"
 msgstr ""
 
-#: includes/admin/system-info.php:87
-#: includes/admin/system-info.php:104
+#: includes/admin/system-info.php:99
+#: includes/admin/system-info.php:116
 msgid "Performance"
 msgstr ""
 
 #. translators: %1$s is the WordPress memory limit, %2$s is the PHP memory limit
-#: includes/admin/system-info.php:91
+#: includes/admin/system-info.php:103
 #, php-format
 msgid "Your current WordPress memory limit is set to %1$sM, but your web server allows up to %2$sM. It is recommended to increase the WordPress memory limit to match or exceed the PHP memory limit for optimal performance and speed to ensure your uploads and applying watermarks go as fast as possible."
 msgstr ""
 
-#: includes/admin/system-info.php:95
-#: includes/admin/system-info.php:112
+#: includes/admin/system-info.php:107
+#: includes/admin/system-info.php:124
 msgid "Learn how to increase the WordPress memory limit"
 msgstr ""
 
 #. translators: %s is the PHP memory limit
-#: includes/admin/system-info.php:108
+#: includes/admin/system-info.php:120
 #, php-format
 msgid "Your current PHP memory limit is %sM. If you are seeing issues with slow uploading images or errors, it is recommended to ask your web host if your available memory can be increased. A minimum of 256M is recommended, but as high as possible is best."
-msgstr ""
-
-#: includes/admin/system-info.php:222
-msgid "Copy system info to clipboard"
 msgstr ""
 
 #: includes/admin/tools.php:39
@@ -3707,173 +3716,173 @@ msgid "An item has been removed from your cart because it no longer exists"
 msgstr ""
 
 #. translators: %s is the discount code
-#: includes/class-cart.php:595
+#: includes/class-cart.php:596
 #, php-format
 msgid "Discount \"%s\" removed because it is no longer valid"
 msgstr ""
 
-#: includes/class-cart.php:1565
+#: includes/class-cart.php:1566
 msgid "Contact Information"
 msgstr ""
 
-#: includes/class-cart.php:1570
+#: includes/class-cart.php:1571
 #: includes/class-countries.php:3424
 #: includes/functions/account.php:542
 #: templates/account/signup.php:20
-#: class-export-orders.php:472
+#: class-export-orders.php:497
 msgid "First Name"
 msgstr ""
 
-#: includes/class-cart.php:1579
+#: includes/class-cart.php:1580
 #: includes/class-countries.php:3433
 #: includes/functions/account.php:550
 #: templates/account/signup.php:27
-#: class-export-orders.php:473
+#: class-export-orders.php:498
 msgid "Last Name"
 msgstr ""
 
-#: includes/class-cart.php:1605
+#: includes/class-cart.php:1606
 #: templates/account/login.php:18
 #: templates/account/signup.php:9
 #: templates/shortcodes/password.php:4
 msgid "Password"
 msgstr ""
 
-#: includes/class-cart.php:1607
+#: includes/class-cart.php:1608
 msgid "Optionally set a password"
 msgstr ""
 
-#: includes/class-cart.php:1624
+#: includes/class-cart.php:1625
 #: templates/email/admin-receipt.php:199
 #: templates/email/customer-receipt.php:185
 #: templates/email/order-status.php:153
 #: templates/invoice/admin.php:184
 #: templates/order/details.php:39
-#: class-export-orders.php:476
+#: class-export-orders.php:501
 msgid "EU VAT Number"
 msgstr ""
 
-#: includes/class-cart.php:1726
+#: includes/class-cart.php:1727
 msgid "Delivery Method"
 msgstr ""
 
-#: includes/class-cart.php:1786
-#: includes/class-cart.php:1803
+#: includes/class-cart.php:1787
+#: includes/class-cart.php:1804
 #: templates/invoice/admin.php:173
-#: class-export-orders.php:470
+#: class-export-orders.php:495
 msgid "Shipping Method"
 msgstr ""
 
-#: includes/class-cart.php:1808
-#: includes/class-cart.php:2306
+#: includes/class-cart.php:1809
+#: includes/class-cart.php:2307
 msgid "Sorry, shipping is not available to the address you entered. Please double check the address or try a different shipping address."
 msgstr ""
 
-#: includes/class-cart.php:1869
+#: includes/class-cart.php:1870
 msgid "Use shipping address as billing address"
 msgstr ""
 
-#: includes/class-cart.php:1907
+#: includes/class-cart.php:1908
 msgid "Same as shipping address"
 msgstr ""
 
-#: includes/class-cart.php:1959
+#: includes/class-cart.php:1960
 msgid "Payment"
 msgstr ""
 
 #. translators: %s is the available credit amount formatted as price
-#: includes/class-cart.php:1969
+#: includes/class-cart.php:1970
 #, php-format
 msgid "Use my credits (%s available)"
 msgstr ""
 
 #. translators: %s is the order total amount formatted as price
-#: includes/class-cart.php:1977
+#: includes/class-cart.php:1978
 #: includes/class-payment-method.php:242
 #, php-format
 msgid "Submit Order & Pay %s"
 msgstr ""
 
-#: includes/class-cart.php:1979
+#: includes/class-cart.php:1980
 msgid "Submit Order for Free"
 msgstr ""
 
 #. translators: %1$s is the URL to the terms page, %2$s is the title of the terms page
-#: includes/class-cart.php:1996
+#: includes/class-cart.php:1997
 #, php-format
 msgid "By submitting this order, you agree to our <a href=\"%1$s\" target=\"_blank\">%2$s</a>"
 msgstr ""
 
 #. translators: %s is the section name
-#: includes/class-cart.php:2037
+#: includes/class-cart.php:2038
 #, php-format
 msgid "Edit %s"
 msgstr ""
 
-#: includes/class-cart.php:2055
+#: includes/class-cart.php:2056
 msgid "Next Step"
 msgstr ""
 
-#: includes/class-cart.php:2232
+#: includes/class-cart.php:2233
 msgid "Invalid checkout section"
 msgstr ""
 
-#: includes/class-cart.php:2248
+#: includes/class-cart.php:2249
 msgid "Field contains invalid data"
 msgstr ""
 
 #. translators: %s is the field name
-#: includes/class-cart.php:2265
+#: includes/class-cart.php:2266
 #, php-format
 msgid "%s is required"
 msgstr ""
 
-#: includes/class-cart.php:2277
+#: includes/class-cart.php:2278
 #: frontend.php:173
 msgid "Invalid email"
 msgstr ""
 
-#: includes/class-cart.php:2378
-#: includes/class-cart.php:2586
+#: includes/class-cart.php:2379
+#: includes/class-cart.php:2587
 msgid "Please select a shipping method before completing your order."
 msgstr ""
 
 #. translators: %s is a comma separated list of checkout section names, e.g. "Shipping Address, Payment"
-#: includes/class-cart.php:2499
+#: includes/class-cart.php:2500
 #, php-format
 msgid "Please complete the following before submitting your order: %s"
 msgstr ""
 
-#: includes/class-cart.php:2512
+#: includes/class-cart.php:2513
 msgid "Error encountered during checkout process and your order has already been marked as paid."
 msgstr ""
 
-#: includes/class-cart.php:2512
-#: includes/class-cart.php:2845
+#: includes/class-cart.php:2513
+#: includes/class-cart.php:2846
 msgid "View the order"
 msgstr ""
 
-#: includes/class-cart.php:2524
+#: includes/class-cart.php:2525
 msgid "No payment method selected"
 msgstr ""
 
-#: includes/class-cart.php:2648
+#: includes/class-cart.php:2649
 msgid "Failed to initialize order"
 msgstr ""
 
-#: includes/class-cart.php:2659
+#: includes/class-cart.php:2660
 msgid "Something happened while trying to process your order. Please contact the site owner for more details."
 msgstr ""
 
-#: includes/class-cart.php:2688
+#: includes/class-cart.php:2689
 msgid "No payment method"
 msgstr ""
 
-#: includes/class-cart.php:2778
+#: includes/class-cart.php:2779
 msgid "User account already exists with that email address - please login to continue"
 msgstr ""
 
-#: includes/class-cart.php:2845
+#: includes/class-cart.php:2846
 msgid "It appears your previous checkout has already been processed."
 msgstr ""
 
@@ -12810,8 +12819,8 @@ msgstr ""
 #: includes/class-frontend.php:964
 #: includes/functions/comments.php:16
 #: includes/functions/image.php:278
-#: includes/functions/store.php:131
-#: includes/functions/store.php:184
+#: includes/functions/store.php:133
+#: includes/functions/store.php:186
 #: includes/functions/template.php:373
 msgid "Access denied"
 msgstr ""
@@ -12845,27 +12854,27 @@ msgid "You have been logged out"
 msgstr ""
 
 #. translators: %1$s is the previous order status, %2$s is the new order status
-#: includes/class-order.php:128
+#: includes/class-order.php:129
 #, php-format
 msgid "Status change from %1$s to %2$s"
 msgstr ""
 
 #. translators: %s is the order status name
-#: includes/class-order.php:132
+#: includes/class-order.php:133
 #, php-format
 msgid "Status set to %s"
 msgstr ""
 
 #. translators: %s is the order number
-#: includes/class-order.php:219
-#: includes/class-order.php:1036
+#: includes/class-order.php:220
+#: includes/class-order.php:1040
 #, php-format
 msgid "Order #%s"
 msgstr ""
 
 #. translators: %s is the refund amount formatted as price
 #. translators: %s: refund amount
-#: includes/class-order.php:894
+#: includes/class-order.php:898
 #: includes/payment-methods/paypal.php:805
 #: includes/payment-methods/paypal.php:807
 #: includes/payment-methods/square.php:1794
@@ -13133,6 +13142,7 @@ msgid "Choose from the most used categories"
 msgstr ""
 
 #: includes/class-sunshinephotocart.php:499
+#: class-admin-automated-emails.php:93
 msgid "Price Levels"
 msgstr ""
 
@@ -13326,7 +13336,7 @@ msgstr ""
 #: templates/email/customer-receipt.php:14
 #: templates/email/order-comment.php:17
 #: templates/email/order-status.php:15
-#: class-automated-email-send.php:152
+#: class-automated-email-send.php:161
 msgid "View order"
 msgstr ""
 
@@ -13663,31 +13673,31 @@ msgstr ""
 msgid "Invalid image"
 msgstr ""
 
-#: includes/functions/favorites.php:127
+#: includes/functions/favorites.php:128
 msgid "Could not add image to favorites"
 msgstr ""
 
-#: includes/functions/favorites.php:186
+#: includes/functions/favorites.php:187
 msgid "Guest favorites are not enabled"
 msgstr ""
 
-#: includes/functions/favorites.php:248
+#: includes/functions/favorites.php:249
 msgid "Favorites cleared"
 msgstr ""
 
-#: includes/functions/favorites.php:258
+#: includes/functions/favorites.php:259
 msgid "Customer Profile"
 msgstr ""
 
-#: includes/functions/favorites.php:271
+#: includes/functions/favorites.php:272
 msgid "Image File List"
 msgstr ""
 
-#: includes/functions/favorites.php:282
+#: includes/functions/favorites.php:283
 msgid "Copy and paste the file names above into Lightroom's search feature (Library filter) to quickly find and create a new collection to make processing this order easier. Make sure you are using the \"Contains\" (and not \"Contains All\") search parameter."
 msgstr ""
 
-#: includes/functions/favorites.php:327
+#: includes/functions/favorites.php:328
 msgid "Images in your favorites have been removed because they are no longer available"
 msgstr ""
 
@@ -14465,7 +14475,7 @@ msgstr ""
 #: includes/payment-methods/square.php:96
 #: includes/payment-methods/stripe.php:538
 #: class-authorizenet.php:46
-#: class-export-orders.php:460
+#: class-export-orders.php:485
 #: class-mollie.php:44
 #: class-mercadopago-pro.php:37
 #: class-mercadopago.php:42
@@ -15596,20 +15606,20 @@ msgstr ""
 msgid "You must have proper permissions to view this gallery"
 msgstr ""
 
-#: includes/template-hooks.php:440
-#: includes/template-hooks.php:459
+#: includes/template-hooks.php:441
+#: includes/template-hooks.php:460
 msgid "Save Changes"
 msgstr ""
 
-#: includes/template-hooks.php:470
+#: includes/template-hooks.php:471
 msgid "You are already logged in"
 msgstr ""
 
-#: includes/template-hooks.php:493
+#: includes/template-hooks.php:494
 msgid "Invalid reset password URL"
 msgstr ""
 
-#: includes/template-hooks.php:500
+#: includes/template-hooks.php:501
 msgid "Sorry, invalid search"
 msgstr ""
 
@@ -16032,7 +16042,7 @@ msgid "Your Email"
 msgstr ""
 
 #: templates/favorites/share.php:15
-#: class-admin-automated-emails.php:90
+#: class-admin-automated-emails.php:116
 msgid "Recipients"
 msgstr ""
 
@@ -16776,6 +16786,18 @@ msgstr ""
 msgid "Enable email processing"
 msgstr ""
 
+#: admin.php:104
+msgid "Send Date"
+msgstr ""
+
+#: admin.php:138
+msgid "See email log"
+msgstr ""
+
+#: admin.php:148
+msgid "Process Queue"
+msgstr ""
+
 #: admin.php:172
 msgid "Email Content"
 msgstr ""
@@ -16822,7 +16844,7 @@ msgstr ""
 
 #: class-admin-automated-emails.php:67
 #: hooks.php:154
-#: class-export-orders.php:594
+#: class-export-orders.php:619
 msgid "Search for a gallery"
 msgstr ""
 
@@ -16830,85 +16852,97 @@ msgstr ""
 msgid "Only send this email for the selected galleries. Child galleries are included automatically. Leave empty to send for all galleries."
 msgstr ""
 
-#: class-admin-automated-emails.php:84
+#: class-admin-automated-emails.php:96
+msgid "Only send this email for galleries using the selected price levels. Leave empty to send for all price levels."
+msgstr ""
+
+#: class-admin-automated-emails.php:110
 #: admin/schedule.php:28
 msgid "Time"
 msgstr ""
 
-#: class-admin-automated-emails.php:86
+#: class-admin-automated-emails.php:112
 msgid "How long after/before the trigger should the email be sent?"
 msgstr ""
 
-#: class-admin-automated-emails.php:94
+#: class-admin-automated-emails.php:120
 msgid "User has favorites"
 msgstr ""
 
-#: class-admin-automated-emails.php:95
+#: class-admin-automated-emails.php:121
 msgid "User has no favorites"
 msgstr ""
 
-#: class-admin-automated-emails.php:96
+#: class-admin-automated-emails.php:122
 msgid "User has items in cart"
 msgstr ""
 
-#: class-admin-automated-emails.php:97
+#: class-admin-automated-emails.php:123
 msgid "User has no items in cart"
 msgstr ""
 
-#: class-admin-automated-emails.php:98
+#: class-admin-automated-emails.php:124
 msgid "User has ordered"
 msgstr ""
 
-#: class-admin-automated-emails.php:99
+#: class-admin-automated-emails.php:125
 msgid "User has no orders"
 msgstr ""
 
-#: class-admin-automated-emails.php:100
+#: class-admin-automated-emails.php:126
 msgid "User has not ordered item from gallery"
 msgstr ""
 
-#: class-admin-automated-emails.php:102
+#: class-admin-automated-emails.php:128
 msgid "Select user attributes to determine who should receive this email"
 msgstr ""
 
-#: class-admin-automated-emails.php:102
+#: class-admin-automated-emails.php:128
 msgid "See examples"
 msgstr ""
 
-#: class-admin-automated-emails.php:108
+#: class-admin-automated-emails.php:132
+msgid "Notice, not marketing"
+msgstr ""
+
+#: class-admin-automated-emails.php:134
+msgid "Check this only if the email is a reminder or notice that does not try to sell anything, like a gallery expiring or a gallery being ready. The unsubscribe link and headers are left out, and the email is still sent to customers who unsubscribed. Adding a discount code makes it a marketing email, so leave this unchecked if you use one. You are responsible for following the email laws where you and your customers live."
+msgstr ""
+
+#: class-admin-automated-emails.php:140
 msgid "Discount (optional)"
 msgstr ""
 
-#: class-admin-automated-emails.php:110
+#: class-admin-automated-emails.php:142
 msgid "A unique coupon code will be generated based on the settings of the selected coupon and assigned to the specific user being emailed"
 msgstr ""
 
-#: class-admin-automated-emails.php:114
+#: class-admin-automated-emails.php:146
 msgid "Discount Expiration (Optional)"
 msgstr ""
 
-#: class-admin-automated-emails.php:116
+#: class-admin-automated-emails.php:148
 msgid "How long should the coupon code be valid for after being created? This will override any expiration date settings of the selected discount code"
 msgstr ""
 
-#: class-admin-automated-emails.php:154
+#: class-admin-automated-emails.php:186
 msgid "Gallery tags"
 msgstr ""
 
-#: class-admin-automated-emails.php:163
+#: class-admin-automated-emails.php:195
 msgid "Order tags"
 msgstr ""
 
-#: class-automated-email-send.php:8
+#: class-automated-email-send.php:10
 #: common.php:6
 msgid "Automated Email"
 msgstr ""
 
-#: class-automated-email-send.php:9
+#: class-automated-email-send.php:11
 msgid "This is a general template for automated emails"
 msgstr ""
 
-#: class-automated-email-send.php:64
+#: class-automated-email-send.php:73
 msgid "Unsubscribe from these emails"
 msgstr ""
 
@@ -17039,9 +17073,13 @@ msgid "After gallery is published"
 msgstr ""
 
 #. translators: %1$s: email name, %2$s: recipient email address
-#: common.php:256
+#: common.php:287
 #, php-format
 msgid "%1$s for %2$s"
+msgstr ""
+
+#: common.php:360
+msgid "Queue processed!"
 msgstr ""
 
 #: templates/admin/no-emails.php:2
@@ -17056,35 +17094,35 @@ msgstr ""
 msgid "Creating automated emails in Sunshine Photo Cart"
 msgstr ""
 
-#: unsubscribe.php:125
+#: unsubscribe.php:131
 msgid "Invalid link"
 msgstr ""
 
-#: unsubscribe.php:126
+#: unsubscribe.php:132
 msgid "This unsubscribe link is not valid."
 msgstr ""
 
-#: unsubscribe.php:149
-#: unsubscribe.php:157
+#: unsubscribe.php:155
+#: unsubscribe.php:163
 msgid "Unsubscribed"
 msgstr ""
 
-#: unsubscribe.php:150
+#: unsubscribe.php:156
 msgid "You have been unsubscribed and will no longer receive marketing emails from us."
 msgstr ""
 
-#: unsubscribe.php:158
+#: unsubscribe.php:164
 msgid "You are unsubscribed and will not receive marketing emails from us."
 msgstr ""
 
 #. translators: %s: email address being unsubscribed
-#: unsubscribe.php:163
+#: unsubscribe.php:169
 #, php-format
 msgid "Unsubscribe %s from future marketing emails from us?"
 msgstr ""
 
-#: unsubscribe.php:166
-#: unsubscribe.php:168
+#: unsubscribe.php:172
+#: unsubscribe.php:174
 msgid "Unsubscribe"
 msgstr ""
 
@@ -17702,10 +17740,10 @@ msgstr ""
 #: frontend.php:817
 #: includes/download-handler.php:99
 #: includes/download-handler.php:107
-#: includes/download-handler.php:161
-#: includes/download-handler.php:201
-#: includes/download-handler.php:208
-#: includes/download-handler.php:234
+#: includes/download-handler.php:162
+#: includes/download-handler.php:177
+#: includes/download-handler.php:184
+#: includes/download-handler.php:210
 msgid "Download Error"
 msgstr ""
 
@@ -17885,13 +17923,13 @@ msgstr ""
 msgid "Download Expired"
 msgstr ""
 
-#: includes/download-handler.php:161
-#: includes/download-handler.php:201
-#: includes/download-handler.php:208
+#: includes/download-handler.php:162
+#: includes/download-handler.php:177
+#: includes/download-handler.php:184
 msgid "Download file not found"
 msgstr ""
 
-#: includes/download-handler.php:234
+#: includes/download-handler.php:210
 msgid "You do not have permission to download this file"
 msgstr ""
 
@@ -18416,7 +18454,7 @@ msgid "Gallery ID"
 msgstr ""
 
 #: class-export-galleries.php:13
-#: class-export-orders.php:486
+#: class-export-orders.php:511
 msgid "Gallery Name"
 msgstr ""
 
@@ -18441,12 +18479,12 @@ msgid "Expiration Date"
 msgstr ""
 
 #: class-export-galleries.php:156
-#: class-export-orders.php:572
+#: class-export-orders.php:597
 msgid "Dates"
 msgstr ""
 
 #: class-export-galleries.php:158
-#: class-export-orders.php:574
+#: class-export-orders.php:599
 msgid "to"
 msgstr ""
 
@@ -18454,122 +18492,122 @@ msgstr ""
 msgid "Export"
 msgstr ""
 
-#: class-export-orders.php:461
+#: class-export-orders.php:486
 msgid "Order ID"
 msgstr ""
 
-#: class-export-orders.php:463
+#: class-export-orders.php:488
 msgid "Order Date"
 msgstr ""
 
-#: class-export-orders.php:465
+#: class-export-orders.php:490
 msgid "Order Subtotal"
 msgstr ""
 
-#: class-export-orders.php:466
+#: class-export-orders.php:491
 msgid "Order Tax"
 msgstr ""
 
-#: class-export-orders.php:468
+#: class-export-orders.php:493
 msgid "Shipping Cost"
 msgstr ""
 
-#: class-export-orders.php:482
+#: class-export-orders.php:507
 msgid "Product Name"
 msgstr ""
 
-#: class-export-orders.php:483
+#: class-export-orders.php:508
 msgid "Product Qty"
 msgstr ""
 
-#: class-export-orders.php:484
+#: class-export-orders.php:509
 #: product-options.php:43
 msgid "Product Options"
 msgstr ""
 
-#: class-export-orders.php:485
+#: class-export-orders.php:510
 msgid "Image File Name"
 msgstr ""
 
 #. translators: %d: product number
-#: class-export-orders.php:492
+#: class-export-orders.php:517
 #, php-format
 msgid "Product %d Name"
 msgstr ""
 
 #. translators: %d: product number
-#: class-export-orders.php:494
+#: class-export-orders.php:519
 #, php-format
 msgid "Product %d Qty"
 msgstr ""
 
 #. translators: %d: product number
-#: class-export-orders.php:496
+#: class-export-orders.php:521
 #, php-format
 msgid "Product %d Options"
 msgstr ""
 
-#: class-export-orders.php:500
+#: class-export-orders.php:525
 msgid "Product(s)"
 msgstr ""
 
-#: class-export-orders.php:506
+#: class-export-orders.php:531
 msgid "Shipping First Name"
 msgstr ""
 
-#: class-export-orders.php:507
+#: class-export-orders.php:532
 msgid "Shipping Last Name"
 msgstr ""
 
-#: class-export-orders.php:512
+#: class-export-orders.php:537
 msgid "Shipping Zip"
 msgstr ""
 
-#: class-export-orders.php:514
+#: class-export-orders.php:539
 msgid "Billing First Name"
 msgstr ""
 
-#: class-export-orders.php:515
+#: class-export-orders.php:540
 msgid "Billing Last Name"
 msgstr ""
 
-#: class-export-orders.php:520
+#: class-export-orders.php:545
 msgid "Billing Zip"
 msgstr ""
 
-#: class-export-orders.php:534
+#: class-export-orders.php:559
 msgid "Line Item Format"
 msgstr ""
 
-#: class-export-orders.php:538
+#: class-export-orders.php:563
 msgid "Combined"
 msgstr ""
 
-#: class-export-orders.php:540
+#: class-export-orders.php:565
 msgid "One row per order. All products listed in a single \"Products\" column, separated by commas."
 msgstr ""
 
-#: class-export-orders.php:544
+#: class-export-orders.php:569
 msgid "Separate Rows"
 msgstr ""
 
-#: class-export-orders.php:546
+#: class-export-orders.php:571
 msgid "One row per line item. Order information is repeated for each product. Best for analyzing individual items."
 msgstr ""
 
-#: class-export-orders.php:550
+#: class-export-orders.php:575
 msgid "Separate Columns"
 msgstr ""
 
-#: class-export-orders.php:552
+#: class-export-orders.php:577
 msgid "One row per order. Each product gets its own columns (Product 1 Name, Product 1 Qty, Product 2 Name, etc.). Column count varies based on the order with the most items."
 msgstr ""
 
-#: class-export-orders.php:581
+#: class-export-orders.php:606
 msgid "Any gallery"
 msgstr ""
 
-#: class-export-orders.php:584
+#: class-export-orders.php:609
 msgid "Will include all child galleries as well"
 msgstr ""
 
@@ -20072,24 +20110,26 @@ msgstr ""
 #: admin/tools.php:526
 #: admin/tools.php:558
 #: admin/tools.php:596
-#: admin/tools.php:993
-#: admin/tools.php:1075
-#: admin/tools.php:1109
-#: admin/tools.php:1579
-#: admin/tools.php:1624
-#: admin/tools.php:1724
-#: admin/tools.php:1766
-#: admin/tools.php:2043
-#: admin/tools.php:2161
-#: includes/class-cloud-storage-import.php:422
-#: includes/class-cloud-storage-import.php:764
-#: includes/class-cloud-storage-import.php:823
+#: admin/tools.php:1020
+#: admin/tools.php:1048
+#: admin/tools.php:1085
+#: admin/tools.php:1125
+#: admin/tools.php:1159
+#: admin/tools.php:1631
+#: admin/tools.php:1676
+#: admin/tools.php:1776
+#: admin/tools.php:1818
+#: admin/tools.php:2083
+#: admin/tools.php:2204
+#: includes/class-cloud-storage-import.php:442
+#: includes/class-cloud-storage-import.php:787
+#: includes/class-cloud-storage-import.php:847
 msgid "Insufficient permissions"
 msgstr ""
 
 #: admin/media-library.php:227
-#: includes/class-cloud-storage-import.php:425
-#: includes/class-cloud-storage-import.php:768
+#: includes/class-cloud-storage-import.php:445
+#: includes/class-cloud-storage-import.php:791
 msgid "Cloud storage is not configured"
 msgstr ""
 
@@ -20786,8 +20826,8 @@ msgstr ""
 #: admin/tools.php:15
 #: admin/tools.php:162
 #: admin/tools.php:189
-#: admin/tools.php:1154
-#: admin/tools.php:1249
+#: admin/tools.php:1204
+#: admin/tools.php:1299
 msgid "Start Migration"
 msgstr ""
 
@@ -20866,13 +20906,13 @@ msgid "Starting migration..."
 msgstr ""
 
 #: admin/tools.php:208
-#: admin/tools.php:1365
+#: admin/tools.php:1417
 msgid "Migration in progress"
 msgstr ""
 
 #. translators: %d: number of failed items
 #: admin/tools.php:218
-#: admin/tools.php:1376
+#: admin/tools.php:1428
 #, php-format
 msgid "%d failed"
 msgstr ""
@@ -20883,13 +20923,13 @@ msgstr ""
 
 #: admin/tools.php:231
 #: admin/tools.php:323
-#: admin/tools.php:1383
-#: admin/tools.php:1459
+#: admin/tools.php:1435
+#: admin/tools.php:1511
 msgid "Stop Migration"
 msgstr ""
 
 #: admin/tools.php:284
-#: admin/tools.php:1420
+#: admin/tools.php:1472
 msgid "failed"
 msgstr ""
 
@@ -20898,13 +20938,13 @@ msgid "Are you sure you want to stop the migration? Images that have already bee
 msgstr ""
 
 #: admin/tools.php:313
-#: admin/tools.php:866
-#: admin/tools.php:1449
+#: admin/tools.php:893
+#: admin/tools.php:1501
 msgid "Stopping..."
 msgstr ""
 
 #: admin/tools.php:322
-#: admin/tools.php:1458
+#: admin/tools.php:1510
 msgid "Failed to stop migration"
 msgstr ""
 
@@ -20923,7 +20963,7 @@ msgid "Migration was stopped. %d images were successfully migrated before cancel
 msgstr ""
 
 #: admin/tools.php:376
-#: admin/tools.php:1488
+#: admin/tools.php:1540
 msgid "Migration Complete"
 msgstr ""
 
@@ -20945,8 +20985,8 @@ msgstr ""
 
 #. translators: %d: number of additional items not shown
 #: admin/tools.php:398
-#: admin/tools.php:957
-#: admin/tools.php:1518
+#: admin/tools.php:984
+#: admin/tools.php:1570
 #, php-format
 msgid "...and %d more"
 msgstr ""
@@ -20957,8 +20997,8 @@ msgid "Retry Failed Uploads"
 msgstr ""
 
 #: admin/tools.php:408
-#: admin/tools.php:964
-#: admin/tools.php:1527
+#: admin/tools.php:991
+#: admin/tools.php:1579
 msgid "Clear Results"
 msgstr ""
 
@@ -20991,7 +21031,7 @@ msgid "No failed images to retry"
 msgstr ""
 
 #: admin/tools.php:640
-#: admin/tools.php:693
+#: admin/tools.php:690
 msgid "Reclaim Local Storage"
 msgstr ""
 
@@ -21007,343 +21047,354 @@ msgstr ""
 msgid "View Cleanup Progress"
 msgstr ""
 
-#: admin/tools.php:696
+#: admin/tools.php:693
 msgid "This tool finds images that are already in cloud storage but still have local copies on this server, then deletes the local files to free up disk space. Cloud copies are not touched — galleries continue serving from cloud storage."
 msgstr ""
 
-#: admin/tools.php:701
-msgid "No reclaimable files found. Every image in cloud storage has already had its local copy removed."
-msgstr ""
-
-#. translators: %s: number of redundant local files
-#: admin/tools.php:710
-#, php-format
-msgid "Found: %s redundant local files"
-msgstr ""
-
-#: admin/tools.php:716
+#: admin/tools.php:697
 msgid "Each local file is deleted only after its cloud copy is confirmed present and the correct size. Files that can't be verified are skipped."
 msgstr ""
 
-#: admin/tools.php:720
+#: admin/tools.php:701
 msgid "This action cannot be undone."
 msgstr ""
 
-#: admin/tools.php:721
+#: admin/tools.php:702
 msgid "Local files will be permanently deleted. Cloud copies remain in your bucket and galleries continue to serve from cloud storage."
 msgstr ""
 
-#: admin/tools.php:725
-#: admin/tools.php:749
+#: admin/tools.php:706
+#: admin/tools.php:728
+#: admin/tools.php:742
+#: admin/tools.php:756
+#: admin/tools.php:776
 msgid "Start Cleanup"
 msgstr ""
 
+#: admin/tools.php:727
+#: admin/tools.php:741
+msgid "Scan failed"
+msgstr ""
+
 #: admin/tools.php:733
+#, php-format
+msgid "Checked %1$s images, %2$s local copies to remove"
+msgstr ""
+
+#: admin/tools.php:755
+#: admin/tools.php:775
+msgid "Failed to start cleanup"
+msgstr ""
+
+#: admin/tools.php:762
 msgid "Start cleanup? Local copies of images already in cloud storage will be permanently deleted."
 msgstr ""
 
-#: admin/tools.php:739
-#: admin/tools.php:1268
-msgid "Starting..."
+#: admin/tools.php:766
+msgid "Checking images..."
 msgstr ""
 
-#: admin/tools.php:765
+#: admin/tools.php:792
 msgid "Reclaiming local storage"
 msgstr ""
 
 #. translators: %d: number of skipped files
-#: admin/tools.php:775
+#: admin/tools.php:802
 #, php-format
 msgid "%d skipped (cloud copy not reachable)"
 msgstr ""
 
-#: admin/tools.php:778
+#: admin/tools.php:805
 msgid "Local files are deleted in the background. You can safely leave this page — the cleanup keeps running and you'll get an email when it finishes."
 msgstr ""
 
-#: admin/tools.php:787
-#: admin/tools.php:875
+#: admin/tools.php:814
+#: admin/tools.php:902
 msgid "Stop Cleanup"
 msgstr ""
 
-#: admin/tools.php:806
-#: admin/tools.php:899
+#: admin/tools.php:833
+#: admin/tools.php:926
 msgid "skipped"
 msgstr ""
 
-#: admin/tools.php:838
+#: admin/tools.php:865
 msgid "skipped (cloud copy not reachable)"
 msgstr ""
 
-#: admin/tools.php:861
+#: admin/tools.php:888
 msgid "Stop the cleanup? Files already deleted will not be restored."
 msgstr ""
 
-#: admin/tools.php:915
+#: admin/tools.php:942
 msgid "Cleanup Cancelled"
 msgstr ""
 
 #. translators: %1$d: number of local files deleted, %2$s: amount of disk space freed
-#: admin/tools.php:919
+#: admin/tools.php:946
 #, php-format
 msgid "Cleanup was stopped. %1$d local files were deleted (%2$s freed) before cancellation."
 msgstr ""
 
-#: admin/tools.php:925
+#: admin/tools.php:952
 msgid "Cleanup Complete"
 msgstr ""
 
 #. translators: %1$d: number of local files deleted, %2$s: amount of disk space freed
-#: admin/tools.php:931
+#: admin/tools.php:958
 #, php-format
 msgid "Deleted %1$d local files and freed %2$s of disk space."
 msgstr ""
 
 #. translators: %1$d: number of local files deleted, %2$s: amount of disk space freed, %3$d: number of files skipped
-#: admin/tools.php:940
+#: admin/tools.php:967
 #, php-format
 msgid "Deleted %1$d local files (%2$s freed). Skipped %3$d files where the cloud copy could not be verified."
 msgstr ""
 
-#: admin/tools.php:948
+#: admin/tools.php:975
 msgid "Skipped Images:"
 msgstr ""
 
-#: admin/tools.php:949
+#: admin/tools.php:976
 msgid "These images had cloud storage metadata but the cloud copy could not be verified. Local files were preserved. Try re-running the migration tool to re-upload them."
 msgstr ""
 
-#: admin/tools.php:970
+#: admin/tools.php:997
 msgid "Clear cleanup results?"
 msgstr ""
 
-#: admin/tools.php:1000
+#: admin/tools.php:1027
 msgid "A migration is currently running. Let it finish before reclaiming local storage."
 msgstr ""
 
-#: admin/tools.php:1041
+#: admin/tools.php:1091
 msgid "No local files to clean up"
 msgstr ""
 
-#: admin/tools.php:1064
+#: admin/tools.php:1114
 msgid "Cleanup started"
 msgstr ""
 
-#: admin/tools.php:1151
-#: admin/tools.php:1183
+#: admin/tools.php:1201
+#: admin/tools.php:1233
 msgid "WP Offload Media Migration"
 msgstr ""
 
-#: admin/tools.php:1153
+#: admin/tools.php:1203
 msgid "Convert legacy WP Offload Media data into Sunshine's own storage so frontend pages stop making per-image database lookups"
 msgstr ""
 
-#: admin/tools.php:1191
+#: admin/tools.php:1241
 msgid "Migration is already complete. No further action needed."
 msgstr ""
 
-#: admin/tools.php:1202
+#: admin/tools.php:1252
 msgid "Images not loading? Re-run the migration to rebuild their addresses from your current cloud storage settings. Images already pointing to the right place are left alone."
 msgstr ""
 
-#: admin/tools.php:1205
+#: admin/tools.php:1255
 msgid "Re-Run Migration"
 msgstr ""
 
-#: admin/tools.php:1223
+#: admin/tools.php:1273
 msgid "No migration needed. No WP Offload Media data was found on this site."
 msgstr ""
 
-#: admin/tools.php:1233
+#: admin/tools.php:1283
 msgid "This one-time step copies your WP Offload Media data into Sunshine's own storage."
 msgstr ""
 
 #. translators: %s: number of images
-#: admin/tools.php:1239
+#: admin/tools.php:1289
 #, php-format
 msgid "Images to migrate: %s"
 msgstr ""
 
-#: admin/tools.php:1245
+#: admin/tools.php:1295
 msgid "This only updates database metadata. No files are uploaded or moved."
 msgstr ""
 
-#: admin/tools.php:1277
+#: admin/tools.php:1318
+msgid "Starting..."
+msgstr ""
+
+#: admin/tools.php:1327
 msgid "Failed to start migration"
 msgstr ""
 
 #. translators: %d: number of images
-#: admin/tools.php:1303
+#: admin/tools.php:1355
 #, php-format
 msgid "%d images migrated from WP Offload Media are missing bucket location data. Their full-size download links can expire and stop working. Run the repair below to fix them."
 msgstr ""
 
-#: admin/tools.php:1309
+#: admin/tools.php:1361
 msgid "Repair Metadata"
 msgstr ""
 
-#: admin/tools.php:1329
+#: admin/tools.php:1381
 msgid "Error running repair."
 msgstr ""
 
-#: admin/tools.php:1338
-#: admin/tools.php:1340
+#: admin/tools.php:1390
+#: admin/tools.php:1392
 msgid "items repaired."
 msgstr ""
 
-#: admin/tools.php:1338
+#: admin/tools.php:1390
 msgid "couldn't be repaired automatically — their original WP Offload Media data is no longer available. Contact support if you need help."
 msgstr ""
 
-#: admin/tools.php:1344
+#: admin/tools.php:1396
 msgid "repaired so far..."
 msgstr ""
 
-#: admin/tools.php:1348
+#: admin/tools.php:1400
 msgid "Network error. Please try again."
 msgstr ""
 
-#: admin/tools.php:1381
+#: admin/tools.php:1433
 msgid "Please keep this page open until the migration finishes."
 msgstr ""
 
-#: admin/tools.php:1427
+#: admin/tools.php:1479
 msgid "Invalid response from server"
 msgstr ""
 
-#: admin/tools.php:1430
+#: admin/tools.php:1482
 msgid "Error processing migration"
 msgstr ""
 
-#: admin/tools.php:1435
+#: admin/tools.php:1487
 msgid "Network error. Please refresh the page."
 msgstr ""
 
-#: admin/tools.php:1443
+#: admin/tools.php:1495
 msgid "Stop the migration? Items that have already been migrated will stay migrated."
 msgstr ""
 
-#: admin/tools.php:1479
+#: admin/tools.php:1531
 msgid "Migration Stopped"
 msgstr ""
 
 #. translators: %d: successful count
-#: admin/tools.php:1483
+#: admin/tools.php:1535
 #, php-format
 msgid "Migration was stopped. %d items were migrated before cancellation. Run the migration again to finish the rest."
 msgstr ""
 
 #. translators: %d: total successful
-#: admin/tools.php:1494
+#: admin/tools.php:1546
 #, php-format
 msgid "Successfully migrated %d items. Your pages should now load faster on image-heavy templates."
 msgstr ""
 
 #. translators: 1: successful, 2: failed
-#: admin/tools.php:1502
+#: admin/tools.php:1554
 #, php-format
 msgid "Migration finished with %1$d successful and %2$d failed."
 msgstr ""
 
-#: admin/tools.php:1509
+#: admin/tools.php:1561
 msgid "Failed Attachment IDs:"
 msgstr ""
 
-#: admin/tools.php:1586
+#: admin/tools.php:1638
 msgid "No WP Offload Media data found."
 msgstr ""
 
-#: admin/tools.php:1592
+#: admin/tools.php:1644
 msgid "No items to migrate."
 msgstr ""
 
-#: admin/tools.php:1635
+#: admin/tools.php:1687
 msgid "WP Offload Media table is no longer available. Migration cannot continue."
 msgstr ""
 
 #. translators: 1: number of images, 2: link opening tag, 3: link closing tag
-#: admin/tools.php:1852
+#: admin/tools.php:1892
 #, php-format
 msgid "%1$d images migrated from WP Offload Media are missing bucket location data and their downloads may fail. %2$sRun the repair tool%3$s to fix them."
 msgstr ""
 
-#: admin/tools.php:1889
+#: admin/tools.php:1929
 msgid "Record Image Locations"
 msgstr ""
 
-#: admin/tools.php:1891
+#: admin/tools.php:1931
 msgid "Work out which bucket and file each already-uploaded image lives at, so their addresses are rebuilt from your current settings instead of the ones they were uploaded with"
 msgstr ""
 
-#: admin/tools.php:1892
+#: admin/tools.php:1932
 msgid "Record Locations"
 msgstr ""
 
-#: admin/tools.php:1974
+#: admin/tools.php:2014
 msgid "Cloud storage is not set up, so there is nothing to record."
 msgstr ""
 
-#: admin/tools.php:1981
+#: admin/tools.php:2021
 msgid "Every uploaded image already has its location recorded. Nothing to do."
 msgstr ""
 
-#: admin/tools.php:1985
+#: admin/tools.php:2025
 msgid "Recording image locations"
 msgstr ""
 
-#: admin/tools.php:1986
+#: admin/tools.php:2026
 msgid "Nothing is uploaded, downloaded or changed in your bucket. This only fills in a missing note about where each image already is."
 msgstr ""
 
-#: admin/tools.php:1989
+#: admin/tools.php:2029
 msgid "images recorded"
 msgstr ""
 
-#: admin/tools.php:2006
-#: admin/tools.php:2133
+#: admin/tools.php:2046
+#: admin/tools.php:2176
 msgid "Something went wrong. Please try again."
 msgstr ""
 
-#: admin/tools.php:2016
+#: admin/tools.php:2056
 msgid "Done."
 msgstr ""
 
-#: admin/tools.php:2018
+#: admin/tools.php:2058
 msgid "could not be worked out and were left as they are, so they keep loading exactly as before."
 msgstr ""
 
-#: admin/tools.php:2026
-#: admin/tools.php:2145
+#: admin/tools.php:2066
+#: admin/tools.php:2188
 msgid "Network error. Reload the page to carry on where this stopped."
 msgstr ""
 
 #. translators: 1: bucket images are recorded in, 2: bucket the site is set up for
-#: admin/tools.php:2098
+#: admin/tools.php:2141
 #, php-format
 msgid "Your images are recorded as living in the bucket \"%1$s\", but Sunshine is now set up for \"%2$s\"."
 msgstr ""
 
-#: admin/tools.php:2104
+#: admin/tools.php:2147
 msgid "If you renamed that bucket, point Sunshine at the new name and your galleries will load again. If those images really are in a separate bucket, leave them alone and they will keep loading from there."
 msgstr ""
 
-#: admin/tools.php:2106
+#: admin/tools.php:2149
 msgid "I renamed it, update my images"
 msgstr ""
 
-#: admin/tools.php:2107
+#: admin/tools.php:2150
 msgid "They are in a separate bucket, leave them"
 msgstr ""
 
-#: admin/tools.php:2139
+#: admin/tools.php:2182
 msgid "images updated. Reload a gallery to check."
 msgstr ""
 
-#: admin/tools.php:2142
+#: admin/tools.php:2185
 msgid "updated so far..."
 msgstr ""
 
-#: admin/tools.php:2181
+#: admin/tools.php:2224
 msgid "Unknown choice"
 msgstr ""
 
@@ -21415,7 +21466,7 @@ msgstr ""
 
 #. translators: %s: error message
 #: includes/class-cloud-storage-client-bunny.php:76
-#: includes/class-cloud-storage-client-gcs.php:134
+#: includes/class-cloud-storage-client-gcs.php:174
 #: includes/class-cloud-storage-client-s3.php:299
 #, php-format
 msgid "Connection failed: %s"
@@ -21435,27 +21486,27 @@ msgstr ""
 msgid "Connection successful but test upload failed. Check storage zone permissions."
 msgstr ""
 
-#: includes/class-cloud-storage-client-bunny.php:120
+#: includes/class-cloud-storage-client-bunny.php:117
 msgid "Warning: No CDN Pull Zone URL configured. Public image serving will use storage URLs which are slower. Configure a Pull Zone URL for optimal performance."
 msgstr ""
 
-#: includes/class-cloud-storage-client-bunny.php:123
+#: includes/class-cloud-storage-client-bunny.php:120
 msgid "Warning: No Token Authentication Key configured. Full-resolution images will not be protected with expiring URLs. Enable Token Authentication in your Pull Zone security settings."
 msgstr ""
 
-#: includes/class-cloud-storage-client-bunny.php:128
-#: includes/class-cloud-storage-client-gcs.php:127
+#: includes/class-cloud-storage-client-bunny.php:125
+#: includes/class-cloud-storage-client-gcs.php:167
 #: includes/class-cloud-storage-client-s3.php:255
 msgid "Connection successful! All tests passed."
 msgstr ""
 
 #: includes/class-cloud-storage-client-gcs.php:31
-#: includes/class-cloud-storage-client-gcs.php:469
+#: includes/class-cloud-storage-client-gcs.php:551
 msgid "Google Cloud Storage JSON key is required"
 msgstr ""
 
 #: includes/class-cloud-storage-client-gcs.php:39
-#: includes/class-cloud-storage-client-gcs.php:476
+#: includes/class-cloud-storage-client-gcs.php:558
 msgid "Invalid JSON key file. Please check your service account JSON."
 msgstr ""
 
@@ -21467,6 +21518,10 @@ msgstr ""
 
 #: includes/class-cloud-storage-client-gcs.php:122
 msgid " Warning: Your GCS bucket uses uniform bucket-level access, which does not support per-object ACLs. Go to Cloud Console → Cloud Storage → Your Bucket → Permissions → Access Control → Switch from \"Uniform\" to \"Fine-grained\". Then re-run this test."
+msgstr ""
+
+#: includes/class-cloud-storage-client-gcs.php:159
+msgid "Warning: Your bucket blocks public files (Public access prevention is on). Every image will be served through signed links instead. That works, but public thumbnails load faster. To allow them, open your bucket in Google Cloud Console → Permissions → Public access prevention → set it to \"Not enforced\", then run this test again."
 msgstr ""
 
 #: includes/class-cloud-storage-client-s3.php:168
@@ -21499,97 +21554,97 @@ msgstr ""
 msgid "Unexpected error: %s"
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:161
+#: includes/class-cloud-storage-import.php:181
 msgid "Image Source"
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:166
+#: includes/class-cloud-storage-import.php:186
 msgid "FTP Folder"
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:176
+#: includes/class-cloud-storage-import.php:196
 msgid "Cloud Storage Folder"
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:183
+#: includes/class-cloud-storage-import.php:203
 msgid "Loading folders..."
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:191
+#: includes/class-cloud-storage-import.php:211
 msgid "Selected:"
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:196
+#: includes/class-cloud-storage-import.php:216
 msgid "Click the arrow to expand folders. Select a folder using the radio button."
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:218
+#: includes/class-cloud-storage-import.php:238
 msgid "Cloud storage is not configured. Please configure it in Sunshine settings."
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:223
+#: includes/class-cloud-storage-import.php:243
 msgid "Please select a cloud storage folder."
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:362
+#: includes/class-cloud-storage-import.php:382
 msgid "Scanning your cloud storage…"
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:363
+#: includes/class-cloud-storage-import.php:383
 msgid "Large buckets are scanned in small batches so the import never times out. This can take a moment."
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:364
+#: includes/class-cloud-storage-import.php:384
 msgid "galleries found so far"
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:446
+#: includes/class-cloud-storage-import.php:466
 msgid "Scan session expired, please start over."
 msgstr ""
 
 #. translators: %s is the folder path in the cloud storage bucket that could not be read
-#: includes/class-cloud-storage-import.php:509
+#: includes/class-cloud-storage-import.php:529
 #, php-format
 msgid "Could not read the folder \"%s\" from your cloud storage, so the scan was stopped before anything was imported. This is usually temporary, so please try again."
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:775
-#: includes/class-cloud-storage-import.php:830
-#: includes/class-cloud-storage-import.php:933
+#: includes/class-cloud-storage-import.php:798
+#: includes/class-cloud-storage-import.php:854
+#: includes/class-cloud-storage-import.php:957
 msgid "Could not initialize cloud storage client"
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:780
-#: includes/class-cloud-storage-import.php:835
+#: includes/class-cloud-storage-import.php:803
+#: includes/class-cloud-storage-import.php:859
 msgid "Failed to list cloud storage contents"
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:902
+#: includes/class-cloud-storage-import.php:926
 msgid "Loading..."
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:903
+#: includes/class-cloud-storage-import.php:927
 msgid "No subfolders"
 msgstr ""
 
-#: includes/class-cloud-storage-import.php:905
+#: includes/class-cloud-storage-import.php:929
 msgid "Error loading folders"
 msgstr ""
 
-#: includes/class-cloud-storage-manager.php:2259
+#: includes/class-cloud-storage-manager.php:2313
 msgid "No objects found in WP Offload Media data"
 msgstr ""
 
-#: includes/class-cloud-storage-manager.php:2319
+#: includes/class-cloud-storage-manager.php:2373
 msgid "Could not build URLs from WP Offload Media data"
 msgstr ""
 
-#: includes/class-cloud-storage-manager.php:2407
+#: includes/class-cloud-storage-manager.php:2461
 msgid "Could not retrieve URLs from WP Offload Media"
 msgstr ""
 
 #: includes/hooks.php:430
-#: includes/hooks.php:459
+#: includes/hooks.php:464
 msgid "Sunshine Cloud Storage:"
 msgstr ""
 
@@ -21605,28 +21660,28 @@ msgstr ""
 msgid "<strong>Sunshine Cloud Storage:</strong> WP Offload Media plugin is active. You have Cloud Storage set to \"Entire WordPress site\" which may conflict. Consider setting it to \"Sunshine galleries only\" or disabling one of the plugins."
 msgstr ""
 
-#: includes/hooks.php:460
+#: includes/hooks.php:465
 msgid "Your cloud storage bucket does not support per-object ACLs (Access Control Lists). This means Sunshine cannot set individual files as public or private, which may cause thumbnails to not display or full-resolution images to be publicly accessible."
 msgstr ""
 
-#: includes/hooks.php:464
+#: includes/hooks.php:469
 msgid "<strong>How to fix:</strong> Go to Google Cloud Console &rarr; Cloud Storage &rarr; Your Bucket &rarr; Permissions &rarr; Access Control &rarr; Switch from \"Uniform\" to \"Fine-grained\"."
 msgstr ""
 
-#: includes/hooks.php:466
+#: includes/hooks.php:471
 msgid "<strong>How to fix:</strong> Go to S3 Console &rarr; Your Bucket &rarr; Permissions &rarr; Object Ownership &rarr; Edit &rarr; Select \"ACLs enabled\" with \"Bucket owner preferred\"."
 msgstr ""
 
-#: includes/hooks.php:468
+#: includes/hooks.php:473
 msgid "<strong>How to fix:</strong> Check your storage provider's documentation for enabling per-object ACLs on your bucket."
 msgstr ""
 
-#: includes/hooks.php:472
+#: includes/hooks.php:477
 msgid "After making changes, go to Sunshine Settings &rarr; Cloud Storage and click \"Test Connection\" to verify."
 msgstr ""
 
 #. translators: 1: link opening tag, 2: link closing tag
-#: includes/hooks.php:528
+#: includes/hooks.php:533
 #, php-format
 msgid "<strong>Sunshine Cloud Storage:</strong> WP Offload Media data was found on this site. %1$sRun the one-time migration%2$s to move it into Sunshine's own storage."
 msgstr ""
