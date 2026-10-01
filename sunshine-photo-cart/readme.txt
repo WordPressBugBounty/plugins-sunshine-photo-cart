@@ -6,7 +6,7 @@ Tags: client photo gallery, photo proofing, client proofing, sell photos, client
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 3.7.2
+Stable tag: 3.7.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -242,6 +242,16 @@ Security is important to us. Please report security bugs through the [Patchstack
 11. Admin gallery management - Easy-to-use admin interface to create galleries, upload images, and manage your client photo galleries and photo proofing workflow.
 
 == Changelog ==
+
+= 3.7.3 - October 1, 2026 =
+* New: A "Refresh photo details" button on the gallery edit screen reads the keywords, title, caption and photo date from your original files for photos already in that gallery and its sub-galleries, so galleries imported before this update can be searched by keyword
+* Fix: Viewing a gallery no longer gives a guest a session cookie, so galleries can be served from a page cache until the visitor adds to their cart, saves a favorite, or enters a gallery password. The cart's "Return to gallery" link still points to the gallery the item came from
+* Fix: The "Set your password" link in new account emails, including accounts created during bulk gallery creation, and password reset links showed the login/register screen instead of the new password form on sites where the account URL settings had never been saved
+* New: `sunshine_cart_item_tax_rate` filter to charge a different tax rate on individual cart items, such as a reduced VAT rate on some products
+* Tweak: Renamed the Privacy settings tab to Privacy & Data, and the Data tab to Usage Tracking
+* Fix: When the watermark image file is missing from the server (for example after it was moved to cloud storage), an admin notice now says new images aren't being watermarked, and the Sunshine log records each image that was skipped. Before, images were processed without a watermark and nothing said so
+* Fix: A license check that got back a page that wasn't license data, such as a firewall or maintenance page, no longer wipes the saved license status and expiration for every addon, and no longer logs PHP warnings
+* Fix: Pickup no longer adds products' Extra Shipping Cost to its price. Since 3.6.10, a Pickup set to 0 could charge the extra cost for each large item in the cart
 
 = 3.7.2 - September 24, 2026 =
 * Fix: The "Check your system information" link in the images-waiting warning opened a page that no longer exists. It now opens Tools > Site Health > Info, where the image queue details (images waiting, queue running, next run) have been added to the Sunshine section
