@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Sunshine Photo Cart\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/sunshine-gift-"
 "cards\n"
-"POT-Creation-Date: 2026-10-01T18:55:37+00:00\n"
+"POT-Creation-Date: 2026-10-09T17:07:54+00:00\n"
 "PO-Revision-Date: 2026-03-02 21:18-0700\n"
 "Last-Translator: Derek Ashauer <derek@sunshinephotocart.com>\n"
 "Language-Team: \n"
@@ -172,7 +172,7 @@ msgstr "Документация"
 #: includes/admin/class-admin-meta-box.php:155
 #: includes/admin/class-admin-meta-box.php:675
 #: includes/admin/class-options.php:567 includes/class-payment-method.php:352
-#: includes/payment-methods/stripe.php:506 templates/admin/header.php:57
+#: includes/payment-methods/stripe.php:513 templates/admin/header.php:57
 msgid "Learn more"
 msgstr "Узнать больше"
 
@@ -382,7 +382,10 @@ msgid ""
 "Your watermark image file could not be found on this server, so new images "
 "are not being watermarked. <a href=\"%s\">Upload the watermark image again</"
 "a>."
-msgstr "Файл изображения водяного знака не найден на этом сервере, поэтому на новые изображения водяной знак не ставится. <a href=\"%s\">Загрузи изображение водяного знака заново</a>."
+msgstr ""
+"Файл изображения водяного знака не найден на этом сервере, поэтому на новые "
+"изображения водяной знак не ставится. <a href=\"%s\">Загрузи изображение "
+"водяного знака заново</a>."
 
 #. translators: 1: number of images waiting, 2: URL to the Site Health info page
 #: includes/admin/class-admin.php:685
@@ -525,6 +528,7 @@ msgid "Log file not found."
 msgstr "Файл журнала не найден."
 
 #: includes/admin/class-customers-table.php:42
+#: includes/admin/options/taxes.php:16
 #: includes/admin/sunshine-product-category.php:166
 #: includes/class-payment-method.php:57 includes/class-shipping-method.php:159
 #: templates/admin/order-items.php:102 templates/image/add-comment.php:7
@@ -535,19 +539,19 @@ msgstr "Имя"
 
 #: includes/admin/class-customers-table.php:43
 #: includes/admin/class-privacy.php:256 includes/admin/settings-fields.php:1432
-#: includes/class-cart.php:1595 includes/functions/account.php:558
+#: includes/class-cart.php:1655 includes/functions/account.php:558
 #: includes/payment-methods/paypal-legacy.php:45
 #: includes/payment-methods/paypal-legacy.php:58
 #: templates/admin/order-items.php:69 templates/email/signup.php:9
-#: templates/invoice/admin.php:159 templates/order/details.php:8
+#: templates/invoice/admin.php:160 templates/order/details.php:8
 #: templates/required-data.php:9 class-export-orders.php:499
 msgid "Email"
 msgstr "Email"
 
 #: includes/admin/class-customers-table.php:44 includes/admin/customers.php:187
 #: includes/admin/install.php:285 includes/admin/settings-fields.php:245
-#: includes/admin/sunshine-gallery.php:170 includes/class-frontend.php:931
-#: templates/multi-image-select/select-images.php:35
+#: includes/admin/sunshine-gallery.php:170 includes/class-frontend.php:932
+#: templates/multi-image-select/select-images.php:37
 msgid "Favorites"
 msgstr "Избранное"
 
@@ -775,8 +779,8 @@ msgstr ""
 
 #: includes/admin/class-privacy.php:190 includes/admin/class-privacy.php:257
 #: includes/admin/settings-fields.php:976
-#: includes/admin/settings-fields.php:986 includes/class-cart.php:1622
-#: templates/invoice/admin.php:164 templates/order/details.php:13
+#: includes/admin/settings-fields.php:986 includes/class-cart.php:1682
+#: templates/invoice/admin.php:165 templates/order/details.php:13
 #: class-export-orders.php:500
 msgid "Phone"
 msgstr "Телефон"
@@ -853,7 +857,7 @@ msgstr "Номер заказа"
 #: includes/admin/class-privacy.php:254 includes/admin/sunshine-gallery.php:282
 #: includes/admin/sunshine-order.php:422 includes/admin/sunshine-order.php:622
 #: templates/account/orders.php:6 templates/admin/order-items.php:61
-#: templates/invoice/admin.php:131 templates/order/details.php:18
+#: templates/invoice/admin.php:132 templates/order/details.php:18
 #: gallery.php:269 admin/customers.php:19 admin/schedule.php:27
 #: class-admin-gift-cards.php:190
 msgid "Date"
@@ -869,7 +873,7 @@ msgid "Billing Name"
 msgstr "Название счета"
 
 #: includes/admin/class-privacy.php:259 includes/admin/customers.php:106
-#: includes/class-cart.php:1908 templates/invoice/admin.php:194
+#: includes/class-cart.php:1968 templates/invoice/admin.php:195
 msgid "Billing Address"
 msgstr "Платежный адрес"
 
@@ -878,20 +882,20 @@ msgid "Shipping Name"
 msgstr "Название доставки"
 
 #: includes/admin/class-privacy.php:268 includes/admin/customers.php:99
-#: includes/class-cart.php:1762 includes/template-hooks.php:432
-#: templates/invoice/admin.php:191
+#: includes/class-cart.php:1822 includes/template-hooks.php:432
+#: templates/invoice/admin.php:192
 msgid "Shipping Address"
 msgstr "Адрес доставки"
 
 #: includes/admin/class-privacy.php:276 includes/admin/sunshine-order.php:720
-#: templates/invoice/admin.php:201 class-export-orders.php:547
+#: templates/invoice/admin.php:202 class-export-orders.php:547
 msgid "Customer Notes"
 msgstr "Примечания к клиенту"
 
 #: includes/admin/class-privacy.php:277 includes/admin/customers.php:142
 #: includes/admin/sunshine-order.php:843 templates/account/orders.php:7
 #: templates/cart/item.php:19 templates/checkout/summary.php:16
-#: templates/invoice/admin.php:135 templates/invoice/admin.php:244
+#: templates/invoice/admin.php:136 templates/invoice/admin.php:245
 #: templates/order/item.php:18 class-reports-customers-table.php:36
 #: class-reports-galleries-table.php:39 class-reports-images-table.php:37
 #: class-reports-products-table.php:36 gallery.php:273
@@ -1057,8 +1061,8 @@ msgstr "Очистить поиск"
 
 #: includes/admin/gallery-navigator.php:83
 #: includes/admin/gallery-navigator.php:207
-#: includes/payment-methods/stripe.php:1149
-#: includes/payment-methods/stripe.php:1174
+#: includes/payment-methods/stripe.php:1156
+#: includes/payment-methods/stripe.php:1181
 msgid "Permission denied"
 msgstr "Доступ запрещен"
 
@@ -1075,13 +1079,13 @@ msgstr "Перетащите, чтобы изменить порядок"
 #: includes/admin/gallery-navigator.php:159
 #: includes/admin/gallery-navigator.php:319
 #: includes/admin/sunshine-gallery.php:55
-#: includes/admin/sunshine-gallery.php:1825
+#: includes/admin/sunshine-gallery.php:1835
 msgid "Password Protected"
 msgstr "Защищено паролем"
 
 #: includes/admin/gallery-navigator.php:161
 #: includes/admin/gallery-navigator.php:321
-#: includes/admin/sunshine-gallery.php:1827
+#: includes/admin/sunshine-gallery.php:1837
 msgid "Private"
 msgstr "Частный"
 
@@ -1098,7 +1102,7 @@ msgstr "Истекший"
 
 #: includes/admin/gallery-navigator.php:176
 #: includes/admin/gallery-navigator.php:336
-#: includes/admin/sunshine-gallery.php:1566
+#: includes/admin/sunshine-gallery.php:1576
 #: includes/class-cloud-storage-import.php:928
 msgid "images"
 msgstr "изображения"
@@ -1113,7 +1117,7 @@ msgstr[2] "подгалерей"
 
 #. translators: %s is the section name
 #: includes/admin/gallery-navigator.php:184
-#: includes/admin/gallery-navigator.php:344 includes/class-cart.php:2044
+#: includes/admin/gallery-navigator.php:344 includes/class-cart.php:2104
 msgid "Edit"
 msgstr "Редактировать"
 
@@ -1280,7 +1284,7 @@ msgstr "Настройка"
 #: includes/admin/options/emails.php:64
 #: includes/admin/options/payment-methods.php:63
 #: includes/admin/options/shipping-methods.php:85
-#: includes/class-frontend.php:441 includes/functions/checkout.php:98
+#: includes/class-frontend.php:442 includes/functions/checkout.php:98
 #: includes/functions/checkout.php:168 includes/functions/checkout.php:226
 #: includes/functions/checkout.php:251 includes/functions/checkout.php:276
 #: includes/functions/checkout.php:313 includes/functions/checkout.php:427
@@ -1299,8 +1303,8 @@ msgstr "Добавить способ доставки"
 
 #: includes/admin/options/shipping-methods.php:48
 #: includes/admin/options/shipping-methods.php:80
-#: includes/admin/options/taxes.php:51 includes/admin/options/taxes.php:74
-#: includes/admin/options/taxes.php:107 templates/cart/item.php:17
+#: includes/admin/options/taxes.php:53 includes/admin/options/taxes.php:77
+#: includes/admin/options/taxes.php:112 templates/cart/item.php:17
 #: admin/schedule.php:93 admin/schedule.php:100
 msgid "Delete"
 msgstr "Удалить"
@@ -1326,16 +1330,22 @@ msgstr "Почтовый индекс/почтовый код (ы)"
 msgid "Tax Rate"
 msgstr "Налоговая ставка"
 
-#: includes/admin/options/taxes.php:27 includes/admin/options/taxes.php:64
-#: includes/admin/options/taxes.php:97
+#: includes/admin/options/taxes.php:28 includes/admin/options/taxes.php:66
+#: includes/admin/options/taxes.php:101
 msgid "All countries"
 msgstr "Все страны"
 
-#: includes/admin/options/taxes.php:39
+#: includes/admin/options/taxes.php:40
 msgid "Any state/province"
 msgstr "Любой штат/провинция"
 
-#: includes/admin/options/taxes.php:85
+#: includes/admin/options/taxes.php:51 includes/admin/options/taxes.php:75
+#: includes/admin/options/taxes.php:110 includes/admin/reports.php:22
+#: includes/functions/taxes.php:54
+msgid "Tax"
+msgstr "Налог"
+
+#: includes/admin/options/taxes.php:88
 msgid ""
 "Zip/Postal Code(s): separate multiple codes with commas. Use * as a wildcard "
 "(902* matches anything starting with 902) or ... for a numeric range "
@@ -1402,15 +1412,6 @@ msgstr "Изображения"
 #: includes/admin/reports.php:21 reports.php:8
 msgid "Profits"
 msgstr "Прибыль"
-
-#: includes/admin/reports.php:22 includes/admin/sunshine-order.php:874
-#: includes/payment-methods/square.php:931
-#: includes/payment-methods/stripe.php:2134 templates/cart/totals.php:43
-#: templates/checkout/summary.php:71 templates/email/admin-receipt.php:85
-#: templates/email/customer-receipt.php:89 templates/email/order-status.php:85
-#: templates/invoice/admin.php:285 templates/order/totals.php:28
-msgid "Tax"
-msgstr "Налог"
 
 #: includes/admin/reports.php:38
 msgid "Day"
@@ -1684,8 +1685,8 @@ msgstr "Галерея"
 msgid "Order Received"
 msgstr "Заказ принят"
 
-#: includes/admin/settings-fields.php:279 includes/class-frontend.php:583
-#: templates/image/add-to-cart.php:89
+#: includes/admin/settings-fields.php:279 includes/class-frontend.php:584
+#: templates/image/add-to-cart.php:85
 msgid "Store"
 msgstr "Магазин"
 
@@ -1713,7 +1714,7 @@ msgstr "Адреса"
 msgid "Account Details"
 msgstr "Детали учетной записи"
 
-#: includes/admin/settings-fields.php:337 includes/class-frontend.php:526
+#: includes/admin/settings-fields.php:337 includes/class-frontend.php:527
 #: templates/account/login.php:9 templates/account/login.php:27
 msgid "Login"
 msgstr "Войти"
@@ -1724,7 +1725,7 @@ msgstr "Войти"
 msgid "Reset Password"
 msgstr "Сбросить пароль"
 
-#: includes/admin/settings-fields.php:353 includes/class-frontend.php:509
+#: includes/admin/settings-fields.php:353 includes/class-frontend.php:510
 #: includes/functions/account.php:419
 msgid "Logout"
 msgstr "Выйти"
@@ -2406,9 +2407,9 @@ msgstr "Другие поля"
 
 #: includes/admin/settings-fields.php:977
 #: includes/admin/settings-fields.php:987 includes/admin/sunshine-order.php:732
-#: includes/class-cart.php:1939 templates/email/admin-receipt.php:146
-#: templates/email/customer-receipt.php:150
-#: templates/email/order-status.php:118 templates/order/details.php:59
+#: includes/class-cart.php:1999 templates/email/admin-receipt.php:145
+#: templates/email/customer-receipt.php:149
+#: templates/email/order-status.php:117 templates/order/details.php:59
 msgid "Notes"
 msgstr "Заметки"
 
@@ -3042,35 +3043,35 @@ msgstr "Неверный тип файла"
 msgid "Upload directory is not writable"
 msgstr "Каталог загрузки недоступен для записи"
 
-#: includes/admin/sunshine-gallery.php:1587
-#: includes/admin/sunshine-gallery.php:1636
+#: includes/admin/sunshine-gallery.php:1597
+#: includes/admin/sunshine-gallery.php:1646
 msgid "You do not have permission to import images."
 msgstr "У вас нет разрешения на импорт изображений."
 
-#: includes/admin/sunshine-gallery.php:1596
+#: includes/admin/sunshine-gallery.php:1606
 msgid "A directory must be selected before importing."
 msgstr "Перед импортом необходимо выбрать каталог."
 
-#: includes/admin/sunshine-gallery.php:1605
-#: includes/admin/sunshine-gallery.php:1651
+#: includes/admin/sunshine-gallery.php:1615
+#: includes/admin/sunshine-gallery.php:1661
 msgid "The selected directory is not available."
 msgstr "Выбранный каталог недоступен."
 
-#: includes/admin/sunshine-gallery.php:1676
+#: includes/admin/sunshine-gallery.php:1686
 msgid "Already uploaded to gallery"
 msgstr "Уже загружено в галерею"
 
 #. translators: %s is the upload directory
-#: includes/admin/sunshine-gallery.php:1696
+#: includes/admin/sunshine-gallery.php:1706
 #, php-format
 msgid "The selected file could not be copied to %s."
 msgstr "Выбранный файл не может быть скопирован в %s."
 
-#: includes/admin/sunshine-gallery.php:1735
+#: includes/admin/sunshine-gallery.php:1745
 msgid "No emails collected yet"
 msgstr "Электронные письма пока не собраны"
 
-#: includes/admin/sunshine-gallery.php:1809
+#: includes/admin/sunshine-gallery.php:1819
 msgid "Add gallery name"
 msgstr "Добавить название галереи"
 
@@ -3090,14 +3091,14 @@ msgstr "Все режимы"
 #: includes/payment-methods/paypal-legacy.php:39
 #: includes/payment-methods/paypal.php:63
 #: includes/payment-methods/square.php:100
-#: includes/payment-methods/stripe.php:542 class-authorizenet.php:50
+#: includes/payment-methods/stripe.php:549 class-authorizenet.php:50
 #: class-mollie.php:48 class-mercadopago-pro.php:41 class-mercadopago.php:46
 #: class-payfast.php:39 class-paystack.php:43
 msgid "Live"
 msgstr "Live"
 
 #: includes/admin/sunshine-order.php:130 includes/admin/sunshine-order.php:450
-#: includes/payment-methods/stripe.php:543 includes/payment-methods/test.php:7
+#: includes/payment-methods/stripe.php:550 includes/payment-methods/test.php:7
 #: class-authorizenet.php:51 class-mollie.php:49 class-mercadopago-pro.php:42
 #: class-mercadopago.php:47 class-payfast.php:40 class-paystack.php:44
 msgid "Test"
@@ -3125,27 +3126,27 @@ msgstr "Изменить статус на: %s"
 msgid "Remove personal data"
 msgstr "Удалить персональные данные"
 
-#: includes/admin/sunshine-order.php:420 templates/image/product-details.php:30
+#: includes/admin/sunshine-order.php:420 templates/image/product-details.php:31
 msgid "Select All"
 msgstr "Выбрать все"
 
-#: includes/admin/sunshine-order.php:421 includes/class-order.php:1013
+#: includes/admin/sunshine-order.php:421 includes/class-order.php:1030
 #: includes/class-sunshinephotocart.php:535 gallery.php:272 admin.php:237
 #: admin/customers.php:20 admin/customers.php:42 class-admin-gift-cards.php:189
 msgid "Order"
 msgstr "Заказ"
 
 #: includes/admin/sunshine-order.php:423 includes/admin/sunshine-order.php:649
-#: templates/admin/order-items.php:65 templates/invoice/admin.php:155
+#: templates/admin/order-items.php:65 templates/invoice/admin.php:156
 #: templates/order/details.php:4 class-reports-customers-table.php:34
 #: gallery.php:270 admin/schedule.php:31
 msgid "Customer"
 msgstr "Клиент"
 
 #: includes/admin/sunshine-order.php:425 includes/admin/sunshine-order.php:626
-#: templates/email/admin-receipt.php:134
-#: templates/email/customer-receipt.php:138
-#: templates/email/order-status.php:106 templates/invoice/admin.php:169
+#: templates/email/admin-receipt.php:133
+#: templates/email/customer-receipt.php:137
+#: templates/email/order-status.php:105 templates/invoice/admin.php:170
 #: templates/order/details.php:22 class-export-orders.php:496
 msgid "Payment Method"
 msgstr "Способ оплаты"
@@ -3154,7 +3155,7 @@ msgstr "Способ оплаты"
 #: templates/cart/totals.php:70 templates/checkout/summary.php:106
 #: templates/email/admin-receipt.php:124
 #: templates/email/customer-receipt.php:128 templates/email/order-status.php:96
-#: templates/invoice/admin.php:311 templates/order/totals.php:67
+#: templates/invoice/admin.php:312 templates/order/totals.php:67
 #: class-export-orders.php:494
 msgid "Order Total"
 msgstr "Весь заказ"
@@ -3169,7 +3170,7 @@ msgid "Personal data removed"
 msgstr "Удаленные персональные данные"
 
 #: includes/admin/sunshine-order.php:470 includes/admin/sunshine-order.php:549
-#: includes/class-frontend.php:816
+#: includes/class-frontend.php:817
 #: includes/emails/class-email-customer-receipt.php:54
 #: templates/account/orders.php:22 templates/email/customer-receipt.php:16
 #: templates/email/order-status.php:16
@@ -3231,10 +3232,10 @@ msgstr "Уведомление клиента об изменении стату
 
 #: includes/admin/sunshine-order.php:695
 #: includes/payment-methods/square.php:901
-#: includes/payment-methods/stripe.php:2072 templates/cart/totals.php:17
-#: templates/checkout/summary.php:46 templates/email/admin-receipt.php:184
-#: templates/email/customer-receipt.php:170
-#: templates/email/order-status.php:138 templates/order/details.php:46
+#: includes/payment-methods/stripe.php:2089 templates/cart/totals.php:17
+#: templates/checkout/summary.php:46 templates/email/admin-receipt.php:183
+#: templates/email/customer-receipt.php:169
+#: templates/email/order-status.php:137 templates/order/details.php:46
 msgid "Shipping"
 msgstr "Доставка"
 
@@ -3242,9 +3243,9 @@ msgstr "Доставка"
 msgid "No shipping address collected for this order"
 msgstr "Для данного заказа не собран адрес доставки"
 
-#: includes/admin/sunshine-order.php:706 templates/email/admin-receipt.php:191
-#: templates/email/customer-receipt.php:177
-#: templates/email/order-status.php:145 templates/order/details.php:52
+#: includes/admin/sunshine-order.php:706 templates/email/admin-receipt.php:190
+#: templates/email/customer-receipt.php:176
+#: templates/email/order-status.php:144 templates/order/details.php:52
 msgid "Billing"
 msgstr "Биллинг"
 
@@ -3262,7 +3263,7 @@ msgstr "Лог"
 
 #: includes/admin/sunshine-order.php:736 includes/admin/sunshine-order.php:894
 #: templates/email/admin-receipt.php:119
-#: templates/email/customer-receipt.php:123 templates/invoice/admin.php:305
+#: templates/email/customer-receipt.php:123 templates/invoice/admin.php:306
 #: templates/order/totals.php:62
 msgid "Refunds"
 msgstr "Возвраты"
@@ -3283,7 +3284,7 @@ msgstr ""
 #: includes/admin/sunshine-product-category.php:168
 #: templates/admin/order-items.php:101 templates/cart/item.php:2
 #: templates/cart/items.php:4 templates/checkout/summary.php:8
-#: templates/invoice/admin.php:212 templates/invoice/admin.php:222
+#: templates/invoice/admin.php:213 templates/invoice/admin.php:223
 #: templates/order/item.php:2 templates/order/items.php:5
 #: class-reports-images-table.php:34 gallery.php:281
 #: reports/class-reports-image-downloads.php:36 admin.php:25 admin.php:138
@@ -3298,8 +3299,8 @@ msgstr "Данные изображения"
 #: includes/admin/sunshine-order.php:794 includes/admin/sunshine-order.php:831
 #: includes/class-sunshinephotocart.php:423 templates/admin/order-items.php:104
 #: templates/cart/item.php:5 templates/cart/items.php:5
-#: templates/checkout/summary.php:12 templates/invoice/admin.php:213
-#: templates/invoice/admin.php:225 templates/order/item.php:5
+#: templates/checkout/summary.php:12 templates/invoice/admin.php:214
+#: templates/invoice/admin.php:226 templates/order/item.php:5
 #: templates/order/items.php:6 class-reports-products-table.php:34
 #: admin/products.php:67 admin/customers.php:40 admin/products.php:122
 msgid "Product"
@@ -3307,41 +3308,41 @@ msgstr "Товар"
 
 #: includes/admin/sunshine-order.php:795 includes/admin/sunshine-order.php:837
 #: templates/admin/order-items.php:105 templates/cart/item.php:15
-#: templates/cart/items.php:7 templates/image/product-details.php:59
-#: templates/invoice/admin.php:214 templates/invoice/admin.php:238
+#: templates/cart/items.php:7 templates/image/product-details.php:60
+#: templates/invoice/admin.php:215 templates/invoice/admin.php:239
 #: templates/order/item.php:12 templates/order/items.php:7
 #: templates/product-details.php:31 admin/customers.php:41
 msgid "Qty"
 msgstr "Количество"
 
 #: includes/admin/sunshine-order.php:796 templates/cart/items.php:6
-#: templates/invoice/admin.php:215 templates/order/items.php:8
+#: templates/invoice/admin.php:216 templates/order/items.php:8
 msgid "Item Price"
 msgstr "Цена товара"
 
 #: includes/admin/sunshine-order.php:797 templates/cart/items.php:8
-#: templates/invoice/admin.php:216 templates/order/items.php:9
+#: templates/invoice/admin.php:217 templates/order/items.php:9
 msgid "Item Total"
 msgstr "Итого позиций"
 
 #: includes/admin/sunshine-order.php:840 includes/admin/sunshine-product.php:41
 #: includes/admin/sunshine-product.php:118
 #: includes/class-shipping-method.php:178 templates/cart/item.php:12
-#: templates/invoice/admin.php:241 templates/order/item.php:15
+#: templates/invoice/admin.php:242 templates/order/item.php:15
 msgid "Price"
 msgstr "Цена"
 
 #: includes/admin/sunshine-order.php:853 templates/cart/totals.php:3
 #: templates/checkout/summary.php:28 templates/email/admin-receipt.php:45
 #: templates/email/customer-receipt.php:49 templates/email/order-status.php:48
-#: templates/invoice/admin.php:256 templates/order/totals.php:5
+#: templates/invoice/admin.php:257 templates/order/totals.php:5
 msgid "Subtotal"
 msgstr "Промежуточный итог"
 
 #. translators: %s is the shipping method name
 #: includes/admin/sunshine-order.php:859 templates/email/admin-receipt.php:59
 #: templates/email/customer-receipt.php:63 templates/email/order-status.php:62
-#: templates/invoice/admin.php:270 templates/order/totals.php:19
+#: templates/invoice/admin.php:271 templates/order/totals.php:19
 #, php-format
 msgid "Shipping via %s"
 msgstr "Доставка через %s"
@@ -3351,7 +3352,7 @@ msgstr "Доставка через %s"
 #: templates/checkout/summary.php:77 templates/email/admin-receipt.php:72
 #: templates/email/admin-receipt.php:92 templates/email/customer-receipt.php:76
 #: templates/email/customer-receipt.php:96 templates/email/order-status.php:72
-#: templates/invoice/admin.php:279 templates/order/totals.php:43 admin.php:4
+#: templates/invoice/admin.php:280 templates/order/totals.php:43 admin.php:4
 #: discounts.php:34 discounts.php:46 class-export-orders.php:492
 msgid "Discounts"
 msgstr "Скидки"
@@ -3359,7 +3360,7 @@ msgstr "Скидки"
 #: includes/admin/sunshine-order.php:888 templates/checkout/summary.php:95
 #: templates/email/admin-receipt.php:113
 #: templates/email/customer-receipt.php:117 templates/email/order-status.php:91
-#: templates/invoice/admin.php:299 templates/order/totals.php:56
+#: templates/invoice/admin.php:300 templates/order/totals.php:56
 msgid "Credits Applied"
 msgstr "Применяемые кредиты"
 
@@ -3606,7 +3607,7 @@ msgstr "Сироты не найдены!"
 #: includes/admin/tools/orphans.php:162
 #: includes/admin/tools/refresh-photo-details.php:221
 #: includes/admin/tools/regenerate.php:419
-#: includes/admin/tools/square-reconcile.php:191
+#: includes/admin/tools/square-reconcile.php:184
 #: includes/admin/tools/unused-image-sizes.php:153 hooks.php:689
 msgid "Abort"
 msgstr "Отменить"
@@ -3627,7 +3628,13 @@ msgid ""
 "imported before Sunshine read those details. Your photos and thumbnails are "
 "not changed. To run it, edit a gallery and use the \"Refresh photo details\" "
 "button below its images."
-msgstr "Заново считывает ключевые слова, заголовок, подпись и дату съёмки из твоих исходных файлов, чтобы поиск по галерее мог находить фото по ключевым словам. Используй это для галерей, импортированных до того, как Sunshine начал считывать эти данные. Твои фото и миниатюры не изменяются. Чтобы запустить, открой галерею для редактирования и нажми кнопку «Обновить данные фото» под её изображениями."
+msgstr ""
+"Заново считывает ключевые слова, заголовок, подпись и дату съёмки из твоих "
+"исходных файлов, чтобы поиск по галерее мог находить фото по ключевым "
+"словам. Используй это для галерей, импортированных до того, как Sunshine "
+"начал считывать эти данные. Твои фото и миниатюры не изменяются. Чтобы "
+"запустить, открой галерею для редактирования и нажми кнопку «Обновить данные "
+"фото» под её изображениями."
 
 #: includes/admin/tools/refresh-photo-details.php:126
 msgid "Photo not found"
@@ -3649,7 +3656,9 @@ msgstr "Не удалось считать данные из исходного 
 msgid ""
 "To run this, edit a gallery and use the \"Refresh photo details\" button "
 "below its images."
-msgstr "Чтобы запустить, открой галерею для редактирования и нажми кнопку «Обновить данные фото» под её изображениями."
+msgstr ""
+"Чтобы запустить, открой галерею для редактирования и нажми кнопку «Обновить "
+"данные фото» под её изображениями."
 
 #. translators: %s is the gallery title
 #: includes/admin/tools/refresh-photo-details.php:212
@@ -3667,7 +3676,9 @@ msgstr "Готово!"
 msgid ""
 "No photo found at this position. It may have been deleted since this run "
 "started."
-msgstr "На этой позиции фото не найдено. Возможно, его удалили после начала этого запуска."
+msgstr ""
+"На этой позиции фото не найдено. Возможно, его удалили после начала этого "
+"запуска."
 
 #: includes/admin/tools/regenerate.php:22
 #: includes/admin/tools/regenerate.php:25
@@ -3876,13 +3887,7 @@ msgstr "%1$s: отмечен как неудачный (Square: %2$s)"
 msgid "%1$s: still pending at Square (%2$s)"
 msgstr "%1$s: всё ещё ожидает в Square (%2$s)"
 
-#. translators: %s: order name
-#: includes/admin/tools/square-reconcile.php:171
-#, php-format
-msgid "%s: another reconcile already running, skipped"
-msgstr "%s: сверка уже выполняется, пропущено"
-
-#: includes/admin/tools/square-reconcile.php:224
+#: includes/admin/tools/square-reconcile.php:217
 msgid "Request failed"
 msgstr "Запрос не выполнен"
 
@@ -3908,58 +3913,58 @@ msgstr "Удаление неиспользуемых размеров изоб�
 msgid "Return to tools"
 msgstr "Вернуться к инструментам"
 
-#: includes/class-cart.php:320
+#: includes/class-cart.php:324
 msgid "An item has been removed from your cart because it no longer exists"
 msgstr "Товар был удален из корзины, так как его больше не существует"
 
 #. translators: %s is the discount code
-#: includes/class-cart.php:602
+#: includes/class-cart.php:606
 #, php-format
 msgid "Discount \"%s\" removed because it is no longer valid"
 msgstr "Скидка \"%s\" удалена, так как она больше не действует"
 
-#: includes/class-cart.php:1572
+#: includes/class-cart.php:1632
 msgid "Contact Information"
 msgstr "Контактная информация"
 
-#: includes/class-cart.php:1577 includes/class-countries.php:3424
+#: includes/class-cart.php:1637 includes/class-countries.php:3424
 #: includes/functions/account.php:542 templates/account/signup.php:20
 #: class-export-orders.php:497
 msgid "First Name"
 msgstr "Имя"
 
-#: includes/class-cart.php:1586 includes/class-countries.php:3433
+#: includes/class-cart.php:1646 includes/class-countries.php:3433
 #: includes/functions/account.php:550 templates/account/signup.php:27
 #: class-export-orders.php:498
 msgid "Last Name"
 msgstr "Фамилия"
 
-#: includes/class-cart.php:1612 templates/account/login.php:18
+#: includes/class-cart.php:1672 templates/account/login.php:18
 #: templates/account/signup.php:9 templates/shortcodes/password.php:4
 msgid "Password"
 msgstr "Пароль"
 
-#: includes/class-cart.php:1614
+#: includes/class-cart.php:1674
 msgid "Optionally set a password"
 msgstr "По желанию можно установить пароль"
 
-#: includes/class-cart.php:1631 templates/email/admin-receipt.php:199
-#: templates/email/customer-receipt.php:185
-#: templates/email/order-status.php:153 templates/invoice/admin.php:184
+#: includes/class-cart.php:1691 templates/email/admin-receipt.php:198
+#: templates/email/customer-receipt.php:184
+#: templates/email/order-status.php:152 templates/invoice/admin.php:185
 #: templates/order/details.php:39 class-export-orders.php:501
 msgid "EU VAT Number"
 msgstr "Номер НДС ЕС"
 
-#: includes/class-cart.php:1733
+#: includes/class-cart.php:1793
 msgid "Delivery Method"
 msgstr "Метод доставки"
 
-#: includes/class-cart.php:1793 includes/class-cart.php:1810
-#: templates/invoice/admin.php:173 class-export-orders.php:495
+#: includes/class-cart.php:1853 includes/class-cart.php:1870
+#: templates/invoice/admin.php:174 class-export-orders.php:495
 msgid "Shipping Method"
 msgstr "Способ доставки"
 
-#: includes/class-cart.php:1815 includes/class-cart.php:2313
+#: includes/class-cart.php:1875 includes/class-cart.php:2373
 msgid ""
 "Sorry, shipping is not available to the address you entered. Please double "
 "check the address or try a different shipping address."
@@ -3967,36 +3972,36 @@ msgstr ""
 "К сожалению, доставка по указанному адресу недоступна. Проверь адрес ещё раз "
 "или укажи другой адрес доставки."
 
-#: includes/class-cart.php:1876
+#: includes/class-cart.php:1936
 msgid "Use shipping address as billing address"
 msgstr "Используйте адрес доставки в качестве адреса для выставления счета"
 
-#: includes/class-cart.php:1914
+#: includes/class-cart.php:1974
 msgid "Same as shipping address"
 msgstr "Совпадает с адресом доставки"
 
-#: includes/class-cart.php:1966
+#: includes/class-cart.php:2026
 msgid "Payment"
 msgstr "Оплата"
 
 #. translators: %s is the available credit amount formatted as price
-#: includes/class-cart.php:1976
+#: includes/class-cart.php:2036
 #, php-format
 msgid "Use my credits (%s available)"
 msgstr "Использовать мои кредиты (%s доступно)"
 
 #. translators: %s is the order total amount formatted as price
-#: includes/class-cart.php:1984 includes/class-payment-method.php:242
+#: includes/class-cart.php:2044 includes/class-payment-method.php:242
 #, php-format
 msgid "Submit Order & Pay %s"
 msgstr "Оформить заказ и оплатить %s"
 
-#: includes/class-cart.php:1986
+#: includes/class-cart.php:2046
 msgid "Submit Order for Free"
 msgstr "Отправить заказ бесплатно"
 
 #. translators: %1$s is the URL to the terms page, %2$s is the title of the terms page
-#: includes/class-cart.php:2003
+#: includes/class-cart.php:2063
 #, php-format
 msgid ""
 "By submitting this order, you agree to our <a href=\"%1$s\" "
@@ -4006,44 +4011,44 @@ msgstr ""
 "target=\"_blank\">%2$s</a>"
 
 #. translators: %s is the section name
-#: includes/class-cart.php:2044
+#: includes/class-cart.php:2104
 #, php-format
 msgid "Edit %s"
 msgstr "Редактировать %s"
 
-#: includes/class-cart.php:2062
+#: includes/class-cart.php:2122
 msgid "Next Step"
 msgstr "Следующий шаг"
 
-#: includes/class-cart.php:2239
+#: includes/class-cart.php:2299
 msgid "Invalid checkout section"
 msgstr "Неверный раздел оформления заказа"
 
-#: includes/class-cart.php:2255
+#: includes/class-cart.php:2315
 msgid "Field contains invalid data"
 msgstr "Поле содержит недопустимые данные"
 
 #. translators: %s is the field name
-#: includes/class-cart.php:2272
+#: includes/class-cart.php:2332
 #, php-format
 msgid "%s is required"
 msgstr "Требуется %s"
 
-#: includes/class-cart.php:2284 frontend.php:173
+#: includes/class-cart.php:2344 frontend.php:173
 msgid "Invalid email"
 msgstr "Неверный E-mail"
 
-#: includes/class-cart.php:2385 includes/class-cart.php:2593
+#: includes/class-cart.php:2445 includes/class-cart.php:2654
 msgid "Please select a shipping method before completing your order."
 msgstr "Выбери способ доставки, прежде чем завершить заказ."
 
 #. translators: %s is a comma separated list of checkout section names, e.g. "Shipping Address, Payment"
-#: includes/class-cart.php:2506
+#: includes/class-cart.php:2566
 #, php-format
 msgid "Please complete the following before submitting your order: %s"
 msgstr "Заполни следующее, прежде чем отправить заказ: %s"
 
-#: includes/class-cart.php:2519
+#: includes/class-cart.php:2579
 msgid ""
 "Error encountered during checkout process and your order has already been "
 "marked as paid."
@@ -4051,19 +4056,19 @@ msgstr ""
 "Во время оформления заказа возникла ошибка, и ваш заказ уже был отмечен как "
 "оплаченный."
 
-#: includes/class-cart.php:2519 includes/class-cart.php:2852
+#: includes/class-cart.php:2579 includes/class-cart.php:2935
 msgid "View the order"
 msgstr "Посмотреть заказ"
 
-#: includes/class-cart.php:2531
+#: includes/class-cart.php:2591
 msgid "No payment method selected"
 msgstr "Способ оплаты не выбран"
 
-#: includes/class-cart.php:2655
+#: includes/class-cart.php:2716
 msgid "Failed to initialize order"
 msgstr "Не удалось инициализировать заказ"
 
-#: includes/class-cart.php:2666
+#: includes/class-cart.php:2727
 msgid ""
 "Something happened while trying to process your order. Please contact the "
 "site owner for more details."
@@ -4071,11 +4076,11 @@ msgstr ""
 "Что-то произошло при попытке обработать ваш заказ. Пожалуйста, свяжитесь с "
 "владельцем сайта для получения более подробной информации."
 
-#: includes/class-cart.php:2695
+#: includes/class-cart.php:2756
 msgid "No payment method"
 msgstr "Нет способа оплаты"
 
-#: includes/class-cart.php:2785
+#: includes/class-cart.php:2868
 msgid ""
 "User account already exists with that email address - please login to "
 "continue"
@@ -4083,7 +4088,7 @@ msgstr ""
 "Учетная запись пользователя с таким адресом электронной почты уже существует "
 "- пожалуйста, войдите, чтобы продолжить"
 
-#: includes/class-cart.php:2852
+#: includes/class-cart.php:2935
 msgid "It appears your previous checkout has already been processed."
 msgstr "Похоже, что ваш предыдущий заказ уже обработан."
 
@@ -12819,24 +12824,24 @@ msgstr "Сообщение"
 msgid "Search results"
 msgstr "Результаты поиска"
 
-#: includes/class-frontend.php:251
+#: includes/class-frontend.php:252
 msgid "Sorry, you do not have permission to view this page"
 msgstr "Извините, у вас нет разрешения на просмотр этой страницы"
 
-#: includes/class-frontend.php:442
+#: includes/class-frontend.php:443
 msgid "You have already selected the maximum number of photos allowed"
 msgstr "Вы уже выбрали максимально допустимое количество фотографий"
 
-#: includes/class-frontend.php:443
+#: includes/class-frontend.php:444
 msgid "View Cart"
 msgstr "Просмотр корзины"
 
-#: includes/class-frontend.php:444
+#: includes/class-frontend.php:445
 msgid "Create an account to save your favorites permanently"
 msgstr ""
 "Создайте учетную запись, чтобы сохранить свои избранные элементы навсегда"
 
-#: includes/class-frontend.php:445
+#: includes/class-frontend.php:446
 msgid ""
 "Your selections will only be saved for this browser session. To save them "
 "permanently, <a href=\"#\" id=\"sunshine--guest-to-signup\">create an "
@@ -12846,170 +12851,171 @@ msgstr ""
 "сохранить их навсегда, <a href=\"#\" id=\"sunshine--guest-to-"
 "signup\">создайте учетную запись</a>."
 
-#: includes/class-frontend.php:446 templates/favorites/guest-choice.php:17
+#: includes/class-frontend.php:447 templates/favorites/guest-choice.php:17
 msgid "Continue as guest"
 msgstr "Продолжить как гость"
 
-#: includes/class-frontend.php:447 templates/favorites/guest-choice.php:10
+#: includes/class-frontend.php:448 templates/favorites/guest-choice.php:10
 msgid "I already have an account"
 msgstr "У меня уже есть аккаунт"
 
-#: includes/class-frontend.php:448
+#: includes/class-frontend.php:449
 msgid "Back to sign up"
 msgstr "Вернуться к регистрации"
 
-#: includes/class-frontend.php:449
+#: includes/class-frontend.php:450
 msgid "I understand, continue"
 msgstr "Я понимаю, продолжить"
 
-#: includes/class-frontend.php:537 includes/emails/class-email-signup.php:8
+#: includes/class-frontend.php:538 includes/emails/class-email-signup.php:8
 #: templates/account/signup.php:1
 msgid "Sign Up"
 msgstr "Зарегистрироваться"
 
-#: includes/class-frontend.php:622 includes/class-frontend.php:728
+#: includes/class-frontend.php:623 includes/class-frontend.php:729
 #: templates/image/add-to-cart.php:2 templates/fill.php:20
-#: templates/fill.php:33
+#: templates/fill.php:38
 msgid "Return to gallery"
 msgstr "Вернуться в галерею"
 
 #. translators: %s: image name
-#: includes/class-frontend.php:632
+#: includes/class-frontend.php:633
 #, php-format
 msgid "Favorite: %s"
 msgstr "Избранное: %s"
 
 #. translators: %s: image name
-#: includes/class-frontend.php:645 includes/class-frontend.php:658
+#: includes/class-frontend.php:646 includes/class-frontend.php:659
 #, php-format
 msgid "Purchase options: %s"
 msgstr "Варианты покупки: %s"
 
 #. translators: %s: image name
-#: includes/class-frontend.php:678
+#: includes/class-frontend.php:679
 #, php-format
 msgid "Comments: %s"
 msgstr "Комментарии: %s"
 
-#: includes/class-frontend.php:693 class-lightbox.php:424
+#: includes/class-frontend.php:694 class-lightbox.php:424
 msgid "Share"
 msgstr "Поделиться"
 
-#: includes/class-frontend.php:718
+#: includes/class-frontend.php:719
 msgid "Visit store"
 msgstr "Перейти в магазин"
 
 #. translators: %s is the parent gallery name
 #. translators: %s is the gallery name
-#: includes/class-frontend.php:740 includes/class-frontend.php:750
+#: includes/class-frontend.php:741 includes/class-frontend.php:751
 #: templates/cart/cart.php:21 templates/cart/empty.php:7
 #: themes/cover/functions.php:60 themes/cover/functions.php:72
 #, php-format
 msgid "Return to %s"
 msgstr "Вернуться к %s"
 
-#: includes/class-frontend.php:762
+#: includes/class-frontend.php:763
 msgid "Add all to cart"
 msgstr "Добавить все в корзину"
 
-#: includes/class-frontend.php:774
+#: includes/class-frontend.php:775
 msgid "Share your favorites"
 msgstr "Поделитесь своими любимыми"
 
-#: includes/class-frontend.php:786
+#: includes/class-frontend.php:787
 msgid "Clear all favorites"
 msgstr "Очистить все избранные"
 
 #. translators: %s is the gallery name
-#: includes/class-frontend.php:806 includes/functions/template.php:889
+#: includes/class-frontend.php:807 includes/functions/template.php:889
 #, php-format
 msgid "Return to gallery \"%s\""
 msgstr "Вернуться в галерею \"%s\""
 
 #. translators: %1$s is the gallery name, %2$s is the site name
-#: includes/class-frontend.php:844
+#: includes/class-frontend.php:845
 #, php-format
 msgid "A photo from the gallery %1$s by %2$s"
 msgstr "Фото из галереи %1$s by %2$s"
 
 #. translators: %1$s is the gallery name, %2$s is the site name
-#: includes/class-frontend.php:874
+#: includes/class-frontend.php:875
 #, php-format
 msgid "Photo gallery %1$s by %2$s"
 msgstr "Фотогалерея %1$s по %2$s"
 
-#: includes/class-frontend.php:929
+#: includes/class-frontend.php:930
 msgid "Minimize"
 msgstr "Свернуть"
 
-#: includes/class-frontend.php:935
+#: includes/class-frontend.php:936
 msgid "Show favorites"
 msgstr "Показать избранное"
 
-#: includes/class-frontend.php:964
+#: includes/class-frontend.php:965
 msgid "Sorry, you are not allowed to view this image"
 msgstr "Извините, вам не разрешено просматривать это изображение"
 
-#: includes/class-frontend.php:964 includes/functions/comments.php:16
-#: includes/functions/image.php:331 includes/functions/store.php:133
-#: includes/functions/store.php:186 includes/functions/template.php:373
+#: includes/class-frontend.php:965 includes/functions/comments.php:16
+#: includes/functions/comments.php:63 includes/functions/image.php:331
+#: includes/functions/store.php:133 includes/functions/store.php:188
+#: includes/functions/template.php:373
 msgid "Access denied"
 msgstr "Доступ запрещен"
 
-#: includes/class-frontend.php:1041
+#: includes/class-frontend.php:1042
 msgid ""
 "Images in your cart have been removed because they are no longer available"
 msgstr ""
 "Изображения в вашей корзине были удалены, поскольку они больше не доступны"
 
-#: includes/class-frontend.php:1110
+#: includes/class-frontend.php:1111
 msgid "No gallery found with that password"
 msgstr "Галерея с таким паролем не найдена"
 
-#: includes/class-frontend.php:1127
+#: includes/class-frontend.php:1128
 msgid "Invalid submission"
 msgstr "Неверное представление"
 
-#: includes/class-frontend.php:1140
+#: includes/class-frontend.php:1141
 msgid "Invalid gallery"
 msgstr "Недопустимая галерея"
 
-#: includes/class-frontend.php:1147
+#: includes/class-frontend.php:1148
 msgid "Gallery access code is incorrect, please try again"
 msgstr "Код доступа к галерее неверен, попробуйте еще раз"
 
-#: includes/class-frontend.php:1184
+#: includes/class-frontend.php:1185
 msgid "Not a valid email address"
 msgstr "Недействительный адрес электронной почты"
 
-#: includes/class-frontend.php:1207
+#: includes/class-frontend.php:1208
 msgid "You have been logged out"
 msgstr "Вы вышли из системы"
 
 #. translators: %1$s is the previous order status, %2$s is the new order status
-#: includes/class-order.php:129
+#: includes/class-order.php:130
 #, php-format
 msgid "Status change from %1$s to %2$s"
 msgstr "Изменение состояния с %1$s на %2$s"
 
 #. translators: %s is the order status name
-#: includes/class-order.php:133
+#: includes/class-order.php:134
 #, php-format
 msgid "Status set to %s"
 msgstr "Состояние установлено на %s"
 
 #. translators: %s is the order number
-#: includes/class-order.php:220 includes/class-order.php:1040
+#: includes/class-order.php:221 includes/class-order.php:1057
 #, php-format
 msgid "Order #%s"
 msgstr "Заказ #%s"
 
 #. translators: %s is the refund amount formatted as price
 #. translators: %s: refund amount
-#: includes/class-order.php:898 includes/payment-methods/paypal.php:805
+#: includes/class-order.php:915 includes/payment-methods/paypal.php:805
 #: includes/payment-methods/paypal.php:807
-#: includes/payment-methods/square.php:1794
-#: includes/payment-methods/stripe.php:3365 class-authorizenet.php:472
+#: includes/payment-methods/square.php:1782
+#: includes/payment-methods/stripe.php:3390 class-authorizenet.php:472
 #: class-mollie.php:410 class-mercadopago-pro.php:447 class-mercadopago.php:502
 #: class-payfast.php:556 class-paystack.php:435 class-quickpay.php:502
 #, php-format
@@ -13692,14 +13698,15 @@ msgstr "Товар не добавлен в корзину"
 msgid "No images found"
 msgstr "Изображение не найдено"
 
-#: includes/functions/add-to-cart.php:384
+#: includes/functions/add-to-cart.php:354
+#: includes/functions/add-to-cart.php:408
 msgid "Items not added to cart"
 msgstr "Товары не добавлены в корзину"
 
 #. translators: %s is the product name
 #. translators: %s: product name (optionally followed by the image name)
 #. translators: %s: product name
-#: includes/functions/add-to-cart.php:431 customer-tracking.php:207
+#: includes/functions/add-to-cart.php:455 customer-tracking.php:207
 #: hooks.php:117
 #, php-format
 msgid "%s added to cart"
@@ -13781,12 +13788,12 @@ msgstr "Некорректный комментарий - изображение
 msgid "Invalid comment submission - comments not allowed"
 msgstr "Неправильное представление комментария - комментарии не разрешены"
 
-#: includes/functions/comments.php:77
+#: includes/functions/comments.php:83
 msgid "Invalid comment submission - invalid email address"
 msgstr ""
 "Неправильное отправление комментария - неверный адрес электронной почты"
 
-#: includes/functions/comments.php:109
+#: includes/functions/comments.php:115
 msgid "Invalid comment submission - unknown reason"
 msgstr "Неверное отправление комментария - причина неизвестна"
 
@@ -14519,6 +14526,26 @@ msgstr "Текстовое поле"
 msgid "Print"
 msgstr "Печать"
 
+#. translators: %s is the tax amount
+#: includes/functions/taxes.php:70
+#, php-format
+msgid "includes %s tax"
+msgstr "включает в себя налог %s"
+
+#. translators: %1$s is the tax amount, %2$s is the tax name such as GST or VAT
+#: includes/functions/taxes.php:73
+#, php-format
+msgid "includes %1$s %2$s"
+msgstr "включая %2$s %1$s"
+
+#: includes/functions/taxes.php:85
+msgid "GST"
+msgstr "GST"
+
+#: includes/functions/taxes.php:86
+msgid "VAT"
+msgstr "НДС"
+
 #: includes/functions/template.php:333 includes/functions/template.php:423
 #: includes/functions/template.php:771
 msgid "Previous"
@@ -14611,7 +14638,7 @@ msgstr "Оплатить кредитной картой или со своег�
 #: includes/payment-methods/paypal-legacy.php:35
 #: includes/payment-methods/paypal.php:59
 #: includes/payment-methods/square.php:96
-#: includes/payment-methods/stripe.php:538 class-authorizenet.php:46
+#: includes/payment-methods/stripe.php:545 class-authorizenet.php:46
 #: class-export-orders.php:485 class-mollie.php:44 class-mercadopago-pro.php:37
 #: class-mercadopago.php:42 class-payfast.php:35 class-paystack.php:39
 msgid "Mode"
@@ -14634,8 +14661,8 @@ msgstr "Оплатить через PayPal"
 
 #: includes/payment-methods/paypal-legacy.php:220
 #: includes/payment-methods/paypal.php:722
-#: includes/payment-methods/square.php:1610
-#: includes/payment-methods/stripe.php:3255 class-authorizenet.php:371
+#: includes/payment-methods/square.php:1598
+#: includes/payment-methods/stripe.php:3280 class-authorizenet.php:371
 #: class-mollie.php:323 class-mercadopago-pro.php:384 class-mercadopago.php:439
 #: class-payfast.php:451 class-paystack.php:348 class-quickpay.php:341
 msgid "Transaction ID"
@@ -14862,7 +14889,7 @@ msgstr ""
 
 #: includes/payment-methods/paypal.php:314
 #: includes/payment-methods/square.php:755
-#: includes/payment-methods/stripe.php:3150 class-authorizenet.php:129
+#: includes/payment-methods/stripe.php:3175 class-authorizenet.php:129
 #: class-mercadopago-pro.php:143 class-mercadopago.php:179
 msgid ""
 "This will be processed as a test payment and no real money will be exchanged"
@@ -14903,24 +14930,24 @@ msgid "Refund payment in PayPal"
 msgstr "Возврат платежа в PayPal"
 
 #: includes/payment-methods/paypal.php:750
-#: includes/payment-methods/square.php:1676
-#: includes/payment-methods/stripe.php:3280 class-authorizenet.php:389
+#: includes/payment-methods/square.php:1664
+#: includes/payment-methods/stripe.php:3305 class-authorizenet.php:389
 #: class-mollie.php:348 class-mercadopago-pro.php:405 class-mercadopago.php:460
 #: class-payfast.php:468 class-paystack.php:368 class-quickpay.php:369
 msgid "Notify customer via email"
 msgstr "Уведомление клиента по электронной почте"
 
 #: includes/payment-methods/paypal.php:751
-#: includes/payment-methods/square.php:1677
-#: includes/payment-methods/stripe.php:3281 class-authorizenet.php:390
+#: includes/payment-methods/square.php:1665
+#: includes/payment-methods/stripe.php:3306 class-authorizenet.php:390
 #: class-mollie.php:349 class-mercadopago-pro.php:406 class-mercadopago.php:461
 #: class-payfast.php:469 class-paystack.php:369 class-quickpay.php:370
 msgid "Full refund"
 msgstr "Полный возврат"
 
 #: includes/payment-methods/paypal.php:752
-#: includes/payment-methods/square.php:1678
-#: includes/payment-methods/stripe.php:3282 class-authorizenet.php:391
+#: includes/payment-methods/square.php:1666
+#: includes/payment-methods/stripe.php:3307 class-authorizenet.php:391
 #: class-mollie.php:350 class-mercadopago-pro.php:407 class-mercadopago.php:462
 #: class-payfast.php:470 class-paystack.php:370 class-quickpay.php:371
 msgid "Amount to refund"
@@ -14947,18 +14974,18 @@ msgid "Order %s failed refund in PayPal"
 msgstr "Заказ %s не смог вернуть деньги в PayPal"
 
 #: includes/payment-methods/paypal.php:831
-#: includes/payment-methods/square.php:1855
-#: includes/payment-methods/stripe.php:3389 class-mercadopago.php:523
+#: includes/payment-methods/square.php:1840
+#: includes/payment-methods/stripe.php:3414 class-mercadopago.php:523
 msgid "Invalid payment"
 msgstr "Недействительный платеж"
 
 #: includes/payment-methods/square.php:16
-#: includes/payment-methods/square.php:1602
+#: includes/payment-methods/square.php:1590
 msgid "Square"
 msgstr "Квадрат"
 
 #: includes/payment-methods/square.php:18
-#: includes/payment-methods/stripe.php:310 class-authorizenet.php:16
+#: includes/payment-methods/stripe.php:317 class-authorizenet.php:16
 #: class-mercadopago.php:9 class-payfast.php:9 class-paystack.php:9
 #: class-quickpay.php:9
 msgid "Pay with credit card"
@@ -15080,7 +15107,7 @@ msgstr ""
 "раз после того, как платёж будет проведён."
 
 #: includes/payment-methods/square.php:560
-#: includes/payment-methods/square.php:1620
+#: includes/payment-methods/square.php:1608
 msgid "Square Processing Fee"
 msgstr "Комиссия Square за обработку"
 
@@ -15102,7 +15129,7 @@ msgid "Discount: %s"
 msgstr "Скидка: %s"
 
 #: includes/payment-methods/square.php:946
-#: includes/payment-methods/stripe.php:2269 discounts.php:35
+#: includes/payment-methods/stripe.php:2286 discounts.php:35
 msgid "Discount"
 msgstr "Скидка"
 
@@ -15125,7 +15152,7 @@ msgstr ""
 
 #. translators: %1$s: Square payment ID, %2$s: payment status
 #: includes/payment-methods/square.php:1255
-#: includes/payment-methods/square.php:1564
+#: includes/payment-methods/square.php:1554
 #, php-format
 msgid "Square reports payment %1$s as %2$s"
 msgstr "Square сообщает, что платёж %1$s имеет статус %2$s"
@@ -15153,46 +15180,46 @@ msgid "Every 15 minutes"
 msgstr "Каждые 15 минут"
 
 #. translators: %s: Square payment ID
-#: includes/payment-methods/square.php:1548
+#: includes/payment-methods/square.php:1539
 #, php-format
 msgid "Square payment %s reconciled as COMPLETED"
 msgstr "Платёж Square %s сверен как COMPLETED"
 
-#: includes/payment-methods/square.php:1615
+#: includes/payment-methods/square.php:1603
 msgid "Square Order ID"
 msgstr "Идентификатор заказа Square"
 
-#: includes/payment-methods/square.php:1625
+#: includes/payment-methods/square.php:1613
 msgid "Not yet available - Square calculates fees at settlement. "
 msgstr "Пока недоступно - Square рассчитывает комиссии при расчёте. "
 
-#: includes/payment-methods/square.php:1626
+#: includes/payment-methods/square.php:1614
 msgid "Refresh from Square"
 msgstr "Обновить из Square"
 
-#: includes/payment-methods/square.php:1633
+#: includes/payment-methods/square.php:1621
 msgid "Card"
 msgstr "Карта"
 
-#: includes/payment-methods/square.php:1643
+#: includes/payment-methods/square.php:1631
 msgid "exp."
 msgstr "действ. до"
 
-#: includes/payment-methods/square.php:1651
-#: includes/payment-methods/stripe.php:3260
+#: includes/payment-methods/square.php:1639
+#: includes/payment-methods/stripe.php:3285
 msgid "Application Fee Amount (To Sunshine)"
 msgstr "Сумма заявочного взноса (до солнечного света)"
 
-#: includes/payment-methods/square.php:1666
+#: includes/payment-methods/square.php:1654
 msgid "Recheck payment status in Square"
 msgstr "Проверить статус платежа в Square"
 
-#: includes/payment-methods/square.php:1668
+#: includes/payment-methods/square.php:1656
 msgid "Refund payment in Square"
 msgstr "Возврат платежа в Square"
 
 #. translators: %s is the order's Square mode (live or test)
-#: includes/payment-methods/square.php:1722
+#: includes/payment-methods/square.php:1710
 #, php-format
 msgid ""
 "Could not refund payment: no Square credentials are connected for this "
@@ -15206,9 +15233,9 @@ msgstr ""
 #. translators: %s is the error detail message
 #. translators: %s: error message
 #. translators: %s: error response
-#: includes/payment-methods/square.php:1761
-#: includes/payment-methods/square.php:1774
-#: includes/payment-methods/stripe.php:3357 class-mercadopago-pro.php:450
+#: includes/payment-methods/square.php:1749
+#: includes/payment-methods/square.php:1762
+#: includes/payment-methods/stripe.php:3382 class-mercadopago-pro.php:450
 #: class-mercadopago-pro.php:452 class-mercadopago.php:505
 #: class-mercadopago.php:507 class-payfast.php:560 class-paystack.php:439
 #: class-quickpay.php:506
@@ -15216,36 +15243,36 @@ msgstr ""
 msgid "Could not refund payment: %s"
 msgstr "Не удалось вернуть платеж: %s"
 
-#: includes/payment-methods/square.php:1771
+#: includes/payment-methods/square.php:1759
 msgid "Unknown error"
 msgstr "Неизвестная ошибка"
 
-#: includes/payment-methods/square.php:1780
+#: includes/payment-methods/square.php:1768
 msgid "Could not refund payment: Square did not return a refund"
 msgstr "Не удалось вернуть платёж: Square не вернул данные о возврате"
 
 #. translators: %s is the refund amount formatted as price
-#: includes/payment-methods/square.php:1790
+#: includes/payment-methods/square.php:1778
 #, php-format
 msgid "Sunshine contributed %s towards refund from processing fees"
 msgstr "Sunshine внесла %s в счет возмещения комиссии за обработку данных"
 
-#: includes/payment-methods/square.php:1798
-#: includes/payment-methods/stripe.php:3369
+#: includes/payment-methods/square.php:1786
+#: includes/payment-methods/stripe.php:3394
 msgid "Customer sent email about refund"
 msgstr "Клиент отправил электронное письмо о возврате средств"
 
-#: includes/payment-methods/square.php:1818
+#: includes/payment-methods/square.php:1806
 msgid ""
 "Square confirmed this payment was completed. The order has been finalized."
 msgstr "Square подтвердил, что платёж прошёл. Заказ завершён."
 
-#: includes/payment-methods/square.php:1821
+#: includes/payment-methods/square.php:1809
 msgid "This order is already marked as paid."
 msgstr "Этот заказ уже отмечен как оплаченный."
 
 #. translators: %s is the Square failure reason, if any
-#: includes/payment-methods/square.php:1826
+#: includes/payment-methods/square.php:1814
 #, php-format
 msgid ""
 "Square reports this payment failed or was canceled%s. The order has been "
@@ -15255,7 +15282,7 @@ msgstr ""
 "неудачный."
 
 #. translators: %s is the Square payment status
-#: includes/payment-methods/square.php:1831
+#: includes/payment-methods/square.php:1819
 #, php-format
 msgid ""
 "Square still reports this payment as %s. The order remains pending. Try "
@@ -15264,51 +15291,43 @@ msgstr ""
 "Square всё ещё сообщает о статусе платежа: %s. Заказ остаётся в ожидании. "
 "Попробуй ещё раз через минуту."
 
-#: includes/payment-methods/square.php:1834
-msgid ""
-"A recheck for this payment is already running. Please wait a moment and try "
-"again."
-msgstr ""
-"Повторная проверка этого платежа уже выполняется. Подожди немного и попробуй "
-"ещё раз."
-
-#: includes/payment-methods/square.php:1837
+#: includes/payment-methods/square.php:1822
 msgid "Could not reach Square"
 msgstr "Не удалось связаться с Square"
 
 #. translators: %s is the error message
-#: includes/payment-methods/square.php:1839
+#: includes/payment-methods/square.php:1824
 #, php-format
 msgid "Could not recheck this payment: %s"
 msgstr "Не удалось перепроверить этот платёж: %s"
 
-#: includes/payment-methods/stripe.php:308
-#: includes/payment-methods/stripe.php:3247
+#: includes/payment-methods/stripe.php:315
+#: includes/payment-methods/stripe.php:3272
 msgid "Stripe"
 msgstr "Stripe"
 
-#: includes/payment-methods/stripe.php:315
+#: includes/payment-methods/stripe.php:322
 msgid "Stripe Pro"
 msgstr "Stripe Pro"
 
-#: includes/payment-methods/stripe.php:377
+#: includes/payment-methods/stripe.php:384
 msgid "Stripe Processing Fee"
 msgstr "Комиссия Stripe за обработку"
 
-#: includes/payment-methods/stripe.php:434
+#: includes/payment-methods/stripe.php:441
 msgid "Stripe webhook is not setup"
 msgstr "Веб-хук Stripe не настроен"
 
-#: includes/payment-methods/stripe.php:434
+#: includes/payment-methods/stripe.php:441
 msgid "Configure here"
 msgstr "Настройте здесь"
 
-#: includes/payment-methods/stripe.php:461
+#: includes/payment-methods/stripe.php:468
 msgid "Continue to payment"
 msgstr "Перейти к оплате"
 
 #. translators: %s is the application fee percentage
-#: includes/payment-methods/stripe.php:479
+#: includes/payment-methods/stripe.php:486
 #, php-format
 msgid ""
 "Note: An additional %s%% fee is added to each Stripe order and goes to "
@@ -15318,19 +15337,19 @@ msgstr ""
 "комиссия %s%%, которая идёт Sunshine Photo Cart, сверх собственных комиссий "
 "Stripe."
 
-#: includes/payment-methods/stripe.php:485
+#: includes/payment-methods/stripe.php:492
 msgid "Checkout Mode"
 msgstr "Режим оплаты"
 
-#: includes/payment-methods/stripe.php:489
+#: includes/payment-methods/stripe.php:496
 msgid "Inline Payment Form (recommended)"
 msgstr "Встроенная форма оплаты (рекомендуется)"
 
-#: includes/payment-methods/stripe.php:490
+#: includes/payment-methods/stripe.php:497
 msgid "Redirect to Stripe Checkout"
 msgstr "Перенаправление на Stripe Checkout"
 
-#: includes/payment-methods/stripe.php:493
+#: includes/payment-methods/stripe.php:500
 msgid ""
 "Inline shows the payment form on your checkout page. Redirect sends "
 "customers to Stripe's hosted checkout page."
@@ -15338,23 +15357,23 @@ msgstr ""
 "Inline отображает форму оплаты на вашей странице оформления заказа. Redirect "
 "перенаправляет клиентов на страницу оформления заказа, размещенную на Stripe."
 
-#: includes/payment-methods/stripe.php:493
+#: includes/payment-methods/stripe.php:500
 msgid "Learn more about Stripe Checkout"
 msgstr "Узнайте больше о Stripe Checkout"
 
-#: includes/payment-methods/stripe.php:498
+#: includes/payment-methods/stripe.php:505
 msgid "Tax Calculation"
 msgstr "Расчет налога"
 
-#: includes/payment-methods/stripe.php:502
+#: includes/payment-methods/stripe.php:509
 msgid "Use Sunshine tax calculations"
 msgstr "Используйте расчеты налога Sunshine"
 
-#: includes/payment-methods/stripe.php:503
+#: includes/payment-methods/stripe.php:510
 msgid "Use Stripe Tax (automatic)"
 msgstr "Использовать Stripe Tax (автоматически)"
 
-#: includes/payment-methods/stripe.php:506
+#: includes/payment-methods/stripe.php:513
 msgid ""
 "When using Stripe Tax, tax is calculated automatically by Stripe based on "
 "customer location. Requires Stripe Tax to be enabled in your Stripe "
@@ -15364,55 +15383,55 @@ msgstr ""
 "основе местоположения клиента. Требуется включить Stripe Tax в панели "
 "управления Stripe."
 
-#: includes/payment-methods/stripe.php:506
+#: includes/payment-methods/stripe.php:513
 msgid "Enable Stripe Tax"
 msgstr "Включить Stripe Tax"
 
-#: includes/payment-methods/stripe.php:518
+#: includes/payment-methods/stripe.php:525
 msgid "Layout"
 msgstr "Макет"
 
-#: includes/payment-methods/stripe.php:522
+#: includes/payment-methods/stripe.php:529
 msgid "Tabs"
 msgstr "Вкладки"
 
-#: includes/payment-methods/stripe.php:523
+#: includes/payment-methods/stripe.php:530
 msgid "Accordion"
 msgstr "Аккордеон"
 
-#: includes/payment-methods/stripe.php:525
+#: includes/payment-methods/stripe.php:532
 msgid "See differences in layout options"
 msgstr "Посмотрите различия в вариантах компоновки"
 
-#: includes/payment-methods/stripe.php:549
+#: includes/payment-methods/stripe.php:556
 msgid "Stripe Connection (Live)"
 msgstr "Stripe Connection (Live)"
 
-#: includes/payment-methods/stripe.php:563
+#: includes/payment-methods/stripe.php:570
 msgid "Stripe Connection (Test)"
 msgstr "Подключение полос (тест)"
 
-#: includes/payment-methods/stripe.php:579
+#: includes/payment-methods/stripe.php:586
 msgid "Stripe Webhook"
 msgstr "Лента Webhook"
 
-#: includes/payment-methods/stripe.php:585
+#: includes/payment-methods/stripe.php:592
 msgid "Stripe Webhook Secret (Live)"
 msgstr "Секрет вебхуков Stripe (Live)"
 
-#: includes/payment-methods/stripe.php:599
+#: includes/payment-methods/stripe.php:606
 msgid "Stripe Webhook Secret (Test)"
 msgstr "Секрет вебхука Stripe (тест)"
 
-#: includes/payment-methods/stripe.php:615
+#: includes/payment-methods/stripe.php:622
 msgid "Bank Statement Descriptor"
 msgstr "Описание банковской выписки"
 
-#: includes/payment-methods/stripe.php:619
+#: includes/payment-methods/stripe.php:626
 msgid "e.g., WWW.YOURSITE.COM"
 msgstr "например, WWW.YOURSITE.COM"
 
-#: includes/payment-methods/stripe.php:620
+#: includes/payment-methods/stripe.php:627
 msgid ""
 "The description that appears on your customer's bank statement. Max 22 "
 "characters, letters/numbers/spaces only. Leave blank to use your Stripe "
@@ -15422,11 +15441,11 @@ msgstr ""
 "клиента. Максимум 22 символа, только буквы/цифры/пробелы. Оставьте поле "
 "пустым, чтобы использовать значение по умолчанию вашей учетной записи Stripe."
 
-#: includes/payment-methods/stripe.php:632
+#: includes/payment-methods/stripe.php:639
 msgid "Add Order Number to Statement"
 msgstr "Добавить номер заказа в выписку"
 
-#: includes/payment-methods/stripe.php:636
+#: includes/payment-methods/stripe.php:643
 msgid ""
 "Append the order number to the bank statement descriptor (e.g., \"MYSHOP* "
 "#12345\"). Helps customers identify charges."
@@ -15434,15 +15453,15 @@ msgstr ""
 "Добавьте номер заказа к описанию в выписке из банковского счета (например, "
 "«MYSHOP* #12345»). Это поможет клиентам идентифицировать платежи."
 
-#: includes/payment-methods/stripe.php:648
+#: includes/payment-methods/stripe.php:655
 msgid "Shortened Descriptor"
 msgstr "Сокращенный дескриптор"
 
-#: includes/payment-methods/stripe.php:652
+#: includes/payment-methods/stripe.php:659
 msgid "e.g., MYSHOP"
 msgstr "например, MYSHOP"
 
-#: includes/payment-methods/stripe.php:653
+#: includes/payment-methods/stripe.php:660
 msgid ""
 "A shortened version (max 10 characters) used with the order number suffix. "
 "If blank, uses first 10 characters of the full descriptor."
@@ -15450,11 +15469,11 @@ msgstr ""
 "Сокращенная версия (максимум 10 символов), используемая с суффиксом номера "
 "заказа. Если поле пустое, используются первые 10 символов полного описания."
 
-#: includes/payment-methods/stripe.php:672
+#: includes/payment-methods/stripe.php:679
 msgid "Optimized Checkout"
 msgstr "Оптимизированная оплата"
 
-#: includes/payment-methods/stripe.php:676
+#: includes/payment-methods/stripe.php:683
 msgid ""
 "Use Stripe's Optimized Checkout Suite to dynamically display the most "
 "relevant payment methods to each customer. When disabled, you can manually "
@@ -15465,40 +15484,40 @@ msgstr ""
 "эта функция отключена, вы можете вручную выбрать способы оплаты, которые "
 "будут предлагаться."
 
-#: includes/payment-methods/stripe.php:689
+#: includes/payment-methods/stripe.php:696
 msgid "Payment Methods"
 msgstr "Способы оплаты"
 
-#: includes/payment-methods/stripe.php:725
+#: includes/payment-methods/stripe.php:732
 msgid "Connected"
 msgstr "Подключено"
 
-#: includes/payment-methods/stripe.php:729
+#: includes/payment-methods/stripe.php:736
 msgid "Account:"
 msgstr "Клиент:"
 
-#: includes/payment-methods/stripe.php:736
-#: includes/payment-methods/stripe.php:741
+#: includes/payment-methods/stripe.php:743
+#: includes/payment-methods/stripe.php:748
 msgid "Account ID:"
 msgstr "Идентификатор учетной записи:"
 
-#: includes/payment-methods/stripe.php:746
+#: includes/payment-methods/stripe.php:753
 msgid "Disconnect Stripe account"
 msgstr "Отключить учетную запись Stripe"
 
-#: includes/payment-methods/stripe.php:752
+#: includes/payment-methods/stripe.php:759
 msgid "Connect to"
 msgstr "Подключить"
 
-#: includes/payment-methods/stripe.php:762
+#: includes/payment-methods/stripe.php:769
 msgid "Learn how to setup Stripe Webhooks"
 msgstr "Узнайте, как настроить веб-крючки Stripe"
 
-#: includes/payment-methods/stripe.php:791
+#: includes/payment-methods/stripe.php:798
 msgid "Optimized Checkout is enabled"
 msgstr "Оптимизированная оплата включена"
 
-#: includes/payment-methods/stripe.php:792
+#: includes/payment-methods/stripe.php:799
 msgid ""
 "Stripe will automatically display the most relevant payment methods to each "
 "customer based on their location, device, and purchase amount. Disable "
@@ -15509,7 +15528,7 @@ msgstr ""
 "покупки. Отключите функцию «Оптимизированная оплата» выше, чтобы выбрать "
 "способы оплаты вручную."
 
-#: includes/payment-methods/stripe.php:832
+#: includes/payment-methods/stripe.php:839
 msgid ""
 "Greyed-out methods are not active on your Stripe account. Enable them in "
 "your Stripe Dashboard, then use Sync Payment Methods."
@@ -15518,7 +15537,7 @@ msgstr ""
 "панели Stripe, а затем воспользуйся синхронизацией способов оплаты."
 
 #. translators: %s is a link to the Stripe Dashboard Link settings page
-#: includes/payment-methods/stripe.php:836
+#: includes/payment-methods/stripe.php:843
 #, php-format
 msgid ""
 "When Link is enabled, Stripe automatically offers customers Link's own "
@@ -15531,202 +15550,208 @@ msgstr ""
 "по отдельности: отключи Link ниже, чтобы убрать их, или настрой оплату "
 "частями в %s."
 
-#: includes/payment-methods/stripe.php:837
+#: includes/payment-methods/stripe.php:844
 msgid "Stripe Dashboard Link settings"
 msgstr "Настройки ссылки на панель Stripe"
 
-#: includes/payment-methods/stripe.php:843
+#: includes/payment-methods/stripe.php:850
 msgid "Sync Payment Methods"
 msgstr "Синхронизация способов оплаты"
 
-#: includes/payment-methods/stripe.php:887
+#: includes/payment-methods/stripe.php:894
 msgid "Syncing..."
 msgstr "Синхронизации..."
 
-#: includes/payment-methods/stripe.php:898
+#: includes/payment-methods/stripe.php:905
 msgid "Synced successfully!"
 msgstr "Синхронизация успешно завершена!"
 
-#: includes/payment-methods/stripe.php:903
-#: includes/payment-methods/stripe.php:908
+#: includes/payment-methods/stripe.php:910
+#: includes/payment-methods/stripe.php:915
 msgid "Sync failed"
 msgstr "Ошибка"
 
-#: includes/payment-methods/stripe.php:939
+#: includes/payment-methods/stripe.php:946
 msgid "Credit Card"
 msgstr "Кредитная карта"
 
-#: includes/payment-methods/stripe.php:942
+#: includes/payment-methods/stripe.php:949
 msgid "US Bank Account"
 msgstr "Счет в банке США"
 
-#: includes/payment-methods/stripe.php:945
+#: includes/payment-methods/stripe.php:952
 msgid "Canadian Debit"
 msgstr "Канадская дебетовая карта"
 
-#: includes/payment-methods/stripe.php:948
+#: includes/payment-methods/stripe.php:955
 msgid "Affirm"
 msgstr "Подтвердить"
 
-#: includes/payment-methods/stripe.php:951
+#: includes/payment-methods/stripe.php:958
 msgid "Afterpay/Clearpay"
 msgstr "Afterpay/Clearpay"
 
-#: includes/payment-methods/stripe.php:954
+#: includes/payment-methods/stripe.php:961
 msgid "Alipay"
 msgstr "Alipay"
 
-#: includes/payment-methods/stripe.php:957
+#: includes/payment-methods/stripe.php:964
 msgid "Amazon Pay"
 msgstr "Amazon Pay"
 
-#: includes/payment-methods/stripe.php:960
+#: includes/payment-methods/stripe.php:967
 msgid "Apple Pay"
 msgstr "Apple Pay"
 
-#: includes/payment-methods/stripe.php:963
+#: includes/payment-methods/stripe.php:970
 msgid "Bacs Debit"
 msgstr "Дебетовая карта Bacs"
 
-#: includes/payment-methods/stripe.php:966
+#: includes/payment-methods/stripe.php:973
 msgid "Bancontact"
 msgstr "Bancontact"
 
-#: includes/payment-methods/stripe.php:969
+#: includes/payment-methods/stripe.php:976
 msgid "Cash App"
 msgstr "Приложение Cash"
 
-#: includes/payment-methods/stripe.php:972
+#: includes/payment-methods/stripe.php:979
 msgid "EPS"
 msgstr "EPS"
 
-#: includes/payment-methods/stripe.php:975
+#: includes/payment-methods/stripe.php:982
 msgid "giropay"
 msgstr "giropay"
 
-#: includes/payment-methods/stripe.php:978
+#: includes/payment-methods/stripe.php:985
 msgid "Google Pay"
 msgstr "Google Pay"
 
-#: includes/payment-methods/stripe.php:981
+#: includes/payment-methods/stripe.php:988
 msgid "iDEAL"
 msgstr "iDEAL"
 
-#: includes/payment-methods/stripe.php:984
+#: includes/payment-methods/stripe.php:991
 msgid "Klarna"
 msgstr "Klarna"
 
-#: includes/payment-methods/stripe.php:987
+#: includes/payment-methods/stripe.php:994
 msgid "Link"
 msgstr "Ссылка"
 
-#: includes/payment-methods/stripe.php:990
+#: includes/payment-methods/stripe.php:997
 msgid "Przelewy24"
 msgstr "Открыть производство Przelewy24"
 
-#: includes/payment-methods/stripe.php:993
+#: includes/payment-methods/stripe.php:1000
 msgid "SEPA Direct Debit"
 msgstr "Собирайте платежи от ваших клиентов через прямой дебет"
 
-#: includes/payment-methods/stripe.php:996
+#: includes/payment-methods/stripe.php:1003
 msgid "SOFORT"
 msgstr "SOFORT"
 
-#: includes/payment-methods/stripe.php:999
+#: includes/payment-methods/stripe.php:1006
 msgid "WeChat Pay"
 msgstr "WeChat Pay"
 
-#: includes/payment-methods/stripe.php:1157
+#: includes/payment-methods/stripe.php:1164
 msgid "Could not sync payment methods from Stripe"
 msgstr "Не удалось синхронизировать способы оплаты из Stripe"
 
-#: includes/payment-methods/stripe.php:1182
+#: includes/payment-methods/stripe.php:1189
 msgid "Invalid payment method"
 msgstr "Некорректный способ оплаты"
 
-#: includes/payment-methods/stripe.php:1186
+#: includes/payment-methods/stripe.php:1193
 msgid "Could not update payment method"
 msgstr "Не удалось обновить способ оплаты"
 
-#: includes/payment-methods/stripe.php:1213
+#: includes/payment-methods/stripe.php:1220
 msgid "Stripe payment domain setup successfully"
 msgstr "Успешная настройка платежного домена Stripe"
 
-#: includes/payment-methods/stripe.php:1215
+#: includes/payment-methods/stripe.php:1222
 msgid "Stripe payment domain setup failed"
 msgstr "Не удалось настроить платежный домен Stripe"
 
-#: includes/payment-methods/stripe.php:1267
+#: includes/payment-methods/stripe.php:1274
 msgid "Stripe could not be connected"
 msgstr "Не удалось подключить Stripe"
 
-#: includes/payment-methods/stripe.php:1288
+#: includes/payment-methods/stripe.php:1295
 msgid "Stripe has successfully been connected"
 msgstr "Stripe успешно подключена"
 
-#: includes/payment-methods/stripe.php:1304
+#: includes/payment-methods/stripe.php:1311
 msgid "Stripe could not be disconnected"
 msgstr "Не удалось отключить Stripe"
 
-#: includes/payment-methods/stripe.php:1321
+#: includes/payment-methods/stripe.php:1328
 msgid "Stripe has successfully been disconnected"
 msgstr "Stripe успешно отключена"
 
-#: includes/payment-methods/stripe.php:1581
-#: includes/payment-methods/stripe.php:1582
+#: includes/payment-methods/stripe.php:1588
+#: includes/payment-methods/stripe.php:1589
 msgid ""
 "Payment form not properly initialized. Please refresh the page and try again."
 msgstr ""
 "Форма оплаты не инициализирована должным образом. Пожалуйста, обновите "
 "страницу и попробуйте снова."
 
-#: includes/payment-methods/stripe.php:1583
+#: includes/payment-methods/stripe.php:1590
 msgid ""
 "Payment form not properly mounted. Please refresh the page and try again."
 msgstr ""
 "Форма оплаты не установлена должным образом. Пожалуйста, обновите страницу и "
 "попробуйте снова."
 
-#: includes/payment-methods/stripe.php:1584
+#: includes/payment-methods/stripe.php:1591
 msgid "Payment intent not created. Please refresh the page and try again."
 msgstr ""
 "Платежное намерение не создано. Пожалуйста, обновите страницу и повторите "
 "попытку."
 
-#: includes/payment-methods/stripe.php:1585
+#: includes/payment-methods/stripe.php:1592
 msgid "Payment was not processed, please try again"
 msgstr "Платеж не был обработан, пожалуйста, попробуйте еще раз"
 
-#: includes/payment-methods/stripe.php:1586
+#: includes/payment-methods/stripe.php:1593
 msgid "Payment did not succeed"
 msgstr "Оплата не удалась"
 
-#: includes/payment-methods/stripe.php:1587
+#: includes/payment-methods/stripe.php:1594
 msgid "Payment processing failed:"
 msgstr "Ошибка обработки платежа:"
 
-#: includes/payment-methods/stripe.php:1965
+#: includes/payment-methods/stripe.php:1595
+msgid ""
+"Still waiting for your bank to confirm this payment. Please keep this page "
+"open."
+msgstr "Всё ещё ждём, пока твой банк подтвердит этот платёж. Пожалуйста, не закрывай эту страницу."
+
+#: includes/payment-methods/stripe.php:1982
 msgid "Sales Tax"
 msgstr "Налог с продаж"
 
-#: includes/payment-methods/stripe.php:2333
-#: includes/payment-methods/stripe.php:2340
+#: includes/payment-methods/stripe.php:2350
+#: includes/payment-methods/stripe.php:2357
 msgid "Redirecting to Stripe"
 msgstr "Перенаправление на Stripe"
 
-#: includes/payment-methods/stripe.php:2345
+#: includes/payment-methods/stripe.php:2362
 msgid "Click here to continue to payment"
 msgstr "Нажмите здесь, чтобы перейти к оплате"
 
-#: includes/payment-methods/stripe.php:2386
-#: includes/payment-methods/stripe.php:2405
-#: includes/payment-methods/stripe.php:2460
+#: includes/payment-methods/stripe.php:2403
+#: includes/payment-methods/stripe.php:2422
+#: includes/payment-methods/stripe.php:2477
 msgid "Could not complete order, contact site owner for more details"
 msgstr ""
 "Не удалось завершить заказ, свяжитесь с владельцем сайта для получения "
 "дополнительной информации"
 
-#: includes/payment-methods/stripe.php:2396
+#: includes/payment-methods/stripe.php:2413
 msgid ""
 "This payment has already been processed for a different order. Please "
 "refresh the page and try again."
@@ -15734,26 +15759,26 @@ msgstr ""
 "Этот платеж уже был обработан для другого заказа. Обновите страницу и "
 "попробуйте снова."
 
-#: includes/payment-methods/stripe.php:2412
+#: includes/payment-methods/stripe.php:2429
 msgid "Payment was not successful, please try again"
 msgstr "Оплата не прошла, попробуйте еще раз"
 
-#: includes/payment-methods/stripe.php:2531 class-mercadopago-pro.php:277
+#: includes/payment-methods/stripe.php:2549 class-mercadopago-pro.php:277
 #: class-payfast.php:323
 msgid "Could not process order, please try another payment method"
 msgstr ""
 "Не удалось обработать заказ, пожалуйста, попробуйте другой способ оплаты"
 
-#: includes/payment-methods/stripe.php:2611
+#: includes/payment-methods/stripe.php:2629
 msgid "Stripe payment has been cancelled"
 msgstr "Платеж Stripe был отменен"
 
-#: includes/payment-methods/stripe.php:2999
+#: includes/payment-methods/stripe.php:3024
 msgid "Your payment was successful! Completing your order..."
 msgstr "Ваш платеж прошел успешно! Завершение заказа..."
 
 #. translators: %s is the order name/number
-#: includes/payment-methods/stripe.php:3019
+#: includes/payment-methods/stripe.php:3044
 #, php-format
 msgid ""
 "You have a recent pending order (#%s). If you recently made a payment, "
@@ -15762,18 +15787,18 @@ msgstr ""
 "У вас есть недавний незавершенный заказ (#%s). Если вы недавно произвели "
 "оплату, пожалуйста, подождите немного или обратитесь в службу поддержки."
 
-#: includes/payment-methods/stripe.php:3160
+#: includes/payment-methods/stripe.php:3185
 msgid "You will be redirected to Stripe to complete your payment securely."
 msgstr ""
 "Вы будете перенаправлены на сайт Stripe для безопасного завершения оплаты."
 
-#: includes/payment-methods/stripe.php:3170
+#: includes/payment-methods/stripe.php:3195
 msgid "Loading secure payment form..."
 msgstr "Загрузка безопасной формы оплаты..."
 
 #. translators: %s is the payment method name
 #. translators: %s: payment method name
-#: includes/payment-methods/stripe.php:3272 class-mercadopago-pro.php:397
+#: includes/payment-methods/stripe.php:3297 class-mercadopago-pro.php:397
 #: class-mercadopago.php:452 class-payfast.php:460 class-paystack.php:360
 #: class-quickpay.php:356
 #, php-format
@@ -15781,17 +15806,17 @@ msgid "Refund payment in %s"
 msgstr "Возврат платежа в %s"
 
 #. translators: %s is the error message
-#: includes/payment-methods/stripe.php:3323
+#: includes/payment-methods/stripe.php:3348
 #, php-format
 msgid "Failed to connect: %s"
 msgstr "Не удалось подключиться: %s"
 
-#: includes/payment-methods/stripe.php:3338
+#: includes/payment-methods/stripe.php:3363
 msgid "Refund amount is higher than allowed"
 msgstr "Сумма возврата превышает допустимую"
 
 #. translators: %1$s is the maximum allowed refund amount, %2$s is the requested refund amount
-#: includes/payment-methods/stripe.php:3340
+#: includes/payment-methods/stripe.php:3365
 #, php-format
 msgid ""
 "Refund amount is higher than allowed (Total allowed: %1$s, Refund Requested: "
@@ -16126,7 +16151,7 @@ msgstr "Продолжить оформление заказа"
 msgid "You do not have anything in your cart yet!"
 msgstr "У вас еще ничего нет в корзине!"
 
-#: templates/cart/mini-cart.php:5 templates/fill.php:21 templates/fill.php:34
+#: templates/cart/mini-cart.php:5 templates/fill.php:21 templates/fill.php:39
 msgid "View cart"
 msgstr "Просмотр корзины"
 
@@ -16157,15 +16182,6 @@ msgstr[2] "Доступно ещё %s изображений для выбора
 #: cart.php:58
 msgid "Edit images"
 msgstr "Редактирование изображений"
-
-#. translators: %s is the tax amount
-#: templates/cart/totals.php:75 templates/checkout/summary.php:111
-#: templates/email/admin-receipt.php:129
-#: templates/email/customer-receipt.php:133
-#: templates/email/order-status.php:101 templates/order/totals.php:72
-#, php-format
-msgid "includes %s tax"
-msgstr "включает в себя налог %s"
 
 #: templates/checkout/discount-applied.php:8
 msgid "×"
@@ -16199,13 +16215,13 @@ msgstr "Имена файлов изображений"
 msgid "View Invoice"
 msgstr "Посмотреть счет"
 
-#: templates/email/admin-receipt.php:162 admin/orders.php:30
+#: templates/email/admin-receipt.php:161 admin/orders.php:30
 msgid "Files"
 msgstr "Файлы"
 
-#: templates/email/admin-receipt.php:172
-#: templates/email/customer-receipt.php:158
-#: templates/email/order-status.php:126
+#: templates/email/admin-receipt.php:171
+#: templates/email/customer-receipt.php:157
+#: templates/email/order-status.php:125
 msgid "Customer Information"
 msgstr "Информация о клиенте"
 
@@ -16403,49 +16419,49 @@ msgstr "Комментарий ожидает одобрения"
 msgid "Return to products"
 msgstr "Вернуться к продукции"
 
-#: templates/image/product-details.php:28
+#: templates/image/product-details.php:29
 msgid "Select images for this product:"
 msgstr "Выберите изображения для этого продукта:"
 
-#: templates/image/product-details.php:31
+#: templates/image/product-details.php:32
 msgid "Select None"
 msgstr "Снять выбор"
 
-#: templates/image/product-details.php:58
+#: templates/image/product-details.php:59
 #: templates/store/product-details.php:67 templates/product-details.php:30
 msgid "Decrease quantity"
 msgstr "Уменьшение количества"
 
-#: templates/image/product-details.php:60
+#: templates/image/product-details.php:61
 #: templates/store/product-details.php:65 templates/product-details.php:32
 msgid "Increase quantity"
 msgstr "Количество товара"
 
-#: templates/image/product-details.php:66
+#: templates/image/product-details.php:67
 #: templates/store/product-details.php:73 templates/product-details.php:38
 msgid "Add comments for this item"
 msgstr "Добавить комментарий к этому пункту"
 
-#: templates/image/product-details.php:72
+#: templates/image/product-details.php:73
 #: templates/store/product-details.php:78 templates/gallery-add-to-cart.php:34
 #: templates/product-details.php:44 templates/product-details.php:107
 msgid "Add to cart"
 msgstr "Добавить в корзину"
 
 #. translators: %1$s is the minimum quantity, %2$s is the maximum quantity
-#: templates/image/product-details.php:80
+#: templates/image/product-details.php:81
 #, php-format
 msgid "You must add at least %1$s and no more than %2$s to cart"
 msgstr "Вы должны добавить в корзину не менее %1$s и не более %2$s"
 
 #. translators: %1$s is the minimum quantity
-#: templates/image/product-details.php:83
+#: templates/image/product-details.php:84
 #, php-format
 msgid "You must add at least %1$s to cart"
 msgstr "Вы должны добавить не менее %1$s в корзину"
 
 #. translators: %1$s is the maximum quantity
-#: templates/image/product-details.php:86
+#: templates/image/product-details.php:87
 #, php-format
 msgid "You can only add up to %1$s to cart"
 msgstr "Вы можете добавить в корзину только до %1$s"
@@ -16470,27 +16486,27 @@ msgid "Invoice for %s"
 msgstr "Счет-фактура за %s"
 
 #. translators: %s is the order number
-#: templates/invoice/admin.php:75
+#: templates/invoice/admin.php:76
 #, php-format
 msgid "invoice-%s"
 msgstr "invoice-%s"
 
-#: templates/invoice/admin.php:89
+#: templates/invoice/admin.php:90
 msgid "Download PDF"
 msgstr "Скачать PDF"
 
 #. translators: %s is the order number
-#: templates/invoice/admin.php:105
+#: templates/invoice/admin.php:106
 #, php-format
 msgid "Invoice #%s"
 msgstr "Счета %s"
 
-#: templates/invoice/admin.php:234
+#: templates/invoice/admin.php:235
 msgid "Filenames"
 msgstr "Имена файлов"
 
 #: templates/multi-image-select/gallery-list.php:33
-#: templates/multi-image-select/select-images.php:83
+#: templates/multi-image-select/select-images.php:88
 #: class-reports-products-table.php:37 admin/products.php:86
 #: admin/products.php:148
 msgid "Quantity"
@@ -16504,11 +16520,11 @@ msgstr "Нет доступных вариантов"
 msgid "Apply selected images"
 msgstr "Использовать выбранные изображения"
 
-#: templates/multi-image-select/select-images.php:30
+#: templates/multi-image-select/select-images.php:32
 msgid "Select photos"
 msgstr "Выберите фотографии"
 
-#: templates/multi-image-select/select-images.php:42
+#: templates/multi-image-select/select-images.php:44
 msgid "Show selected"
 msgstr "Показать выбранное"
 
@@ -16949,7 +16965,12 @@ msgid ""
 "guest views are removed first, then the oldest views by customers who have "
 "not ordered. Views by customers who have ordered, other customer activity, "
 "and the Views totals on your galleries are never removed."
-msgstr "Оставь пустым, чтобы хранить все просмотры. Когда их больше этого числа, сначала удаляются самые старые просмотры гостей, затем самые старые просмотры клиентов без заказов. Просмотры клиентов, которые делали заказы, другая активность клиентов и счётчики просмотров в твоих галереях никогда не удаляются."
+msgstr ""
+"Оставь пустым, чтобы хранить все просмотры. Когда их больше этого числа, "
+"сначала удаляются самые старые просмотры гостей, затем самые старые "
+"просмотры клиентов без заказов. Просмотры клиентов, которые делали заказы, "
+"другая активность клиентов и счётчики просмотров в твоих галереях никогда не "
+"удаляются."
 
 #. translators: %s: number of gallery and image view records currently stored
 #: retention.php:17
@@ -16972,7 +16993,11 @@ msgid ""
 "Your Sunshine customer activity log has %1$s records and is taking up a lot "
 "of database space. You can set a maximum number of view records to keep in "
 "<a href=\"%2$s\">Settings > Privacy & Data</a>."
-msgstr "В журнале активности клиентов Sunshine записей: %1$s, и он занимает много места в базе данных. Максимальное число хранимых записей о просмотрах можно задать в разделе <a href=\"%2$s\">Настройки > Конфиденциальность и данные</a>."
+msgstr ""
+"В журнале активности клиентов Sunshine записей: %1$s, и он занимает много "
+"места в базе данных. Максимальное число хранимых записей о просмотрах можно "
+"задать в разделе <a href=\"%2$s\">Настройки > Конфиденциальность и данные</"
+"a>."
 
 #: update.php:16
 msgid "Update Report Data"
@@ -19677,7 +19702,7 @@ msgstr "Не удалось обновить изображения элемен
 msgid "Multi-image"
 msgstr "Мультиизображение"
 
-#: templates/fill-item.php:15 templates/fill-item.php:25
+#: templates/fill-item.php:15 templates/fill-item.php:26
 msgid "Select Image(s)"
 msgstr "Выберите изображение (изображения)"
 
@@ -19730,7 +19755,7 @@ msgstr "Перед оформлением заказа необходимо за
 msgid "Item not filled"
 msgstr "Не заполненная позиция"
 
-#: templates/fill-item.php:46
+#: templates/fill-item.php:47
 msgid "This product does not need any images selected"
 msgstr "Для этого продукта не нужно выбирать изображения"
 
@@ -23022,6 +23047,17 @@ msgstr "Первоначальная сумма:"
 #: templates/shortcode/buy-gift-card.php:139
 msgid "Add to Cart"
 msgstr "Добавить в корзину"
+
+#, php-format
+#~ msgid "%s: another reconcile already running, skipped"
+#~ msgstr "%s: сверка уже выполняется, пропущено"
+
+#~ msgid ""
+#~ "A recheck for this payment is already running. Please wait a moment and "
+#~ "try again."
+#~ msgstr ""
+#~ "Повторная проверка этого платежа уже выполняется. Подожди немного и "
+#~ "попробуй ещё раз."
 
 #~ msgid "Data"
 #~ msgstr "Данные"

@@ -111,6 +111,10 @@ class SPC_Cart {
 			}
 		}
 
+		// Some shipping methods are only allowed when a discount is in the cart (free shipping
+		// "Via Discount"), so the discounts have to be known before the allowed methods are.
+		$this->load_discounts();
+
 		// Set shipping method. Pickup instances are stored as the shipping method too,
 		// so re-hydrate from saved data regardless of needs_shipping().
 		$allowed_shipping_methods = sunshine_get_allowed_shipping_methods();
@@ -610,6 +614,42 @@ class SPC_Cart {
 
 	}
 
+	/**
+	 * Load the valid discounts saved in the session, without working out their amounts.
+	 * Amounts wait for set_discounts(), because a discount can include the shipping cost,
+	 * and the shipping method can't be chosen until it is known which discounts apply.
+	 * Invalid codes are skipped here and left for set_discounts() to remove and report.
+	 */
+	private function load_discounts() {
+
+		$this->discounts = array();
+
+		if ( $this->is_empty() ) {
+			return;
+		}
+
+		$discount_codes = SPC()->session->get( 'discounts' );
+		if ( empty( $discount_codes ) || ! is_array( $discount_codes ) ) {
+			return;
+		}
+
+		foreach ( $discount_codes as $discount_code ) {
+			if ( empty( $discount_code ) ) {
+				continue;
+			}
+			$discount = sunshine_get_discount_by_code( $discount_code );
+			if ( ! $discount || ! $discount->exists() || ! $discount->is_valid() ) {
+				continue;
+			}
+			if ( $discount->is_solo() ) {
+				$this->discounts = array( $discount );
+				break;
+			}
+			$this->discounts[ $discount->get_id() ] = $discount;
+		}
+
+	}
+
 	public function add_discount_name( $name ) {
 		if ( ! in_array( $name, $this->discount_names ) ) {
 			$this->discount_names[] = $name;
@@ -1011,6 +1051,26 @@ class SPC_Cart {
 
 	public function get_tax_formatted() {
 		return sunshine_price( $this->get_tax() );
+	}
+
+	/**
+	 * Name of the tax rate that applied to this cart, or an empty string when it has none.
+	 *
+	 * @return string
+	 */
+	public function get_tax_name() {
+		if ( empty( $this->tax_rate['name'] ) ) {
+			return '';
+		}
+		return trim( $this->tax_rate['name'] );
+	}
+
+	public function get_tax_label() {
+		return sunshine_get_tax_label( $this->get_tax_name() );
+	}
+
+	public function get_tax_included_text() {
+		return sunshine_get_tax_included_text( $this->get_tax_formatted(), $this->get_tax_name() );
 	}
 
 	public function get_credits() {
@@ -2575,6 +2635,7 @@ class SPC_Cart {
 		$order->set_credits( $this->get_credits_applied() );
 		$order->set_total( $this->get_total() );
 		$order->set_price_has_tax( SPC()->get_option( 'price_has_tax' ) );
+		$order->update_meta_value( 'tax_name', $this->get_tax_name() );
 
 		$fees = $this->get_fees();
 		$order->update_fees( $fees );
@@ -2728,6 +2789,23 @@ class SPC_Cart {
 	}
 
 	public function post_process_order( $order ) {
+		global $wpdb;
+
+		// Checkout and a payment webhook can both try to finish the same order, sometimes at the
+		// same moment. Hold a database lock while finishing it so the second one waits, then sees
+		// the marker and stops, instead of sending the receipts and counting discounts twice.
+		$lock_name = 'sunshine_post_process_' . $order->get_id();
+		$locked    = ( '1' === (string) $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, 15)', $lock_name ) ) );
+
+		// Read straight from the database, the order object may hold meta loaded before the lock.
+		$already_processed = $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = 'post_processed' LIMIT 1", $order->get_id() ) );
+		if ( $already_processed ) {
+			SPC()->log( 'Order ' . $order->get_id() . ' already post processed, skipping' );
+			if ( $locked ) {
+				$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
+			}
+			return;
+		}
 
 		SPC()->log( 'Post processing order: ' . $order->get_id() );
 
@@ -2768,6 +2846,11 @@ class SPC_Cart {
 		}
 
 		SPC()->session->set( 'checkout_order_id', '' );
+
+		$order->update_meta_value( 'post_processed', current_time( 'timestamp' ) );
+		if ( $locked ) {
+			$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
+		}
 
 	}
 
