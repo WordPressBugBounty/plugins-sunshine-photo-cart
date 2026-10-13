@@ -6,7 +6,7 @@ Tags: client photo gallery, photo proofing, client proofing, sell photos, client
 Requires at least: 5.5
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 3.7.4
+Stable tag: 3.7.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -242,6 +242,9 @@ Security is important to us. Please report security bugs through the [Patchstack
 11. Admin gallery management - Easy-to-use admin interface to create galleries, upload images, and manage your client photo galleries and photo proofing workflow.
 
 == Changelog ==
+
+= 3.7.5 - October 13, 2026 =
+* Security: Visitors can no longer see photos from a gallery they don't have access to, like a password-protected or private gallery, through the share, add to cart, or product options windows
 
 = 3.7.4 - October 9, 2026 =
 * New: Each tax rate can have a name, like GST or VAT, that shows in place of "Tax" on the cart, checkout, order pages, emails and invoices. Picking a country on a tax rate fills in the usual name for that country, and rates without a name keep showing "Tax"
