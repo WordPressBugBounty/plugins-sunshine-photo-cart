@@ -191,7 +191,8 @@ function sunshine_in_array_r( $needle, $haystack, $strict = false ) {
  *
  * Each pattern can be an exact code (90210), a wildcard prefix (902* matches
  * anything starting with 902, including zip+4 and alphanumeric codes like CB23*),
- * or a numeric range (90210...99000 matches any code between the two numbers).
+ * or a numeric range (90210...99000 matches any code between the two numbers; a US
+ * ZIP+4 such as 90250-1234 is compared by its first 5 digits).
  * Both the postcode and patterns are uppercased and space-stripped before comparing.
  *
  * @since 3.6.12
@@ -208,6 +209,9 @@ function sunshine_postcode_matches( $postcode, $patterns ) {
 
 	$patterns = explode( ',', strtoupper( str_replace( ' ', '', $patterns ) ) );
 
+	// A US ZIP+4 (80250-1234) belongs to its 5 digit ZIP, so ranges compare those 5 digits.
+	$range_postcode = preg_match( '/^(\d{5})-?\d{4}$/', $postcode, $zip ) ? $zip[1] : $postcode;
+
 	foreach ( $patterns as $pattern ) {
 
 		if ( '' === $pattern ) {
@@ -217,8 +221,8 @@ function sunshine_postcode_matches( $postcode, $patterns ) {
 		// Range: 90210...99000 (numeric only).
 		if ( false !== strpos( $pattern, '...' ) ) {
 			$range = explode( '...', $pattern );
-			if ( 2 === count( $range ) && is_numeric( $range[0] ) && is_numeric( $range[1] ) && is_numeric( $postcode )
-				&& (int) $postcode >= (int) $range[0] && (int) $postcode <= (int) $range[1] ) {
+			if ( 2 === count( $range ) && is_numeric( $range[0] ) && is_numeric( $range[1] ) && is_numeric( $range_postcode )
+				&& (int) $range_postcode >= (int) $range[0] && (int) $range_postcode <= (int) $range[1] ) {
 				return true;
 			}
 			continue;
@@ -521,6 +525,10 @@ function sunshine_doing_upload( $gallery_id ) {
 	// but runs in every context (REST, CLI, cron) since Sunshine_Admin only
 	// loads under is_admin().
 	add_filter( 'intermediate_image_sizes', 'sunshine_upload_image_sizes', 99999 );
+	// List the gallery folder once per request rather than once per photo.
+	add_filter( 'pre_wp_unique_filename_file_list', 'sunshine_import_folder_file_list', 10, 2 );
+	add_filter( 'wp_unique_filename', 'sunshine_import_remember_file_name', 10, 3 );
+	add_filter( 'wp_update_attachment_metadata', 'sunshine_import_remember_size_files', PHP_INT_MAX, 2 );
 	set_time_limit( 600 );
 }
 
@@ -611,6 +619,64 @@ function sunshine_hide_comments( $query ) {
 
 }
 
+/**
+ * Simple per-visitor attempt limits for things that can be guessed or abused, such as gallery
+ * passwords, logins and sharing. Visitors are told apart by user ID, or by IP address when logged out.
+ */
+function sunshine_rate_limit_key( $action ) {
+	$visitor = is_user_logged_in() ? 'user' . get_current_user_id() : ( isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '' );
+	return 'sunshine_limit_' . md5( $action . '|' . $visitor );
+}
+
+// Whether the current visitor has used up their attempts for this action.
+function sunshine_is_rate_limited( $action, $limit ) {
+	$limit = apply_filters( 'sunshine_rate_limit', $limit, $action );
+	return (int) get_transient( sunshine_rate_limit_key( $action ) ) >= $limit;
+}
+
+// Count one attempt for this action. Attempts are forgotten once $window seconds pass without a new one.
+function sunshine_add_rate_limit_attempt( $action, $window ) {
+	$key = sunshine_rate_limit_key( $action );
+	set_transient( $key, (int) get_transient( $key ) + 1, $window );
+}
+
+/* Comment feeds build their own query and skip the filter above, so leave order logs and gallery photo comments out of them too */
+add_filter( 'comment_feed_where', 'sunshine_hide_comments_from_feeds' );
+function sunshine_hide_comments_from_feeds( $where ) {
+	return $where . ' AND ' . sunshine_hidden_comments_where_sql();
+}
+
+/**
+ * Collect new Stripe or Square keys from sunshinephotocart.com after a connect. The return
+ * address only carries a one-time pickup code, so the keys never sit in a web address.
+ *
+ * @param string $provider 'stripe' or 'square'.
+ * @param string $code     Pickup code from the return address.
+ * @return array|false The keys, or false when they couldn't be collected.
+ */
+function sunshine_collect_connect_keys( $provider, $code ) {
+	if ( empty( $code ) ) {
+		return false;
+	}
+	$response = wp_remote_post(
+		'https://www.sunshinephotocart.com/?' . $provider . '_connect_pickup=1',
+		array(
+			'body'    => array( 'pickup' => $code ),
+			'timeout' => 30,
+		)
+	);
+	if ( is_wp_error( $response ) ) {
+		SPC()->log( ucfirst( $provider ) . ' keys could not be collected: ' . $response->get_error_message() );
+		return false;
+	}
+	$body = json_decode( wp_remote_retrieve_body( $response ), true );
+	if ( empty( $body['success'] ) || empty( $body['data'] ) || ! is_array( $body['data'] ) ) {
+		SPC()->log( ucfirst( $provider ) . ' keys could not be collected: ' . wp_remote_retrieve_body( $response ) );
+		return false;
+	}
+	return $body['data'];
+}
+
 function sunshine_image_placeholder_url() {
 	return apply_filters( 'sunshine_image_placeholder_url', SUNSHINE_PHOTO_CART_URL . '/assets/images/missing-image.png' );
 }
@@ -633,7 +699,7 @@ function sunshine_random_string( $length = 10 ) {
 	$characters_length = strlen( $characters );
 	$random_string     = '';
 	for ( $i = 0; $i < $length; $i++ ) {
-		$random_string .= $characters[ rand( 0, $characters_length - 1 ) ];
+		$random_string .= $characters[ random_int( 0, $characters_length - 1 ) ];
 	}
 	return $random_string;
 }
@@ -645,34 +711,47 @@ function sunshine_create_htaccess( $force = false ) {
 	$file       = $upload_dir['basedir'] . '/sunshine/.htaccess';
 
 	// Check if the URL we are protecting is still accurate, delete if not. May have moved domains from staging to live.
-	$url          = get_bloginfo( 'url' );
-	$url          = str_replace( array( 'http://', 'https://', 'www.' ), '', $url );
-	$existing_url = get_option( 'sunshine_download_htaccess_url' );
-	if ( $url != $existing_url || $force ) {
+	// Also rebuild it when these rules change, so existing stores get the new ones.
+	$rules_version = 2;
+	$url           = get_bloginfo( 'url' );
+	$url           = str_replace( array( 'http://', 'https://', 'www.' ), '', $url );
+	$existing_url  = get_option( 'sunshine_download_htaccess_url' );
+	if ( $url != $existing_url || $force || (int) get_option( 'sunshine_download_htaccess_version' ) !== $rules_version ) {
 		@unlink( $file );
 	}
 
 	if ( ! file_exists( $file ) ) {
 		SPC()->log( 'New htaccess file created' );
 		$escaped_url = preg_replace( '/\./', '\.', $url );
-		$data        = "RewriteEngine on
+		// [NC] so camera files named .JPG or .jpeg are covered too. The referrer has to be this site
+		// exactly, not just start with its domain (example.com.evil.com).
+		$data = "Options -Indexes
+
+RewriteEngine on
 
 # Block direct access to log files
-RewriteRule \.(txt|log)$ - [F,L]
+RewriteRule \.(txt|log)$ - [F,L,NC]
 
 # Allow intermediate-sized images without restrictions
-RewriteCond %{REQUEST_URI} ^/.*-\d+x\d+\.(jpg|png|gif)$ [NC]
-RewriteRule \.(jpg|png|gif)$ - [L]
+RewriteCond %{REQUEST_URI} ^/.*-\d+x\d+\.(jpe?g|png|gif|webp|avif)$ [NC]
+RewriteRule \.(jpe?g|png|gif|webp|avif)$ - [L,NC]
 
 # Block hotlinking from external referrers for full-size images
-RewriteCond %{HTTP_REFERER} !^https?://(www\.)?$escaped_url [NC]
-RewriteRule \.(jpg|png|gif)$ - [F,L]
+RewriteCond %{HTTP_REFERER} !^https?://(www\.)?$escaped_url(/|$) [NC]
+RewriteRule \.(jpe?g|png|gif|webp|avif)$ - [F,L,NC]
 
 # Allow access to full-sized images only if they exist
 RewriteCond %{REQUEST_FILENAME} -s
-RewriteRule \.(jpg)$ - [L]";
+RewriteRule \.(jpe?g)$ - [L,NC]";
 		file_put_contents( $file, $data );
 		update_option( 'sunshine_download_htaccess_url', $url, false );
+		update_option( 'sunshine_download_htaccess_version', $rules_version, false );
+	}
+
+	// Photos waiting in the FTP import folder are only ever read by PHP, never by a browser.
+	$import_dir = sunshine_get_import_directory();
+	if ( is_dir( $import_dir ) && ! file_exists( $import_dir . '/.htaccess' ) ) {
+		file_put_contents( $import_dir . '/.htaccess', "<IfModule mod_authz_core.c>\n\tRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n\tDeny from all\n</IfModule>\n" );
 	}
 
 }

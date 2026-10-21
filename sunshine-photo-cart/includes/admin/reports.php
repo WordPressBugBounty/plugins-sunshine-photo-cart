@@ -10,7 +10,7 @@ function sunshine_reports_page() {
 			'order'          => 'ASC',
 		),
 	);
-	$init_date  = ( ! empty( $init_order ) ) ? $init_order[0]->get_date( 'Y-m-d' ) : date( 'Y-m-d', SPC()->get_option( 'install_time' ) );
+	$init_date  = ( ! empty( $init_order ) ) ? $init_order[0]->get_date( 'Y-m-d' ) : wp_date( 'Y-m-d', SPC()->get_option( 'install_time' ) );
 
 	$available_reports = array(
 		'orders'    => __( 'Orders', 'sunshine-photo-cart' ),
@@ -31,34 +31,36 @@ function sunshine_reports_page() {
 		}
 	}
 
+	// Order dates are saved in the store's time zone, so the date buttons use the store's today.
+	$today            = current_time( 'Y-m-d' );
 	$durations        = apply_filters(
 		'sunshine_reports_date_formats',
 		array(
 			'day'   => array(
 				'label'  => __( 'Day', 'sunshine-photo-cart' ),
-				'after'  => date( 'Y-m-d' ),
-				'before' => date( 'Y-m-d' ),
+				'after'  => $today,
+				'before' => $today,
 			),
 			'week'  => array(
 				'label'  => __( 'Week', 'sunshine-photo-cart' ),
-				'after'  => date( 'Y-m-d', strtotime( '-7 days' ) ),
-				'before' => date( 'Y-m-d' ),
+				'after'  => wp_date( 'Y-m-d', strtotime( '-7 days' ) ),
+				'before' => $today,
 			),
 			'month' => array(
 				'label'  => __( 'Month', 'sunshine-photo-cart' ),
-				'after'  => date( 'Y-m-d', strtotime( '-1 months' ) ),
-				'before' => date( 'Y-m-d' ),
+				'after'  => wp_date( 'Y-m-d', strtotime( '-1 months' ) ),
+				'before' => $today,
 			),
 			'year'  => array(
 				'label'  => __( 'Year', 'sunshine-photo-cart' ),
 				'active' => '',
-				'after'  => date( 'Y-m-d', strtotime( '-1 years' ) ),
-				'before' => date( 'Y-m-d' ),
+				'after'  => wp_date( 'Y-m-d', strtotime( '-1 years' ) ),
+				'before' => $today,
 			),
 			'all'   => array(
 				'label'  => __( 'All time', 'sunshine-photo-cart' ),
 				'after'  => $init_date,
-				'before' => date( 'Y-m-d' ),
+				'before' => $today,
 			),
 		)
 	);
@@ -94,8 +96,8 @@ function sunshine_reports_page() {
 						<input type="hidden" name="page" value="sunshine-reports" />
 						<input type="hidden" name="report" value="<?php echo esc_attr( $report ); ?>" />
 						<input type="hidden" name="duration" value="custom" />
-							<input type="date" name="after" value="<?php echo esc_attr( date( 'Y-m-d', strtotime( $current_after ) ) ); ?>" min="<?php echo esc_attr( $init_date ); ?>" max="<?php echo esc_attr( date( 'Y-m-d' ) ); ?>" />
-						<input type="date" name="before" value="<?php echo esc_attr( date( 'Y-m-d', strtotime( $current_before ) ) ); ?>" min="<?php echo esc_attr( $init_date ); ?>" max="<?php echo esc_attr( date( 'Y-m-d' ) ); ?>" />
+							<input type="date" name="after" value="<?php echo esc_attr( date( 'Y-m-d', strtotime( $current_after ) ) ); ?>" min="<?php echo esc_attr( $init_date ); ?>" max="<?php echo esc_attr( $today ); ?>" />
+						<input type="date" name="before" value="<?php echo esc_attr( date( 'Y-m-d', strtotime( $current_before ) ) ); ?>" min="<?php echo esc_attr( $init_date ); ?>" max="<?php echo esc_attr( $today ); ?>" />
 						<input type="submit" value="<?php esc_attr_e( 'Filter', 'sunshine-photo-cart' ); ?>" class="button" />
 					</form>
 				</div>
@@ -148,7 +150,7 @@ function sunshine_report_orders_display( $current_duration, $current_after, $cur
 	if ( ! $data || isset( $_GET['refresh'] ) ) {
 
 		$args        = array(
-			'status' => sunshine_order_statuses_paid(),
+			'status' => sunshine_order_statuses_sales(),
 			'after'  => array(
 				'year'  => date( 'Y', strtotime( $current_after ) ),
 				'month' => date( 'n', strtotime( $current_after ) ),
@@ -203,7 +205,12 @@ function sunshine_report_orders_display( $current_duration, $current_after, $cur
 				break;
 		}
 
-		$period = new DatePeriod( new DateTime( $current_after ), $interval, new DateTime( $current_before ) );
+		$period_start = new DateTime( $current_after );
+		if ( 'Y-m' === $key_format ) {
+			// One point a month: step from the 1st, so every month up to the last one is there.
+			$period_start->modify( 'first day of this month' );
+		}
+		$period = new DatePeriod( $period_start, $interval, new DateTime( $current_before ) );
 		foreach ( $period as $dt ) {
 			$paid_labels[ $dt->format( $key_format ) ] = $dt->format( $display_format );
 			$paid_values[ $dt->format( $key_format ) ] = 0;
@@ -212,11 +219,15 @@ function sunshine_report_orders_display( $current_duration, $current_after, $cur
 		if ( ! empty( $paid_orders ) ) {
 
 			foreach ( $paid_orders as $order ) {
-				$paid_values[ $order->get_date( $key_format ) ] += $order->get_total();
-				$paid_total                                     += $order->get_total();
+				// get_total() is already less its refunds, so a Refunded order counts only for what was kept.
+				$total = $order->get_total();
+				if ( ! sunshine_order_counts_in_sales( $order->get_status(), $total ) ) {
+					continue;
+				}
+				$paid_values[ $order->get_date( $key_format ) ] += $total;
+				$paid_total                                     += $total;
+				$paid_count++;
 			}
-
-			$paid_count = count( $paid_orders );
 
 			ksort( $paid_labels );
 			ksort( $paid_values );
@@ -364,7 +375,7 @@ function sunshine_report_tax_display( $current_duration, $current_after, $curren
 	if ( ! $data || isset( $_GET['refresh'] ) ) {
 
 		$args        = array(
-			'status' => sunshine_order_statuses_paid(),
+			'status' => sunshine_order_statuses_sales(),
 			'after'  => array(
 				'year'  => date( 'Y', strtotime( $current_after ) ),
 				'month' => date( 'n', strtotime( $current_after ) ),
@@ -378,15 +389,21 @@ function sunshine_report_tax_display( $current_duration, $current_after, $curren
 		);
 		$paid_orders = sunshine_get_orders( $args );
 
-		$tax = 0;
+		$tax         = 0;
+		$order_count = 0;
 		if ( ! empty( $paid_orders ) ) {
 			foreach ( $paid_orders as $order ) {
+				// A Refunded order counts only when something was kept after its refunds.
+				if ( ! sunshine_order_counts_in_sales( $order->get_status(), $order->get_total() ) ) {
+					continue;
+				}
 				$tax += $order->get_tax();
+				$order_count++;
 			}
 		}
 
 		$data = array(
-			'order_count' => count( $paid_orders ),
+			'order_count' => $order_count,
 			'tax'         => $tax,
 		);
 

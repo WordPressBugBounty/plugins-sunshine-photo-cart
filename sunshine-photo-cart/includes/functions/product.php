@@ -125,10 +125,17 @@ function sunshine_get_price_levels() {
 
 function sunshine_get_default_price_level() {
 	$price_levels = sunshine_get_price_levels();
-	if ( ! empty( $price_levels ) ) {
-		return array_shift( $price_levels );
+	if ( empty( $price_levels ) ) {
+		return false;
 	}
-	return false;
+	// The level marked default at install, whatever it has been renamed to.
+	foreach ( $price_levels as $price_level ) {
+		if ( get_term_meta( $price_level->get_id(), 'default', true ) ) {
+			return $price_level;
+		}
+	}
+	// No level marked default: fall back to the first level.
+	return array_shift( $price_levels );
 }
 
 function sunshine_get_default_price_level_id() {
@@ -137,6 +144,42 @@ function sunshine_get_default_price_level_id() {
 		return $price_level->get_id();
 	}
 	return false;
+}
+
+/**
+ * Signature for a price level, printed next to it on any page that lets a visitor buy at that
+ * level (store shortcodes, gift card and session fee pages). It does not expire, so cached pages
+ * keep working.
+ *
+ * @param int $price_level Price level ID.
+ * @return string
+ */
+function sunshine_price_level_token( $price_level ) {
+	return substr( wp_hash( 'sunshine_price_level|' . intval( $price_level ) ), 0, 20 );
+}
+
+/**
+ * The price level a request asks for, only when a page was allowed to offer it: the store's
+ * default level, or a level sent with its sunshine_price_level_token(). Anything else gets the
+ * default level, so a visitor can't swap in a cheaper level than the page showed them.
+ *
+ * @param array  $request   Request data, usually $_POST or $_GET.
+ * @param string $level_key Field holding the price level.
+ * @param string $token_key Field holding its signature.
+ * @return int|string The price level, or '' when the request names none.
+ */
+function sunshine_get_requested_price_level( $request, $level_key = 'price_level', $token_key = 'price_level_token' ) {
+	if ( empty( $request[ $level_key ] ) ) {
+		return '';
+	}
+	$price_level = intval( $request[ $level_key ] );
+	$default     = intval( sunshine_get_default_price_level_id() );
+	$token       = isset( $request[ $token_key ] ) ? sanitize_text_field( wp_unslash( $request[ $token_key ] ) ) : '';
+	if ( $price_level === $default || hash_equals( sunshine_price_level_token( $price_level ), $token ) ) {
+		return $price_level;
+	}
+	SPC()->log( 'Price level ' . $price_level . ' in the request was not signed, using the default price level instead' );
+	return $default;
 }
 
 

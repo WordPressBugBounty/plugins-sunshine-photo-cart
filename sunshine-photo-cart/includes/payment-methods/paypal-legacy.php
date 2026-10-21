@@ -21,9 +21,14 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 		add_filter( 'sunshine_admin_order_tabs', array( $this, 'admin_order_tab' ), 10, 2 );
 		add_action( 'sunshine_admin_order_tab_paypal-legacy', array( $this, 'admin_order_tab_content_paypal_legacy' ) );
 
+		// IPNs keep being handled while the method is off, so a payment made just before it was
+		// turned off still completes its order. IPNs are verified with PayPal before they count.
 		add_action( 'wp', array( $this, 'ipn' ) );
-		add_action( 'wp', array( $this, 'clear_cart' ) );
-		add_action( 'wp', array( $this, 'cancel_order' ) );
+
+		if ( $this->is_active() ) {
+			add_action( 'wp', array( $this, 'clear_cart' ) );
+			add_action( 'wp', array( $this, 'cancel_order' ) );
+		}
 
 	}
 
@@ -112,23 +117,50 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 			$amount_key                   = 'amount_' . $i;
 			$paypal_args[ $name_key ]     = $item->get_name_raw();
 			$paypal_args[ $quantity_key ] = $item->get_qty();
-			$paypal_args[ $amount_key ]   = $item->get_price() - $item->get_discount_per_item();
+			$paypal_args[ $amount_key ]   = sunshine_round_amount( $item->get_price() - $item->get_discount_per_item() );
 			$i++;
 		}
 		if ( $order->get_shipping() > 0 ) {
 			$paypal_args[ 'item_name_' . $i ] = $order->get_shipping_method_name();
 			$paypal_args[ 'quantity_' . $i ]  = 1;
-			$paypal_args[ 'amount_' . $i ]    = round( $order->get_shipping(), 2 );
+			$paypal_args[ 'amount_' . $i ]    = sunshine_round_amount( $order->get_shipping() );
+			$i++;
 		}
-		$paypal_args['tax_cart'] = round( $order->get_tax(), 2 );
-		$discount_total          = 0;
-		if ( $order->get_discount() ) {
-			$discount_total = $order->get_discount();
+		// Fees like a payment method fee are their own lines. PayPal does not take lines below
+		// zero, so fees that take money off (gift cards) end up in the discount below.
+		foreach ( (array) $order->get_fees() as $fee ) {
+			if ( sunshine_round_amount( floatval( $fee['amount'] ) ) <= 0 ) {
+				continue;
+			}
+			$paypal_args[ 'item_name_' . $i ] = $fee['name'];
+			$paypal_args[ 'quantity_' . $i ]  = 1;
+			$paypal_args[ 'amount_' . $i ]    = sunshine_round_amount( $fee['amount'] );
+			$i++;
 		}
-		if ( $order->get_credits() > 0 ) {
-			$discount_total += $order->get_credits();
+		$paypal_args['tax_cart'] = sunshine_round_amount( $order->get_tax() );
+
+		// PayPal charges the lines plus tax minus the discount. The discount is whatever makes
+		// that come to the order total, so it covers discount codes, credits and gift cards.
+		$lines_total = 0;
+		for ( $line = 1; isset( $paypal_args[ 'amount_' . $line ] ); $line++ ) {
+			$lines_total += $paypal_args[ 'amount_' . $line ] * intval( $paypal_args[ 'quantity_' . $line ] );
 		}
-		$paypal_args['discount_amount_cart'] = round( $discount_total, 2 );
+		$order_total    = sunshine_round_amount( $order->get_total() );
+		$discount_total = sunshine_round_amount( $lines_total + $paypal_args['tax_cart'] - $order_total );
+		if ( $discount_total < 0 ) {
+			// Rounding each item's price pushed the lines below the order total. Send the order
+			// as one line instead, so PayPal is still asked for the exact total.
+			SPC()->log( 'PayPal Legacy lines add up to less than ' . $order->get_name() . ' total, sending it as one line' );
+			for ( $line = 1; isset( $paypal_args[ 'amount_' . $line ] ); $line++ ) {
+				unset( $paypal_args[ 'item_name_' . $line ], $paypal_args[ 'quantity_' . $line ], $paypal_args[ 'amount_' . $line ] );
+			}
+			$paypal_args['item_name_1'] = $order->get_name();
+			$paypal_args['quantity_1']  = 1;
+			$paypal_args['amount_1']    = $order_total;
+			$paypal_args['tax_cart']    = 0;
+			$discount_total             = 0;
+		}
+		$paypal_args['discount_amount_cart'] = $discount_total;
 
 		// Business Info
 		$paypal_args['business']      = $this->get_email();
@@ -137,7 +169,7 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 		$paypal_args['charset']       = 'utf-8';
 		$paypal_args['currency_code'] = SPC()->get_option( 'currency' );
 		$paypal_args['return']        = add_query_arg( array( 'paypal_complete' => '1' ), $order->get_permalink() );
-		$paypal_args['cancel_return'] = wp_nonce_url( add_query_arg( 'order_id', $order->get_id(), sunshine_get_page_url( 'checkout' ) ), 'paypal_cancel', 'paypal_cancel' );
+		$paypal_args['cancel_return'] = wp_nonce_url( add_query_arg( 'order_id', $order->get_id(), sunshine_get_page_url( 'checkout' ) ), 'paypal_cancel_' . $order->get_id(), 'paypal_cancel' );
 		$paypal_args['notify_url']    = trailingslashit( get_bloginfo( 'url' ) ) . '?sunshine_paypal_ipn=paypal_standard_ipn';
 		if ( $order->get_delivery_method() == 'pickup' || $order->get_delivery_method() == 'download' ) {
 			// Don't need any shipping info, so don't pass anything
@@ -168,6 +200,11 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 		$paypal_args['night_phone_c'] = substr( $phone, 6, 4 );
 
 		$paypal_args = apply_filters( 'sunshine_paypal_args', $paypal_args );
+
+		// Remember the order total PayPal was asked for, so the IPN can check the payment
+		// against it, and notice if the order changed after the customer left for PayPal.
+		$order->update_meta_value( 'paypal_legacy_expected_total', $order_total );
+		$order->update_meta_value( 'paypal_legacy_order_total', $order->get_total() );
 
 		foreach ( $paypal_args as $key => $value ) {
 			$paypal_args_array_escaped[] = '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" />';
@@ -248,23 +285,15 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 				}
 			}
 
-			// Only handle new order IPNs
-			if ( ! in_array( $myPost['txn_type'], array( 'cart', 'express_checkout' ) ) ) {
+			// Only handle new order IPNs. Refund and reversal notices have no txn_type.
+			if ( ! isset( $myPost['txn_type'] ) || ! in_array( $myPost['txn_type'], array( 'cart', 'express_checkout' ), true ) ) {
 				exit;
 			}
 
 			// read the IPN message sent from PayPal and prepend 'cmd=_notify-validate'
 			$req = 'cmd=_notify-validate';
-			if ( function_exists( 'get_magic_quotes_gpc' ) ) {
-				$get_magic_quotes_exists = true;
-			}
 			foreach ( $myPost as $key => $value ) {
-				if ( $get_magic_quotes_exists == true && get_magic_quotes_gpc() == 1 ) {
-					$value = urlencode( stripslashes( $value ) );
-				} else {
-					$value = urlencode( $value );
-				}
-				$req .= "&$key=$value";
+				$req .= '&' . $key . '=' . urlencode( $value );
 			}
 
 			$paypal_url = ( $this->get_mode_value() != 'live' ) ? 'https://www.sandbox.paypal.com/cgi-bin/webscr' : 'https://www.paypal.com/cgi-bin/webscr';
@@ -296,6 +325,40 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 			$order_id = intval( $_POST['custom'] );
 			$order    = sunshine_get_order( $order_id );
 			if ( ! $order->exists() ) {
+				exit;
+			}
+
+			// A VERIFIED IPN only proves PayPal sent it, not that the money went to this store for
+			// this order, so check who was paid, the currency, and the amount.
+			$status         = isset( $myPost['payment_status'] ) ? $myPost['payment_status'] : '';
+			$store_account  = strtolower( (string) $this->get_email() );
+			$paid_to        = array_map( 'strtolower', array( isset( $myPost['receiver_email'] ) ? $myPost['receiver_email'] : '', isset( $myPost['receiver_id'] ) ? $myPost['receiver_id'] : '' ) );
+			$expected_total = $order->get_meta_value( 'paypal_legacy_expected_total' );
+			$order_total_at = $order->get_meta_value( 'paypal_legacy_order_total' );
+			if ( '' === (string) $expected_total ) {
+				// Orders sent to PayPal before this check existed.
+				$expected_total = $order->get_total();
+				$order_total_at = $order->get_total();
+			}
+			$paid = ( isset( $myPost['mc_gross'] ) ? $myPost['mc_gross'] : '?' ) . ' ' . ( isset( $myPost['mc_currency'] ) ? $myPost['mc_currency'] : '' );
+
+			if ( 'Completed' !== $status ) {
+				SPC()->log( 'PayPal IPN for ' . $order->get_name() . ' has status ' . $status . ', not completing the order' );
+				exit;
+			}
+
+			$matches = '' !== $store_account && in_array( $store_account, $paid_to, true )
+				&& isset( $myPost['mc_currency'], $myPost['mc_gross'] ) && $myPost['mc_currency'] === SPC()->get_option( 'currency' )
+				&& round( floatval( $myPost['mc_gross'] ), 2 ) === round( floatval( $expected_total ), 2 )
+				&& round( floatval( $order_total_at ), 2 ) === round( $order->get_total(), 2 );
+
+			if ( ! $matches ) {
+				$txn_id = isset( $myPost['txn_id'] ) ? sanitize_text_field( $myPost['txn_id'] ) : '';
+				SPC()->log( 'PayPal IPN payment ' . $txn_id . ' (' . $paid . ' to ' . implode( '/', $paid_to ) . ') does not match ' . $order->get_name() . ' (total ' . $order->get_total() . ')' );
+				/* translators: 1: PayPal transaction ID, 2: amount paid in PayPal */
+				$note = sprintf( __( 'PayPal payment %1$s for %2$s does not match the order total, order was not completed', 'sunshine-photo-cart' ), $txn_id, sanitize_text_field( $paid ) );
+				$order->add_log( $note );
+				sunshine_order_payment_problem( $order, $note, $this->id );
 				exit;
 			}
 
@@ -333,12 +396,24 @@ class SPC_Payment_Method_PayPal_Legacy extends SPC_Payment_Method {
 	}
 
 	function cancel_order() {
-		if ( isset( $_GET['paypal_cancel'] ) && wp_verify_nonce( $_GET['paypal_cancel'], 'paypal_cancel' ) && isset( $_GET['order_id'] ) ) {
+		if ( isset( $_GET['paypal_cancel'] ) && isset( $_GET['order_id'] ) && wp_verify_nonce( $_GET['paypal_cancel'], 'paypal_cancel_' . intval( $_GET['order_id'] ) ) ) {
 			$order_id = intval( $_GET['order_id'] );
-			$order    = sunshine_get_order( $order_id );
-			if ( $order->exists() ) {
-				$order->delete( true );
+
+			// Only the order this visitor is checking out with, and only while it still waits for payment.
+			if ( ! $order_id || intval( SPC()->session->get( 'checkout_order_id' ) ) !== $order_id ) {
+				SPC()->log( 'PayPal Legacy cancel ignored, order ' . $order_id . ' is not this checkout session\'s order' );
+				return;
 			}
+
+			$order = sunshine_get_order( $order_id );
+			if ( ! $order->exists() || ! in_array( $order->get_status(), sunshine_order_statuses_needs_payment(), true ) ) {
+				SPC()->log( 'PayPal Legacy cancel ignored, order ' . $order_id . ' is not waiting for payment' );
+				return;
+			}
+
+			// Keep the order on record as cancelled, and start a new one if they check out again.
+			$order->set_status( 'cancelled', __( 'Customer cancelled the PayPal payment', 'sunshine-photo-cart' ) );
+			SPC()->session->set( 'checkout_order_id', '' );
 			SPC()->cart->add_error( __( 'PayPal payment has been cancelled', 'sunshine-photo-cart' ) );
 			wp_safe_redirect( sunshine_get_page_url( 'checkout' ) );
 			exit;

@@ -239,6 +239,11 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 
 	public function create_order_status( $status, $order ) {
 		if ( $order->get_payment_method() == $this->id ) {
+			// Only an order PayPal actually captured money for counts as paid.
+			if ( ! $order->get_meta_value( 'paypal_capture_id' ) ) {
+				SPC()->log( 'Not setting order status to new for PayPal payment, order ' . $order->get_id() . ' has no PayPal capture' );
+				return $status;
+			}
 			SPC()->log( 'Setting order status to new for PayPal payment' );
 			return 'new'; // Straight to new.
 		}
@@ -512,12 +517,12 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 		$items      = array();
 		$item_total = 0;
 		foreach ( SPC()->cart->get_cart_items() as $cart_item ) {
-			$unit_amount = round( $cart_item->get_price(), 2 );
+			$unit_amount = sunshine_round_amount( $cart_item->get_price() );
 			$item_total += $unit_amount * $cart_item->get_qty();
 			$items[]     = array(
 				'name'        => $cart_item->get_name_raw(),
 				'unit_amount' => array(
-					'value'         => (string) $unit_amount,
+					'value'         => $this->format_amount( $unit_amount ),
 					'currency_code' => SPC()->get_option( 'currency' ),
 				),
 				'quantity'    => $cart_item->get_qty(),
@@ -527,12 +532,17 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 		$fees = SPC()->cart->get_fees();
 		if ( ! empty( $fees ) ) {
 			foreach ( $fees as $fee ) {
-				$unit_amount = round( $fee['amount'], 2 );
+				$unit_amount = sunshine_round_amount( $fee['amount'] );
+				// PayPal does not allow items below zero. A fee that takes money off (a gift card)
+				// is left out here and ends up in the discount below, which balances the breakdown.
+				if ( $unit_amount <= 0 ) {
+					continue;
+				}
 				$item_total += $unit_amount;
 				$items[]     = array(
 					'name'        => $fee['name'],
 					'unit_amount' => array(
-						'value'         => (string) $unit_amount,
+						'value'         => $this->format_amount( $unit_amount ),
 						'currency_code' => SPC()->get_option( 'currency' ),
 					),
 					'quantity'    => 1,
@@ -546,11 +556,27 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 		// amount.value is the true charge (get_total()); tax and shipping are sent ex-tax-of-discount
 		// already, so the discount line is whatever balances the equation. With the cart's discount
 		// tax/base split now correct, this equals the real ex-tax discount (cart + line-item + credits).
-		$item_total      = round( $item_total, 2 );
-		$tax_total       = round( SPC()->cart->get_tax(), 2 );
-		$shipping_amount = round( SPC()->cart->get_shipping(), 2 );
+		// Every amount is sent with the currency's own decimals (none for yen); PayPal refuses more.
+		$item_total = sunshine_round_amount( $item_total );
+		$tax_total  = (float) SPC()->cart->get_tax();
+
+		// When prices include tax, each line's tax is taken out of the whole line, but PayPal
+		// only takes a price for one item. One item's price before tax times the quantity can be
+		// a cent or so off the line's own before-tax amount, so the tax sent moves by the same
+		// cents and the breakdown still adds up without a made up discount.
+		if ( 'yes' === SPC()->get_option( 'price_has_tax' ) ) {
+			foreach ( SPC()->cart->get_cart_items() as $cart_item ) {
+				if ( $cart_item->get_tax_rate() ) {
+					$tax_total -= sunshine_round_amount( $cart_item->get_price() ) * $cart_item->get_qty() - (float) $cart_item->get_subtotal();
+				}
+			}
+			$tax_total = max( 0, $tax_total );
+		}
+
+		$tax_total       = sunshine_round_amount( $tax_total );
+		$shipping_amount = sunshine_round_amount( SPC()->cart->get_shipping() );
 		$amount          = (float) SPC()->cart->get_total();
-		$discount        = round( $item_total + $tax_total + $shipping_amount - $amount, 2 );
+		$discount        = sunshine_round_amount( $item_total + $tax_total + $shipping_amount - $amount );
 		if ( $discount < 0 ) {
 			// Should never happen; would indicate an upstream total/breakdown bug.
 			SPC()->log( 'PayPal breakdown produced a negative discount (' . $discount . '); clamping to 0. item_total=' . $item_total . ' tax=' . $tax_total . ' shipping=' . $shipping_amount . ' amount=' . $amount );
@@ -562,23 +588,23 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 			'purchase_units'      => array(
 				array(
 					'amount' => array(
-						'value'         => (string) $amount,
+						'value'         => $this->format_amount( $amount ),
 						'currency_code' => SPC()->get_option( 'currency' ),
 						'breakdown'     => array(
 							'item_total' => array(
-								'value'         => (string) $item_total,
+								'value'         => $this->format_amount( $item_total ),
 								'currency_code' => SPC()->get_option( 'currency' ),
 							),
 							'tax_total'  => array(
-								'value'         => (string) $tax_total,
+								'value'         => $this->format_amount( $tax_total ),
 								'currency_code' => SPC()->get_option( 'currency' ),
 							),
 							'shipping'   => array(
-								'value'         => (string) $shipping_amount,
+								'value'         => $this->format_amount( $shipping_amount ),
 								'currency_code' => SPC()->get_option( 'currency' ),
 							),
 							'discount'   => array(
-								'value'         => (string) $discount,
+								'value'         => $this->format_amount( $discount ),
 								'currency_code' => SPC()->get_option( 'currency' ),
 							),
 						),
@@ -616,6 +642,8 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 
 		$order = $this->make_request( 'checkout/orders', $order_args );
 		if ( ! empty( $order->id ) ) {
+			// Remember which PayPal order this checkout created, so only that one can be captured.
+			SPC()->session->set( 'paypal_order_id', $order->id );
 			wp_send_json_success( array( 'order_id' => $order->id ) );
 		}
 
@@ -647,12 +675,20 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 	public function process_payment( $order ) {
 
 		if ( ! isset( $_POST['paypal_order_id'] ) ) {
+			SPC()->log( 'PayPal payment failed: no PayPal Order ID submitted' );
+			SPC()->cart->add_error( __( 'Failed to capture PayPal payment', 'sunshine-photo-cart' ) );
 			return false;
 		}
 
 		$paypal_order_id = sanitize_text_field( $_POST['paypal_order_id'] );
 
 		SPC()->log( 'Processing PayPal payment for PayPal Order ID ' . $paypal_order_id );
+
+		if ( empty( $paypal_order_id ) || SPC()->session->get( 'paypal_order_id' ) !== $paypal_order_id ) {
+			SPC()->log( 'PayPal Order ID ' . $paypal_order_id . ' was not created by this checkout session' );
+			SPC()->cart->add_error( __( 'Failed to capture PayPal payment', 'sunshine-photo-cart' ) );
+			return;
+		}
 
 		$this->setup();
 
@@ -665,6 +701,19 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 			}
 			SPC()->cart->add_error( $error );
 			SPC()->log( $error );
+			return;
+		}
+
+		// Make sure what PayPal captured is the full order total in the store currency.
+		$captured = $capture->purchase_units[0]->payments->captures[0];
+		if ( empty( $captured->amount ) || $captured->amount->currency_code !== SPC()->get_option( 'currency' ) || round( floatval( $captured->amount->value ), 2 ) !== round( $order->get_total(), 2 ) ) {
+			$captured_amount = ( ! empty( $captured->amount ) ) ? $captured->amount->value . ' ' . $captured->amount->currency_code : 'unknown';
+			SPC()->log( 'PayPal capture ' . $captured->id . ' amount (' . $captured_amount . ') does not match order total (' . $order->get_total() . ' ' . SPC()->get_option( 'currency' ) . ')' );
+			/* translators: 1: PayPal capture ID, 2: amount captured by PayPal */
+			$note = sprintf( __( 'PayPal capture %1$s for %2$s does not match the order total, order was not completed', 'sunshine-photo-cart' ), $captured->id, $captured_amount );
+			$order->add_log( $note );
+			sunshine_order_payment_problem( $order, $note, $this->id );
+			SPC()->cart->add_error( __( 'Your payment did not match the order total, please contact the site owner', 'sunshine-photo-cart' ) );
 			return;
 		}
 
@@ -788,7 +837,7 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 			$body    = array(
 				'amount' =>
 					array(
-						'value'         => $refund_amount,
+						'value'         => $this->format_amount( $refund_amount, $order->get_currency() ),
 						'currency_code' => $order->get_currency(),
 					),
 			);
@@ -798,20 +847,53 @@ class SPC_Payment_Method_PayPal extends SPC_Payment_Method {
 				/* translators: %s is the order ID */
 				$order->add_log( sprintf( __( 'Order %s refund is pending in PayPal', 'sunshine-photo-cart' ), $order_id ) );
 				SPC()->notices->add_admin( 'paypal_refund_' . $capture_id, __( 'PayPal refund is pending', 'sunshine-photo-cart' ), 'error' );
-				$order->set_status( 'refunded' );
 				$order->add_refund( $refund_amount );
+				$this->maybe_mark_refunded( $order );
 			} elseif ( ! empty( $request->status ) && $request->status == 'COMPLETED' ) {
 				/* translators: %s is the refund amount formatted as price */
-				$order->add_log( sprintf( __( 'Refund has been processed for %s', 'sunshine-photo-cart' ), sunshine_price( $refund_amount ) ) );
-				/* translators: %s is the refund amount formatted as price */
-				SPC()->notices->add_admin( 'paypal_refund_' . $capture_id, sprintf( __( 'Refund has been processed for %s', 'sunshine-photo-cart' ), sunshine_price( $refund_amount ) ) );
-				$order->set_status( 'refunded' );
+				SPC()->notices->add_admin( 'paypal_refund_' . $capture_id, sprintf( __( 'Refund has been processed for %s', 'sunshine-photo-cart' ), sunshine_price( $refund_amount, false, $order->get_currency() ) ) );
 				$order->add_refund( $refund_amount );
+				$this->maybe_mark_refunded( $order );
 			} else {
-				SPC()->notices->add_admin( 'paypal_refund_' . $capture_id, __( 'PayPal failed to refund', 'sunshine-photo-cart' ), 'error' );
-				/* translators: %s is the order ID */
-				$order->add_log( sprintf( __( 'Order %s failed refund in PayPal', 'sunshine-photo-cart' ), $order_id ) );
+				// PayPal's own reason, like "You cannot do a refund less than the original capture amount."
+				$reason = '';
+				if ( ! empty( $request->details[0]->description ) ) {
+					$reason = $request->details[0]->description;
+				} elseif ( ! empty( $request->message ) ) {
+					$reason = $request->message;
+				}
+				$reason = sanitize_text_field( $reason );
+				/* translators: %s: PayPal's reason, may be empty */
+				SPC()->notices->add_admin( 'paypal_refund_' . $capture_id, trim( sprintf( __( 'PayPal failed to refund. %s', 'sunshine-photo-cart' ), $reason ) ), 'error' );
+				/* translators: 1: order ID, 2: PayPal's reason, may be empty */
+				$order->add_log( trim( sprintf( __( 'Order %1$s failed refund in PayPal. %2$s', 'sunshine-photo-cart' ), $order_id, $reason ) ) );
+				SPC()->log( 'PayPal refund failed for order ' . $order_id . ' (sent ' . wp_json_encode( $body ) . ', full refund box: ' . ( empty( $_POST['paypal_refund_full'] ) ? 'off' : 'on' ) . '): ' . wp_json_encode( $request ) );
 			}
+		}
+	}
+
+	/**
+	 * An amount as the text PayPal wants: the currency's decimals and nothing more, so 54.22
+	 * never goes as 54.21999999999999 and yen never goes with a fraction.
+	 *
+	 * @param float  $amount   The amount.
+	 * @param string $currency Currency code, or '' for the store currency.
+	 * @return string
+	 */
+	private function format_amount( $amount, $currency = '' ) {
+		$decimals = (int) sunshine_currency_decimals( $currency );
+		return number_format( round( (float) $amount, $decimals ), $decimals, '.', '' );
+	}
+
+	/**
+	 * Mark the order Refunded once nothing is left after its refunds. A part refund keeps the
+	 * order's status; the refund is recorded on it and comes off its total.
+	 *
+	 * @param SPC_Order $order The order.
+	 */
+	private function maybe_mark_refunded( $order ) {
+		if ( $order->get_total_minus_refunds() < 0.005 ) {
+			$order->set_status( 'refunded' );
 		}
 	}
 
