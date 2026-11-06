@@ -23,8 +23,23 @@ function sunshine_watermark_image( $attachment_id, $metadata = array(), $passed_
 			}
 			$image_basename = basename( $image );
 			$image_path     = str_replace( $image_basename, '', $image );
+
+			// A size that was never made gets one more try, so there is a copy to stamp.
+			if ( $image_size != 'full' && ! empty( $metadata ) && empty( $metadata['sizes'][ $image_size ]['file'] ) ) {
+				$remade = sunshine_ensure_intermediate_sizes( $attachment_id, $metadata, $image );
+				if ( ! empty( $remade['sizes'][ $image_size ]['file'] ) ) {
+					$metadata = sunshine_secure_intermediate_file_names( $remade, $image );
+					wp_update_attachment_metadata( $attachment_id, $metadata );
+				}
+			}
+
 			if ( $image_size != 'full' && ! empty( $image ) && ! empty( $metadata ) && ! empty( $metadata['sizes'][ $image_size ]['file'] ) ) {
 				$image = $image_path . $metadata['sizes'][ $image_size ]['file'];
+			} elseif ( $image_size != 'full' ) {
+				// Without its own file the size would fall back to the original, and the
+				// original must never be watermarked.
+				SPC()->log( 'No ' . $image_size . ' file recorded for image ' . $attachment_id . ', not watermarking the original' );
+				return;
 			}
 
 			if ( ! file_exists( $image ) ) {

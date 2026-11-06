@@ -3,10 +3,10 @@ Author URI: https://www.sunshinephotocart.com
 Plugin URI: https://www.sunshinephotocart.com
 Contributors: wpsunshine, sccr410
 Tags: client photo gallery, photo proofing, client proofing, sell photos, client galleries
-Requires at least: 5.5
+Requires at least: 5.9
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 3.8
+Stable tag: 3.8.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -242,6 +242,24 @@ Security is important to us. Please report security bugs through the [Patchstack
 11. Admin gallery management - Easy-to-use admin interface to create galleries, upload images, and manage your client photo galleries and photo proofing workflow.
 
 == Changelog ==
+
+= 3.8.1 - November 5, 2026 =
+* Security: Add-on updates are refused unless they're signed by Sunshine Photo Cart, so a hacked update server can't push a bad add-on to your site
+* Change: Sunshine now needs WordPress 5.9 or newer. Image uploads did not work on older WordPress versions running PHP 7
+* Change: Import from FTP folder also finds .jpeg and .png photos, the same as browser uploads, and works with folder names that have brackets
+* New: Sunshine can check the folders your galleries were imported from for new photos, every hour, twice a day or once a day (Settings > Galleries > Check folders for new photos). Photos added later to a gallery's FTP folder, or its cloud folder with the Cloud Storage add-on, are brought in by themselves. Photos are only ever added: one removed from the folder stays in the gallery, and one you delete from the gallery is not brought back
+* New: Regenerating images for a gallery with sub-galleries asks whether to do the sub-galleries too
+* New: Regenerate Images in the Bulk actions menu on the Galleries list, to regenerate several galleries at once
+* Fix: Orders saved without their items on older databases (MySQL or MariaDB 5.5), which left the order screen, invoice and packing list empty
+* Fix: Regenerate Images made full-size copies instead of the thumbnail and large sizes when Delay image processing was on, which made the watermark look small and centered
+* Fix: A missing thumbnail or large size is made at its real size now instead of as a full-size copy of the original
+* Fix: The watermark could land on a photo's original file when its large size was missing. The original is never watermarked now
+* Fix: Regenerate Images uses the original from cloud storage when the local copy was changed, such as by a watermark, so photos aren't stamped twice
+* Fix: A gallery photo with no large size shows its thumbnail or a placeholder to visitors, never its unwatermarked original
+* Fix: Files saved by other scheduled tasks could land in a gallery's folder after background image processing
+* Fix: Regenerate Images run through the API makes only Sunshine's watermarked sizes and keeps large photos at full size
+* Fix: A whole-gallery purchase can be added to the cart from a main gallery whose photos are all in its sub-galleries
+* Fix: With Polylang's media translation on, galleries showed only the photos set to the visitor's language and Load more stopped working. Galleries now show all their photos in every language
 
 = 3.8 - October 21, 2026 =
 * Security: Every payment method now confirms with the payment company that an order was really paid, in full, before the order is marked paid

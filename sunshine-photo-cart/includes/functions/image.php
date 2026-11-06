@@ -83,7 +83,8 @@ function sunshine_fix_image_orientation( $file_path ) {
  * When an uploaded image is smaller than a registered Sunshine size (e.g., sunshine-large),
  * WordPress won't create an intermediate file for that size. This function creates a copy
  * of the original file to serve as the intermediate, so watermarks are applied to the copy
- * instead of the original.
+ * instead of the original. If a size is missing even though the original is bigger than it,
+ * the size is made at its real dimensions instead, so it never ends up as a full-size copy.
  *
  * @param int    $attachment_id The attachment ID.
  * @param array  $metadata      The attachment metadata array (modified in place).
@@ -109,9 +110,24 @@ function sunshine_ensure_intermediate_sizes( $attachment_id, $metadata, $file_pa
 	$file_type = wp_check_filetype( $file_path );
 	$dir       = trailingslashit( $file_info['dirname'] );
 
+	// Added sizes are read as registered too, because the intermediate_image_sizes filter
+	// hides every size during requests that delay image processing.
+	$registered_sizes = array_merge( wp_get_registered_image_subsizes(), wp_get_additional_image_sizes() );
+
 	foreach ( $sizes_to_check as $size_name ) {
 		if ( ! empty( $metadata['sizes'][ $size_name ] ) ) {
 			continue;
+		}
+
+		// Returns false when the original is already within the size, which falls through to the copy below.
+		if ( ! empty( $registered_sizes[ $size_name ] ) ) {
+			$size    = $registered_sizes[ $size_name ];
+			$resized = image_make_intermediate_size( $file_path, $size['width'], $size['height'], $size['crop'] );
+			if ( $resized ) {
+				SPC()->log( 'Created missing size ' . $size_name . ': ' . $resized['file'] );
+				$metadata['sizes'][ $size_name ] = $resized;
+				continue;
+			}
 		}
 
 		$image_width  = $metadata['width'];
@@ -780,12 +796,13 @@ function sunshine_hide_original_image( $attachment_id ) {
  *
  * Sunshine only makes its own sizes, and WordPress falls back to the original for any size that
  * was never made (thumbnail, medium, woocommerce_single...) and for 'full'. Those requests get the
- * large size instead, which is the one Sunshine watermarks. People who can edit the gallery
- * still get the real thing.
+ * large size instead, which is the one Sunshine watermarks. With no large size, the thumbnail
+ * or a placeholder is shown, because the original has no watermark. People who can edit the
+ * gallery still get the real thing.
  */
 add_filter( 'image_downsize', 'sunshine_downsize_hide_original', 6, 3 );
 function sunshine_downsize_hide_original( $out, $attachment_id, $size ) {
-	if ( false !== $out || 'sunshine-large' === $size || ! sunshine_hide_original_image( $attachment_id ) ) {
+	if ( false !== $out || ! sunshine_hide_original_image( $attachment_id ) ) {
 		return $out;
 	}
 
@@ -798,11 +815,22 @@ function sunshine_downsize_hide_original( $out, $attachment_id, $size ) {
 		return $out;
 	}
 
-	if ( empty( $metadata['sizes']['sunshine-large']['file'] ) ) {
+	if ( ! empty( $metadata['sizes']['sunshine-large']['file'] ) ) {
+		return image_downsize( $attachment_id, 'sunshine-large' );
+	}
+
+	// Nothing to protect: not a photo, or one meant to show without a watermark.
+	if ( ! wp_attachment_is_image( $attachment_id ) || ! SPC()->get_option( 'watermark_image' ) || '0' === (string) get_post_meta( $attachment_id, 'sunshine_watermark', true ) ) {
 		return $out;
 	}
 
-	return image_downsize( $attachment_id, 'sunshine-large' );
+	if ( ! empty( $metadata['sizes']['sunshine-thumbnail']['file'] ) ) {
+		return image_downsize( $attachment_id, 'sunshine-thumbnail' );
+	}
+
+	list( $width, $height ) = sunshine_unprocessed_image_dimensions( $attachment_id, $size );
+
+	return array( sunshine_image_placeholder_url(), $width, $height, true );
 }
 
 /**
